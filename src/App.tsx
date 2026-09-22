@@ -3,8 +3,10 @@ import { ScannerScreen } from '@/screens/ScannerScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function App() {
+  useTheme();
   return (
     <Routes>
       <Route path="/" element={<ScannerScreen />} />
