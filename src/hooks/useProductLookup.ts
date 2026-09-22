@@ -1,11 +1,10 @@
 import { useCallback, useState } from 'react';
-import type { Product } from '@/types';
-import { getProduct } from '@/services/catalogService';
-import { lookupOpenFoodFacts } from '@/services/productLookupService';
+import type { Product, ProductSource } from '@/types';
+import { lookupProduct, LookupError } from '@/services/productLookupService';
 
 export interface UseProductLookupResult {
   product: Product | null;
-  source: 'local' | 'openfoodfacts' | 'manual' | null;
+  source: ProductSource | null;
   loading: boolean;
   error: string | null;
   lookup: (barcode: string) => Promise<void>;
@@ -13,7 +12,7 @@ export interface UseProductLookupResult {
 
 export function useProductLookup(): UseProductLookupResult {
   const [product, setProduct] = useState<Product | null>(null);
-  const [source, setSource] = useState<'local' | 'openfoodfacts' | 'manual' | null>(null);
+  const [source, setSource] = useState<ProductSource | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,29 +23,23 @@ export function useProductLookup(): UseProductLookupResult {
     setSource(null);
 
     try {
-      // Step 1: Check local catalog
-      const local = await getProduct(barcode);
-      if (local) {
-        setProduct(local);
-        setSource('local');
-        return;
+      const result = await lookupProduct(barcode);
+      if (result.source === 'manual') {
+        // Manual entry: discard the placeholder, prompt the user
+        setProduct(null);
+        setSource('manual');
+      } else {
+        setProduct(result.product);
+        setSource(result.source);
       }
-
-      // Step 2: Try Open Food Facts API
-      const offResult = await lookupOpenFoodFacts(barcode);
-      if (offResult) {
-        setProduct(offResult);
-        setSource('openfoodfacts');
-        return;
-      }
-
-      // Step 3: Manual entry — return null product
-      setProduct(null);
-      setSource('manual');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lookup failed');
+      if (err instanceof LookupError) {
+        setError(err.message);
+      } else {
+        setError(err instanceof Error ? err.message : 'Lookup failed');
+      }
       setProduct(null);
-      setSource('manual');
+      setSource(null);
     } finally {
       setLoading(false);
     }

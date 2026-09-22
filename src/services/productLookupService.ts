@@ -1,4 +1,4 @@
-import type { Product } from '@/types';
+import type { Product, ProductSource } from '@/types';
 import { getProduct } from '@/services/catalogService';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v0/product';
@@ -15,47 +15,74 @@ export interface OpenFoodFactsResponse {
 
 export interface ProductLookupResult {
   product: Product;
-  source: 'local' | 'openfoodfacts' | 'manual';
+  source: ProductSource;
+}
+
+export type LookupErrorKind = 'network' | 'http' | 'parse' | 'unknown';
+
+export class LookupError extends Error {
+  constructor(message: string, public readonly kind: LookupErrorKind) {
+    super(message);
+  }
 }
 
 /**
  * Look up a barcode in the Open Food Facts API.
- * Returns null on network errors, HTTP errors, or when the product is not found.
+ * Throws LookupError on network errors, HTTP errors, or malformed JSON.
+ * Returns null when the product is not found (status 0 or no product data).
  */
 export async function lookupOpenFoodFacts(
   barcode: string
 ): Promise<Product | null> {
+  const url = `${OFF_API_BASE}/${encodeURIComponent(barcode)}.json`;
+
+  let res: Response;
   try {
-    const res = await fetch(`${OFF_API_BASE}/${barcode}.json`);
-    if (!res.ok) return null;
-
-    const data: OpenFoodFactsResponse = await res.json();
-    if (data.status !== 1 || !data.product) return null;
-
-    const p = data.product;
-    const now = new Date().toISOString();
-    return {
-      barcode,
-      name: p.product_name ?? '',
-      brand: p.brands ?? '',
-      category: p.categories ?? '',
-      storePrice: 0,
-      defaultExpiry: '',
-      imageUrl: p.image_front_url || undefined,
-      source: 'openfoodfacts',
-      createdAt: now,
-      updatedAt: now,
-    };
+    res = await fetch(url);
   } catch (err) {
-    console.error(`lookupOpenFoodFacts: failed for barcode ${barcode}:`, err);
-    return null;
+    throw new LookupError(
+      err instanceof Error ? err.message : 'Network error',
+      'network'
+    );
   }
+
+  if (!res.ok) {
+    throw new LookupError(`HTTP error ${res.status}`, 'http');
+  }
+
+  let data: OpenFoodFactsResponse;
+  try {
+    data = await res.json();
+  } catch (err) {
+    throw new LookupError(
+      err instanceof Error ? err.message : 'Failed to parse response',
+      'parse'
+    );
+  }
+
+  if (data.status !== 1 || !data.product) return null;
+
+  const p = data.product;
+  const now = new Date().toISOString();
+  return {
+    barcode,
+    name: p.product_name ?? '',
+    brand: p.brands ?? '',
+    category: p.categories ?? '',
+    storePrice: 0,
+    defaultExpiry: '',
+    imageUrl: p.image_front_url || undefined,
+    source: 'openfoodfacts',
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
 /**
  * Look up a product by barcode.
  * Checks local catalog first, then Open Food Facts API.
  * Returns a manual placeholder if neither source has the product.
+ * Throws LookupError on network/HTTP/parse errors.
  */
 export async function lookupProduct(
   barcode: string

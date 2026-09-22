@@ -9,11 +9,10 @@ vi.mock('@/services/catalogService', () => ({
   getProduct: mockGetProduct,
 }));
 
-import { lookupOpenFoodFacts, lookupProduct } from '../services/productLookupService';
+import { lookupOpenFoodFacts, lookupProduct, LookupError } from '../services/productLookupService';
 
 describe('productLookupService', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -56,21 +55,28 @@ describe('productLookupService', () => {
       );
     });
 
-    it('should return null on network error', async () => {
+    it('should throw LookupError on network error', async () => {
       global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-      const result = await lookupOpenFoodFacts('1234567890123');
-      expect(result).toBeNull();
+      await expect(lookupOpenFoodFacts('1234567890123')).rejects.toThrow(LookupError);
     });
 
-    it('should return null on HTTP error (non-ok response)', async () => {
+    it('should throw LookupError on HTTP error (non-ok response)', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
       });
 
-      const result = await lookupOpenFoodFacts('nonexistent');
-      expect(result).toBeNull();
+      await expect(lookupOpenFoodFacts('nonexistent')).rejects.toThrow(LookupError);
+    });
+
+    it('should throw LookupError on malformed JSON', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => { throw new Error('Invalid JSON'); },
+      });
+
+      await expect(lookupOpenFoodFacts('1234567890123')).rejects.toThrow(LookupError);
     });
 
     it('should return null when API returns status 0 (product not found)', async () => {
@@ -143,6 +149,18 @@ describe('productLookupService', () => {
       expect(createdTime).toBeLessThanOrEqual(after);
       expect(result!.updatedAt).toBe(result!.createdAt);
     });
+
+    it('should encode barcode in URL', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 0 }),
+      });
+
+      await lookupOpenFoodFacts('123/456+789');
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://world.openfoodfacts.org/api/v0/product/123%2F456%2B789.json'
+      );
+    });
   });
 
   describe('lookupProduct', () => {
@@ -163,6 +181,26 @@ describe('productLookupService', () => {
       const result = await lookupProduct('1234567890123');
       expect(result.source).toBe('local');
       expect(result.product).toEqual(localProduct);
+    });
+
+    it('should skip OFF API call when local catalog hits', async () => {
+      const localProduct = {
+        barcode: '1234567890123',
+        name: 'Local Product',
+        brand: 'Local Brand',
+        category: 'Local Category',
+        storePrice: 5.99,
+        defaultExpiry: '2025-12-31',
+        source: 'local' as const,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      };
+      mockGetProduct.mockResolvedValue(localProduct);
+      global.fetch = vi.fn();
+
+      const result = await lookupProduct('1234567890123');
+      expect(result.source).toBe('local');
+      expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it('should fall back to API when local catalog misses', async () => {
@@ -200,6 +238,13 @@ describe('productLookupService', () => {
       expect(result.product.name).toBe('');
       expect(result.product.barcode).toBe('nonexistent');
       expect(result.product.source).toBe('manual');
+    });
+
+    it('should propagate LookupError from API on network failure', async () => {
+      mockGetProduct.mockResolvedValue(undefined);
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+
+      await expect(lookupProduct('1234567890123')).rejects.toThrow(LookupError);
     });
   });
 });

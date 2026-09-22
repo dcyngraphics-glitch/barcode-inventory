@@ -1,5 +1,7 @@
 export const SETTINGS_ID = 'settings';
 
+export type ProductSource = 'local' | 'openfoodfacts' | 'manual';
+
 export interface Product {
   barcode: string;
   name: string;
@@ -8,7 +10,7 @@ export interface Product {
   storePrice: number;
   defaultExpiry: string;
   imageUrl?: string;
-  source: 'local' | 'openfoodfacts' | 'manual';
+  source: ProductSource;
   createdAt: string;
   updatedAt: string;
 }

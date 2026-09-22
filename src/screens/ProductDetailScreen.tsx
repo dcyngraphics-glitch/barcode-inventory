@@ -15,7 +15,7 @@ const BOTTOM_NAV_HEIGHT = 80;
 export function ProductDetailScreen() {
   const { barcode } = useParams<{ barcode: string }>();
   const navigate = useNavigate();
-  const { product: lookedUpProduct, source: lookupSource, loading: lookupLoading, lookup } = useProductLookup();
+  const { product: lookedUpProduct, source: lookupSource, loading: lookupLoading, error: lookupError, lookup } = useProductLookup();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
@@ -77,6 +77,13 @@ export function ProductDetailScreen() {
       setIsNewProduct(true);
     }
   }, [lookedUpProduct, lookupSource]);
+
+  // Surface lookup errors (network, HTTP, parse)
+  useEffect(() => {
+    if (lookupError) {
+      setError(lookupError);
+    }
+  }, [lookupError]);
 
   const getInitialFormData = useCallback((): ProductFormData => {
     if (!product) {
