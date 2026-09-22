@@ -3,7 +3,7 @@ import { Zap, ZapOff, Camera, CameraOff, RefreshCw } from 'lucide-react';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
-  onScan: (barcode: string) => void,
+  onScan: (barcode: string) => void;
 }
 
 export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
@@ -12,7 +12,9 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
   const [flashOn, setFlashOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const { scanning, error, errorType, start, stop } = useBarcodeScanner();
+  const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'permission-denied' | 'no-camera' | 'unknown'>('unknown');
+  const { scanning, start, stop } = useBarcodeScanner();
 
   // Keep ref in sync with latest onScan prop
   useEffect(() => {
@@ -23,25 +25,55 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    start(video, (barcode: string) => onScanRef.current(barcode));
+    // Reset error state when trying to start
+    setError(null);
+    setErrorType('unknown');
 
-    // Check if torch is supported
-    const stream = video.srcObject as MediaStream | null;
-    if (stream) {
-      const track = stream.getVideoTracks()[0];
-      if (track) {
-        const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
-          torch?: boolean;
-        };
-        setTorchSupported(!!capabilities.torch);
+    start(video, (barcode: string) => {
+      onScanRef.current(barcode);
+    }).then(() => {
+      // Start succeeded, now wait for video to play
+      const handlePlaying = () => setInitializing(false);
+      video.addEventListener('playing', handlePlaying);
+      return () => {
+        video.removeEventListener('playing', handlePlaying);
+      };
+    }).catch((err) => {
+      // Start failed
+      const errorType: 'permission-denied' | 'no-camera' | 'unknown' =
+        err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+          ? 'permission-denied'
+          : err instanceof DOMException && (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError' || err.name === 'OverconstrainedError')
+            ? 'no-camera'
+            : 'unknown';
+      setError(err instanceof Error ? err.message : 'Failed to access camera');
+      setErrorType(errorType);
+    });
+
+    // Check if torch is supported (after stream is available)
+    const checkTorchSupport = () => {
+      const stream = video.srcObject as MediaStream | null;
+      if (stream) {
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
+            torch?: boolean;
+          };
+          setTorchSupported(!!capabilities.torch);
+        }
       }
-    }
+    };
 
-    // Small delay to allow camera stream to attach
-    const initTimer = setTimeout(() => setInitializing(false), 500);
+    // Check torch support once we have a stream
+    const interval = setInterval(checkTorchSupport, 100);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      checkTorchSupport(); // Final check
+    }, 2000);
 
     return () => {
-      clearTimeout(initTimer);
+      clearInterval(interval);
+      clearTimeout(timeout);
       stop();
     };
   }, [start, stop]);
