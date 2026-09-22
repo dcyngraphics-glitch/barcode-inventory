@@ -64,6 +64,12 @@ export function ConfirmDialog({
 
   return (
     <>
+      <style>{`
+        .confirm-cancel-btn:hover { opacity: 0.8; }
+        .confirm-cancel-btn:active { transform: scale(0.97); }
+        .confirm-confirm-btn:hover:not(:disabled) { opacity: 0.8; }
+        .confirm-confirm-btn:active:not(:disabled) { transform: scale(0.97); }
+      `}</style>
       {/* Backdrop */}
       <div
         onClick={onCancel}
@@ -75,7 +81,6 @@ export function ConfirmDialog({
           animation: 'fade-in 150ms ease',
         }}
       />
-
       {/* Dialog */}
       <div
         ref={dialogRef}
@@ -88,7 +93,7 @@ export function ConfirmDialog({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          background: '#ffffff',
+          background: 'var(--color-card)',
           borderRadius: '16px',
           padding: '24px',
           boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
@@ -103,7 +108,7 @@ export function ConfirmDialog({
           style={{
             fontSize: '18px',
             fontWeight: 600,
-            color: '#0f172a',
+            color: 'var(--color-foreground)',
             margin: '0 0 8px',
           }}
         >
@@ -113,14 +118,13 @@ export function ConfirmDialog({
           id="confirm-body"
           style={{
             fontSize: '14px',
-            color: '#475569',
+            color: 'var(--color-muted-foreground)',
             margin: '0 0 24px',
             lineHeight: 1.5,
           }}
         >
           {body}
         </p>
-
         <div
           style={{
             display: 'flex',
@@ -130,9 +134,10 @@ export function ConfirmDialog({
         >
           <button
             onClick={onCancel}
+            className="confirm-cancel-btn"
             style={{
               background: 'transparent',
-              color: '#334155',
+              color: 'var(--color-primary)',
               padding: '8px 16px',
               fontWeight: 500,
               fontSize: '14px',
@@ -140,6 +145,7 @@ export function ConfirmDialog({
               cursor: 'pointer',
               border: 'none',
               borderRadius: '8px',
+              transition: 'opacity 200ms ease, transform 100ms ease',
             }}
           >
             {cancelLabel}
@@ -147,9 +153,10 @@ export function ConfirmDialog({
           <button
             onClick={onConfirm}
             disabled={confirmDisabled}
+            className="confirm-confirm-btn"
             style={{
-              background: isDestructive ? '#dc2626' : '#059669',
-              color: '#ffffff',
+              background: isDestructive ? 'var(--color-destructive)' : 'var(--color-primary)',
+              color: 'var(--color-on-primary)',
               padding: '8px 16px',
               fontWeight: 600,
               fontSize: '14px',
@@ -157,7 +164,7 @@ export function ConfirmDialog({
               cursor: confirmDisabled ? 'not-allowed' : 'pointer',
               border: 'none',
               borderRadius: '8px',
-              transition: 'opacity 200ms ease',
+              transition: 'opacity 200ms ease, transform 100ms ease',
               opacity: confirmDisabled ? 0.6 : 1,
             }}
           >

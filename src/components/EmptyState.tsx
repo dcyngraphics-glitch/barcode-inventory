@@ -1,4 +1,4 @@
-import { Package } from 'lucide-react';
+import { PackageOpen } from 'lucide-react';
 
 interface EmptyStateProps {
   title: string;
@@ -19,7 +19,7 @@ export function EmptyState({ title, subtitle, ctaLabel, onCta }: EmptyStateProps
         textAlign: 'center',
       }}
     >
-      <Package size={64} color="#94a3b8" strokeWidth={1.5} />
+      <PackageOpen size={64} color="#94a3b8" strokeWidth={1.5} />
       <h2
         style={{
           fontSize: '18px',

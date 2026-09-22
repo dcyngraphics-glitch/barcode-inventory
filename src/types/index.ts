@@ -30,6 +30,7 @@ export interface Settings {
   notificationsEnabled: boolean;
   theme: 'auto' | 'light' | 'dark';
   catalogSeeded?: boolean;
+  cashierMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -37,6 +38,7 @@ export const DEFAULT_SETTINGS: Settings = {
   alertWindowDays: 3,
   notificationsEnabled: false,
   theme: 'auto',
+  cashierMode: false,
 };
 
 export type ExpiryStatus = 'good' | 'expiring' | 'expired';

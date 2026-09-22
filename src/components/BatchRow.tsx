@@ -124,6 +124,15 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
         >
           <div
             style={{
+              fontSize: '14px',
+              color: '#0f172a',
+              fontWeight: 500,
+            }}
+          >
+            {formattedDate}
+          </div>
+          <div
+            style={{
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
@@ -133,15 +142,6 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
           >
             <Package size={14} />
             <span>× {batch.quantity}</span>
-          </div>
-          <div
-            style={{
-              fontSize: '14px',
-              color: '#0f172a',
-              fontWeight: 500,
-            }}
-          >
-            {formattedDate}
           </div>
         </div>
 

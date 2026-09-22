@@ -24,6 +24,10 @@ export function FilterChips({ active, onChange }: FilterChipsProps) {
         padding: '4px 0',
         WebkitOverflowScrolling: 'touch',
         scrollbarWidth: 'none',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        background: 'var(--color-background)',
       }}
     >
       {FILTERS.map((filter) => {

@@ -179,6 +179,19 @@ export function SettingsScreen() {
         />
       </div>
 
+      {/* Scanner Section */}
+      <h2 className="settings-section-label">
+        Scanner
+      </h2>
+      <div className="settings-card settings-card-stack">
+        <SettingsToggle
+          enabled={settings!.cashierMode}
+          onChange={(enabled) => updateSettings({ cashierMode: enabled })}
+          label="Cashier Mode"
+          description="Scan multiple items quickly — adds directly to cart instead of showing product details"
+        />
+      </div>
+
       {/* Data Section */}
       <h2 className="settings-section-label">
         Data
@@ -239,6 +252,15 @@ export function SettingsScreen() {
         >
           <ExternalLink size={20} />
           View on GitHub
+        </a>
+        <a
+          href="https://github.com/blob/main/LICENSE"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="settings-info-row"
+        >
+          <ExternalLink size={20} />
+          Licenses
         </a>
       </div>
 

@@ -6,18 +6,22 @@ import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { CartReviewScreen } from '@/screens/CartReviewScreen';
-import { SettingsProvider } from '@/context/SettingsContext';
+import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext';
 import { ScanCartProvider } from '@/context/ScanCartContext';
 import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
+import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
+import { getAllBatches } from '@/services/inventoryService';
 
 export default function App() {
   useTheme();
   useEffect(() => {
     seedCatalogIfEmpty();
   }, []);
+
   return (
     <SettingsProvider>
+      <NotificationChecker />
       <ScanCartProvider>
         <div className="app-container">
           <Routes>
@@ -34,6 +38,34 @@ export default function App() {
   );
 }
 
+function NotificationChecker() {
+  const { settings } = useSettingsContext();
+  useEffect(() => {
+    if (!settings?.notificationsEnabled) return;
+    if (getPermissionStatus() !== 'granted') return;
+    const alertWindowDays = settings.alertWindowDays ?? 3;
+    getAllBatches()
+      .then((batches) => notifyExpiringItems(batches, alertWindowDays))
+      .catch((err) => {
+        console.error('Failed to check expiring items for notifications:', err);
+      });
+  }, [settings?.notificationsEnabled, settings?.alertWindowDays]);
+
+  // Periodically re-check (e.g., inventory may have changed via other screens)
+  useEffect(() => {
+    if (!settings?.notificationsEnabled) return;
+    if (getPermissionStatus() !== 'granted') return;
+    const id = setInterval(() => {
+      const alertWindowDays = settings.alertWindowDays ?? 3;
+      getAllBatches()
+        .then((batches) => notifyExpiringItems(batches, alertWindowDays))
+        .catch(() => {});
+    }, 60 * 60 * 1000); // every hour
+    return () => clearInterval(id);
+  }, [settings?.notificationsEnabled, settings?.alertWindowDays]);
+  return null;
+}
+
 const navItems = [
   { path: '/', icon: ScanLine, label: 'Scan' },
   { path: '/inventory', icon: Package, label: 'Inventory' },
@@ -44,7 +76,7 @@ function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" aria-label="Main navigation">
       {navItems.map((item) => {
         const isActive = item.path === '/'
           ? location.pathname === '/' || location.pathname.startsWith('/product') || location.pathname.startsWith('/cart')
@@ -54,6 +86,7 @@ function BottomNav() {
             key={item.path}
             to={item.path}
             className={`bottom-nav-item${isActive ? ' active' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
           >
             <item.icon size={24} />
             <span className="bottom-nav-label">{item.label}</span>

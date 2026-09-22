@@ -32,9 +32,9 @@ export function Toast({ toasts, onDismiss }: ToastProps) {
         pointerEvents: 'none',
       }}
     >
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
-      ))}
+      {toasts[0] && (
+        <ToastItem key={toasts[0].id} toast={toasts[0]} onDismiss={onDismiss} />
+      )}
     </div>
   );
 }
@@ -55,9 +55,9 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
   }, [toast.id, onDismiss]);
 
   const iconMap = {
-    success: <CheckCircle size={18} color="#059669" />,
-    error: <AlertTriangle size={18} color="#dc2626" />,
-    info: <AlertTriangle size={18} color="#475569" />,
+    success: <CheckCircle size={18} color="var(--color-accent)" />,
+    error: <AlertTriangle size={18} color="var(--color-destructive)" />,
+    info: <AlertTriangle size={18} color="var(--foreground)" />,
   };
 
   return (
@@ -69,8 +69,8 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
         alignItems: 'center',
         gap: '8px',
         padding: '12px 24px',
-        background: '#0f172a',
-        color: '#ffffff',
+        background: 'var(--color-background)',
+        color: 'var(--color-foreground)',
         borderRadius: '8px',
         fontSize: '14px',
         fontWeight: 500,
@@ -93,7 +93,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
         style={{
           background: 'transparent',
           border: 'none',
-          color: '#94a3b8',
+          color: 'var(--color-muted-foreground, var(--color-foreground))',
           cursor: 'pointer',
           padding: '4px',
           display: 'flex',

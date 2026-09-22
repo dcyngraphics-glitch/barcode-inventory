@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play } from 'lucide-react';
+import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard } from 'lucide-react';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
   onScan: (barcode: string) => void;
+  onManualEntry?: () => void;
 }
 
-export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
+export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const onScanRef = useRef(onScan);
   const [flashOn, setFlashOn] = useState(false);
@@ -157,6 +158,12 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
                 <RefreshCw size={18} />
                 Retry camera access
               </button>
+              {onManualEntry && (
+                <button onClick={onManualEntry} className="camera-retry-btn" style={{ marginTop: '8px' }}>
+                  <Keyboard size={18} />
+                  Enter barcode manually
+                </button>
+              )}
             </div>
           </div>
         </div>

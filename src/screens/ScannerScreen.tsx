@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScanLine, Keyboard, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
@@ -6,17 +6,43 @@ import { ManualEntrySheet } from '@/components/ManualEntrySheet';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
 import { RecentScans } from '@/components/RecentScans';
 import { useScanCart } from '@/context/ScanCartContext';
+import { useSettings } from '@/hooks/useSettings';
 import { lookupProduct } from '@/services/productLookupService';
 import type { Product } from '@/types';
+
+// Beep audio using Web Audio API oscillator
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.1);
+    // Clean up after the tone ends
+    setTimeout(() => ctx.close(), 200);
+  } catch {
+    // Silently ignore if Web Audio API is not available
+  }
+}
 
 export function ScannerScreen() {
   const navigate = useNavigate();
   const { addItem, totalItems, totalPrice } = useScanCart();
+  const { settings } = useSettings();
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
   const [scanToast, setScanToast] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cashierMode = settings?.cashierMode ?? false;
 
   // Listen for online/offline events
   useEffect(() => {
@@ -30,9 +56,17 @@ export function ScannerScreen() {
     };
   }, []);
 
+  // Cleanup toast timer on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
   const showScanToast = useCallback((message: string) => {
     setScanToast(message);
-    setTimeout(() => setScanToast(null), 1500);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setScanToast(null), 3000);
   }, []);
 
   const handleBarcodeSubmit = useCallback(async (barcode: string) => {
@@ -44,12 +78,24 @@ export function ScannerScreen() {
       navigator.vibrate(50);
     }
 
+    // Beep on successful scan
+    playBeep();
+
+    // Spec flow (default): navigate to Product Detail
+    if (!cashierMode) {
+      navigate(`/product/${encodeURIComponent(barcode)}`);
+      setScanning(false);
+      return;
+    }
+
+    // Cashier Mode (opt-in): add to cart and keep scanning
     try {
       const result = await lookupProduct(barcode);
 
       if (result.source === 'manual') {
         // Unknown product — prompt for price and expiry
         setQuickEntryBarcode(barcode);
+        setScanning(false);
         return;
       }
 
@@ -77,7 +123,7 @@ export function ScannerScreen() {
     } finally {
       setScanning(false);
     }
-  }, [addItem, showScanToast, scanning]);
+  }, [addItem, showScanToast, scanning, cashierMode, navigate]);
 
   const handleQuickEntrySave = useCallback((price: number, expiryDate: string) => {
     if (!quickEntryBarcode) return;
@@ -201,7 +247,7 @@ export function ScannerScreen() {
         }}
       >
         {/* Camera Viewfinder */}
-        <CameraViewfinder onScan={handleBarcodeSubmit} />
+        <CameraViewfinder onScan={handleBarcodeSubmit} onManualEntry={() => setManualEntryOpen(true)} />
 
         {/* Manual Entry Button */}
         <button
