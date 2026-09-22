@@ -157,37 +157,11 @@ export function SettingsScreen() {
 
   if (loading) {
     return (
-      <div style={{ padding: '16px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <div
-            style={{
-              height: '28px',
-              width: '120px',
-              background: '#f2f3f4',
-              borderRadius: '8px',
-              animation: 'shimmer 1.5s infinite',
-            }}
-          />
-        </div>
+      <div className="settings-skeleton">
+        <div className="settings-skeleton-title" />
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              height: '80px',
-              background: '#f2f3f4',
-              borderRadius: '12px',
-              marginBottom: '12px',
-              animation: 'shimmer 1.5s infinite',
-            }}
-          />
+          <div key={i} className="settings-skeleton-card" />
         ))}
-        <style>{`
-          @keyframes shimmer {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-          }
-        `}</style>
       </div>
     );
   }
@@ -198,50 +172,17 @@ export function SettingsScreen() {
   );
 
   return (
-    <div
-      style={{
-        padding: '16px',
-        paddingBottom: 'calc(16px + 64px + env(safe-area-inset-bottom))',
-        minHeight: '100vh',
-      }}
-    >
+    <div className="settings-screen">
       {/* Header */}
-      <div
-        style={{
-          fontSize: '24px',
-          fontWeight: 600,
-          color: '#0f172a',
-          marginBottom: '24px',
-        }}
-      >
+      <div className="settings-header">
         Settings
       </div>
 
       {/* Notifications Section */}
-      <h2
-        style={{
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          marginBottom: '12px',
-        }}
-      >
+      <h2 className="settings-section-label">
         Notifications
       </h2>
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '12px',
-          padding: '16px',
-          border: '1px solid #e6e8ea',
-          marginBottom: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}
-      >
+      <div className="settings-card settings-card-stack">
         <SettingsToggle
           enabled={settings.notificationsEnabled}
           onChange={handleNotificationToggle}
@@ -249,18 +190,7 @@ export function SettingsScreen() {
           description="Get notified when items are about to expire"
         />
         {permissionDenied && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              background: '#fef2f2',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: '#dc2626',
-            }}
-          >
+          <div className="settings-warning">
             <AlertTriangle size={16} />
             Notifications blocked by browser
           </div>
@@ -277,70 +207,21 @@ export function SettingsScreen() {
       </div>
 
       {/* Data Section */}
-      <h2
-        style={{
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          marginBottom: '12px',
-        }}
-      >
+      <h2 className="settings-section-label">
         Data
       </h2>
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '12px',
-          padding: '16px',
-          border: '1px solid #e6e8ea',
-          marginBottom: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
+      <div className="settings-card settings-card-stack-sm">
         <button
           onClick={handleExport}
           disabled={exporting}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            background: 'transparent',
-            border: '1px solid #e6e8ea',
-            borderRadius: '8px',
-            cursor: exporting ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 500,
-            color: '#334155',
-            opacity: exporting ? 0.6 : 1,
-            transition: 'opacity 200ms ease',
-            minHeight: '44px',
-          }}
+          className="settings-row"
         >
           <Download size={20} />
           {exporting ? 'Exporting...' : 'Export as JSON'}
         </button>
         <button
           onClick={() => setShowClearDialog(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            background: 'transparent',
-            border: '1px solid #dc2626',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 500,
-            color: '#dc2626',
-            transition: 'opacity 200ms ease',
-            minHeight: '44px',
-          }}
+          className="settings-row settings-row-danger"
         >
           <Trash2 size={20} />
           Delete Everything
@@ -348,45 +229,13 @@ export function SettingsScreen() {
       </div>
 
       {/* Appearance Section */}
-      <h2
-        style={{
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          marginBottom: '12px',
-        }}
-      >
+      <h2 className="settings-section-label">
         Appearance
       </h2>
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '12px',
-          padding: '16px',
-          border: '1px solid #e6e8ea',
-          marginBottom: '24px',
-        }}
-      >
+      <div className="settings-card">
         <button
           onClick={handleThemeCycle}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            background: 'transparent',
-            border: '1px solid #e6e8ea',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 500,
-            color: '#334155',
-            transition: 'opacity 200ms ease',
-            minHeight: '44px',
-            width: '100%',
-          }}
+          className="settings-row"
         >
           {THEME_ICON[settings.theme]}
           <span>Theme: {THEME_LABEL[settings.theme]}</span>
@@ -394,47 +243,17 @@ export function SettingsScreen() {
       </div>
 
       {/* About Section */}
-      <h2
-        style={{
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          marginBottom: '12px',
-        }}
-      >
+      <h2 className="settings-section-label">
         About
       </h2>
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '12px',
-          padding: '16px',
-          border: '1px solid #e6e8ea',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Info size={20} color="#475569" />
+      <div className="settings-card settings-card-stack-sm">
+        <div className="settings-info-header">
+          <Info size={20} className="text-muted" />
           <div>
-            <div
-              style={{
-                fontSize: '16px',
-                fontWeight: 600,
-                color: '#0f172a',
-              }}
-            >
+            <div className="settings-info-name">
               Barcode Inventory
             </div>
-            <div
-              style={{
-                fontSize: '14px',
-                color: '#475569',
-              }}
-            >
+            <div className="settings-info-version">
               Version 1.0.0
             </div>
           </div>
@@ -443,21 +262,7 @@ export function SettingsScreen() {
           href="https://github.com"
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            background: 'transparent',
-            border: '1px solid #e6e8ea',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontWeight: 500,
-            color: '#334155',
-            textDecoration: 'none',
-            transition: 'opacity 200ms ease',
-            minHeight: '44px',
-          }}
+          className="settings-info-row"
         >
           <ExternalLink size={20} />
           View on GitHub

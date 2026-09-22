@@ -19,19 +19,6 @@ interface ProductFormProps {
   isNewProduct: boolean;
 }
 
-const inputStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  border: '1px solid #E6E8EA',
-  borderRadius: '8px',
-  fontSize: '16px',
-  fontFamily: 'Inter, sans-serif',
-  background: '#FFFFFF',
-  color: '#0F172A',
-  width: '100%',
-  boxSizing: 'border-box',
-  transition: 'border-color 200ms ease, box-shadow 200ms ease',
-};
-
 export function ProductForm({
   initialData,
   onSubmit,
@@ -99,15 +86,10 @@ export function ProductForm({
     }
   };
 
-  const getInputStyle = (field: string): React.CSSProperties => ({
-    ...inputStyle,
-    border: `1px solid ${validationErrors[field] ? '#DC2626' : '#E6E8EA'}`,
-  });
-
   const getErrorId = (field: string) => `${field}-error`;
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={handleSubmit} className="form-stack">
       {/* Product Name */}
       <FormField id="product-name" label="Product Name" error={validationErrors.name}>
         <input
@@ -117,7 +99,7 @@ export function ProductForm({
           value={formData.name}
           onChange={(e) => updateField('name', e.target.value)}
           placeholder="Enter product name"
-          style={getInputStyle('name')}
+          className={`form-input${validationErrors.name ? ' form-input-error' : ''}`}
           aria-invalid={!!validationErrors.name}
           aria-describedby={validationErrors.name ? getErrorId('name') : undefined}
         />
@@ -131,7 +113,7 @@ export function ProductForm({
           value={formData.brand}
           onChange={(e) => updateField('brand', e.target.value)}
           placeholder="Enter brand"
-          style={inputStyle}
+          className="form-input"
         />
       </FormField>
 
@@ -143,26 +125,14 @@ export function ProductForm({
           value={formData.category}
           onChange={(e) => updateField('category', e.target.value)}
           placeholder="Enter category"
-          style={inputStyle}
+          className="form-input"
         />
       </FormField>
 
       {/* Price */}
       <FormField id="product-price" label="Price (₱)" error={validationErrors.price}>
-        <div style={{ position: 'relative' }}>
-          <span
-            style={{
-              position: 'absolute',
-              left: '16px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: '16px',
-              color: '#475569',
-              pointerEvents: 'none',
-            }}
-          >
-            ₱
-          </span>
+        <div className="form-currency-wrap">
+          <span className="form-currency-symbol">₱</span>
           <input
             id="product-price"
             ref={(el) => { fieldRefs.current.price = el; }}
@@ -171,10 +141,7 @@ export function ProductForm({
             value={formData.price}
             onChange={(e) => updateField('price', e.target.value)}
             placeholder="0.00"
-            style={{
-              ...getInputStyle('price'),
-              paddingLeft: '36px',
-            }}
+            className={`form-input form-currency-input${validationErrors.price ? ' form-input-error' : ''}`}
             aria-invalid={!!validationErrors.price}
             aria-describedby={validationErrors.price ? getErrorId('price') : undefined}
           />
@@ -189,7 +156,7 @@ export function ProductForm({
           type="date"
           value={formData.expiryDate}
           onChange={(e) => updateField('expiryDate', e.target.value)}
-          style={getInputStyle('expiryDate')}
+          className={`form-input${validationErrors.expiryDate ? ' form-input-error' : ''}`}
           aria-invalid={!!validationErrors.expiryDate}
           aria-describedby={validationErrors.expiryDate ? getErrorId('expiryDate') : undefined}
         />
@@ -197,33 +164,12 @@ export function ProductForm({
 
       {/* Quantity */}
       <FormField id="product-quantity" label="Quantity" error={validationErrors.quantity}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
+        <div className="form-stepper">
           <button
             type="button"
             onClick={decrementQuantity}
             disabled={formData.quantity <= 1}
-            style={{
-              width: '44px',
-              height: '44px',
-              border: '1px solid #E6E8EA',
-              borderRadius: '8px',
-              background: '#FFFFFF',
-              color: '#334155',
-              fontSize: '20px',
-              fontWeight: 600,
-              cursor: formData.quantity <= 1 ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: formData.quantity <= 1 ? 0.5 : 1,
-              transition: 'all 200ms ease',
-            }}
+            className="form-stepper-btn"
             aria-label="Decrease quantity"
           >
             <Minus size={20} />
@@ -242,32 +188,14 @@ export function ProductForm({
                 updateField('quantity', 1);
               }
             }}
-            style={{
-              ...getInputStyle('quantity'),
-              flex: 1,
-              textAlign: 'center',
-            }}
+            className="form-input form-stepper-input"
             aria-invalid={!!validationErrors.quantity}
             aria-describedby={validationErrors.quantity ? getErrorId('quantity') : undefined}
           />
           <button
             type="button"
             onClick={incrementQuantity}
-            style={{
-              width: '44px',
-              height: '44px',
-              border: '1px solid #E6E8EA',
-              borderRadius: '8px',
-              background: '#FFFFFF',
-              color: '#334155',
-              fontSize: '20px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 200ms ease',
-            }}
+            className="form-stepper-btn"
             aria-label="Increase quantity"
           >
             <Plus size={20} />
@@ -280,14 +208,7 @@ export function ProductForm({
         <div
           role="alert"
           aria-live="polite"
-          style={{
-            padding: '12px 16px',
-            background: '#FEE2E2',
-            border: '1px solid #FECACA',
-            borderRadius: '8px',
-            fontSize: '14px',
-            color: '#991B1B',
-          }}
+          className="form-error-box"
         >
           {error}
         </div>
@@ -297,49 +218,17 @@ export function ProductForm({
       <button
         type="submit"
         disabled={loading}
-        style={{
-          width: '100%',
-          background: '#059669',
-          color: '#FFFFFF',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontWeight: 600,
-          fontSize: '16px',
-          minHeight: '48px',
-          border: 'none',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.7 : 1,
-          transition: 'opacity 200ms ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-        }}
+        className="form-submit"
       >
         {loading ? (
           <>
-            <span
-              style={{
-                width: '20px',
-                height: '20px',
-                border: '2px solid #FFFFFF',
-                borderTopColor: 'transparent',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-              }}
-            />
+            <span className="spinner-inline" />
             {isNewProduct ? 'Adding...' : 'Updating...'}
           </>
         ) : (
           isNewProduct ? 'Add to Inventory' : 'Update Inventory'
         )}
       </button>
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </form>
   );
 }
