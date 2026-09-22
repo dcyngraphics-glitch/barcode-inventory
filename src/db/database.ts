@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import type { Product, Batch } from '@/types';
+import type { Product, Batch, Settings } from '@/types';
 
 export interface BarcodeInventoryDB extends DBSchema {
   catalog: {
@@ -11,6 +11,10 @@ export interface BarcodeInventoryDB extends DBSchema {
     key: string;
     value: Batch;
     indexes: { 'by-barcode': string; 'by-expiry': string };
+  };
+  settings: {
+    key: string;
+    value: Settings;
   };
 }
 
@@ -32,6 +36,9 @@ export function getDB(): Promise<IDBPDatabase<BarcodeInventoryDB>> {
           inventoryStore.createIndex('by-barcode', 'barcode');
           inventoryStore.createIndex('by-expiry', 'expiryDate');
         }
+        if (!db.objectStoreNames.contains('settings')) {
+          db.createObjectStore('settings', { keyPath: 'id' });
+        }
       },
     });
   }
@@ -40,10 +47,11 @@ export function getDB(): Promise<IDBPDatabase<BarcodeInventoryDB>> {
 
 export async function clearAllData(): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction(['catalog', 'inventory'], 'readwrite');
+  const tx = db.transaction(['catalog', 'inventory', 'settings'], 'readwrite');
   await Promise.all([
     tx.objectStore('catalog').clear(),
     tx.objectStore('inventory').clear(),
+    tx.objectStore('settings').clear(),
   ]);
   await tx.done;
 }

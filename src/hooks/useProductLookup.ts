@@ -2,8 +2,7 @@ import { useCallback, useState } from 'react';
 import type { Product } from '@/types';
 import {
   lookupProduct as lookupProductService,
-  saveProductFromLookup,
-} from '@/services/productLookupService';
+} from '@/services/apiService';
 
 export function useProductLookup() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -25,26 +24,11 @@ export function useProductLookup() {
     }
   }, []);
 
-  const save = useCallback(async (barcode: string, fields: Partial<Product>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const saved = await saveProductFromLookup(barcode, fields);
-      setProduct(saved);
-      return saved;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const reset = useCallback(() => {
     setProduct(null);
     setError(null);
     setSource(null);
   }, []);
 
-  return { product, loading, error, source, lookup, save, reset };
+  return { product, loading, error, source, lookup, reset };
 }

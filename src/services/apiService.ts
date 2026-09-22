@@ -1,5 +1,4 @@
 import type { Product } from '@/types';
-import { getProduct, saveProduct } from './catalogService';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v0/product';
 
@@ -19,11 +18,6 @@ export interface ProductLookupResult {
 }
 
 export async function lookupProduct(barcode: string): Promise<ProductLookupResult> {
-  const local = await getProduct(barcode);
-  if (local) {
-    return { product: local, source: 'local' };
-  }
-
   const offResult = await lookupOpenFoodFacts(barcode);
   if (offResult) {
     return { product: offResult, source: 'openfoodfacts' };
@@ -67,26 +61,4 @@ async function lookupOpenFoodFacts(barcode: string): Promise<Product | null> {
   } catch {
     return null;
   }
-}
-
-export async function saveProductFromLookup(
-  barcode: string,
-  fields: Partial<Product>
-): Promise<Product> {
-  const result = await getProduct(barcode);
-  const now = new Date().toISOString();
-  const product: Product = {
-    barcode:     fields.barcode     ?? barcode,
-    name:        fields.name        ?? result?.name        ?? '',
-    brand:       fields.brand       ?? result?.brand       ?? '',
-    category:    fields.category    ?? result?.category    ?? '',
-    storePrice:  fields.storePrice  ?? result?.storePrice  ?? 0,
-    defaultExpiry: fields.defaultExpiry ?? result?.defaultExpiry ?? '',
-    imageUrl:    fields.imageUrl    ?? result?.imageUrl,
-    source:      result?.source     ?? fields.source      ?? 'local',
-    createdAt:   result?.createdAt  ?? now,
-    updatedAt:   now,
-  };
-  await saveProduct(product);
-  return product;
 }

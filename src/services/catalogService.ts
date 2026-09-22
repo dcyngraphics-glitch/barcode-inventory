@@ -28,25 +28,10 @@ export async function saveProduct(product: Product): Promise<Product> {
   return product;
 }
 
-export async function upsertProduct(
-  barcode: string,
-  fields: Partial<Product>
-): Promise<Product> {
-  const existing = await getProduct(barcode);
-  const now = new Date().toISOString();
-  const product: Product = {
-    barcode:    fields.barcode    ?? existing?.barcode    ?? barcode,
-    name:       fields.name       ?? existing?.name       ?? '',
-    brand:      fields.brand      ?? existing?.brand      ?? '',
-    category:   fields.category   ?? existing?.category   ?? '',
-    storePrice: fields.storePrice ?? existing?.storePrice ?? 0,
-    defaultExpiry: fields.defaultExpiry ?? existing?.defaultExpiry ?? '',
-    imageUrl:   fields.imageUrl   ?? existing?.imageUrl,
-    source:     fields.source     ?? existing?.source     ?? 'local',
-    createdAt:  existing?.createdAt ?? now,
-    updatedAt:  now,
-  };
-  return saveProduct(product);
+export async function updateProduct(product: Product): Promise<Product> {
+  const db = await getDB();
+  await db.put('catalog', product);
+  return product;
 }
 
 export async function deleteProduct(barcode: string): Promise<void> {

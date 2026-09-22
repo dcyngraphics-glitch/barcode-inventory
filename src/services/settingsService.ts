@@ -1,22 +1,20 @@
 import type { Settings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
+import { getDB } from '@/db/database';
 
-const SETTINGS_KEY = 'barcode-inventory-settings';
-
-export function loadSettings(): Settings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return { ...DEFAULT_SETTINGS };
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    return { ...DEFAULT_SETTINGS };
-  }
+export async function loadSettings(): Promise<Settings> {
+  const db = await getDB();
+  const stored = await db.get('settings', 'settings');
+  if (!stored) return { ...DEFAULT_SETTINGS };
+  return { ...DEFAULT_SETTINGS, ...stored };
 }
 
-export function saveSettings(settings: Settings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+export async function saveSettings(settings: Settings): Promise<void> {
+  const db = await getDB();
+  await db.put('settings', settings);
 }
 
-export function clearSettings(): void {
-  localStorage.removeItem(SETTINGS_KEY);
+export async function clearSettings(): Promise<void> {
+  const db = await getDB();
+  await db.delete('settings', 'settings');
 }

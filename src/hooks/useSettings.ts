@@ -3,14 +3,20 @@ import type { Settings } from '@/types';
 import { loadSettings, saveSettings } from '@/services/settingsService';
 
 export function useSettings() {
-  const [settings, setSettings] = useState<Settings>(loadSettings);
+  const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
-    saveSettings(settings);
+    loadSettings().then(setSettings);
+  }, []);
+
+  useEffect(() => {
+    if (settings) {
+      saveSettings(settings);
+    }
   }, [settings]);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
-    setSettings((prev) => ({ ...prev, ...patch }));
+    setSettings((prev) => (prev ? { ...prev, ...patch } : null));
   }, []);
 
   return { settings, updateSettings };

@@ -21,17 +21,17 @@ export interface Batch {
 }
 
 export interface Settings {
-  alertWindow: number;
+  id: 'settings';
+  alertWindowDays: number;
   notificationsEnabled: boolean;
-  currency: 'PHP' | 'USD' | 'EUR';
-  theme: 'light' | 'dark' | 'system';
+  theme: 'auto' | 'light' | 'dark';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  alertWindow: 3,
+  id: 'settings',
+  alertWindowDays: 3,
   notificationsEnabled: false,
-  currency: 'PHP',
-  theme: 'system',
+  theme: 'auto',
 };
 
 export interface NotificationItem {
@@ -43,4 +43,11 @@ export interface NotificationItem {
   read: boolean;
 }
 
-export type ExpiryStatus = 'expired' | 'expiring-soon' | 'good';
+export type ExpiryStatus = 'good' | 'expiring' | 'expired';
+
+export interface InventoryGroup {
+  product: Product;
+  batches: Batch[];
+  totalQuantity: number;
+  earliestExpiry: string;
+}
