@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle } from 'lucide-react';
-import type { Settings, Product, Batch } from '@/types';
-import { SETTINGS_ID } from '@/types';
-import { loadSettings, saveSettings } from '@/services/settingsService';
+import type { Product, Batch } from '@/types';
+import { DEFAULT_SETTINGS } from '@/types';
+import { useSettings } from '@/hooks/useSettings';
 import { requestPermission, getPermissionStatus } from '@/services/notificationService';
 import { getAllProducts } from '@/services/catalogService';
 import { getAllBatches } from '@/services/inventoryService';
@@ -33,44 +33,11 @@ const THEME_LABEL: Record<ThemeOption, string> = {
 };
 
 export function SettingsScreen() {
-  const [settings, setSettings] = useState<Settings>({
-    id: SETTINGS_ID,
-    alertWindowDays: 3,
-    notificationsEnabled: false,
-    theme: 'auto',
-  });
-  const [loading, setLoading] = useState(true);
+  const { settings, updateSettings } = useSettings();
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const { toasts, showToast, dismissToast } = useToast();
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings()
-      .then((loaded) => {
-        setSettings(loaded);
-      })
-      .catch((err) => {
-        console.error('Failed to load settings:', err);
-        showToast('error', 'Failed to load settings');
-      })
-      .finally(() => setLoading(false));
-  }, [showToast]);
-
-  // Generic helper to update a single setting and persist it
-  const updateSetting = useCallback(
-    <K extends keyof Settings>(key: K, value: Settings[K]) => {
-      setSettings((prev) => {
-        const updated = { ...prev, [key]: value };
-        saveSettings(updated).catch((err) => {
-          console.error('Failed to save settings:', err);
-        });
-        return updated;
-      });
-    },
-    []
-  );
 
   // Handle notification toggle
   const handleNotificationToggle = useCallback(
@@ -78,31 +45,32 @@ export function SettingsScreen() {
       if (enabled) {
         const permission = await requestPermission();
         if (permission === 'granted') {
-          updateSetting('notificationsEnabled', true);
+          updateSettings({ notificationsEnabled: true });
         } else {
           showToast('error', 'Notifications blocked by browser');
-          updateSetting('notificationsEnabled', false);
+          updateSettings({ notificationsEnabled: false });
         }
       } else {
-        updateSetting('notificationsEnabled', false);
+        updateSettings({ notificationsEnabled: false });
       }
     },
-    [showToast, updateSetting]
+    [showToast, updateSettings]
   );
 
   // Handle alert window change
   const handleAlertWindowChange = useCallback(
     (days: number) => {
-      updateSetting('alertWindowDays', days);
+      updateSettings({ alertWindowDays: days });
     },
-    [updateSetting]
+    [updateSettings]
   );
 
   // Handle theme cycle
   const handleThemeCycle = useCallback(() => {
+    if (!settings) return;
     const nextTheme = THEME_CYCLE[settings.theme];
-    updateSetting('theme', nextTheme);
-  }, [settings.theme, updateSetting]);
+    updateSettings({ theme: nextTheme });
+  }, [settings, updateSettings]);
 
   // Handle export
   const handleExport = useCallback(async () => {
@@ -140,12 +108,14 @@ export function SettingsScreen() {
     }
   }, [showToast]);
 
-  // Handle clear all data
+  // Handle clear all data — also reset settings
   const handleClearAll = useCallback(async () => {
     try {
       const db = await getDB();
       await db.clear('catalog');
       await db.clear('inventory');
+      // Reset settings to defaults
+      updateSettings({ ...DEFAULT_SETTINGS });
       setShowClearDialog(false);
       showToast('success', 'All data cleared');
     } catch (err) {
@@ -153,7 +123,10 @@ export function SettingsScreen() {
       showToast('error', 'Failed to clear data');
       setShowClearDialog(false);
     }
-  }, [showToast]);
+  }, [showToast, updateSettings]);
+
+  // Loading state from hook
+  const loading = settings === null;
 
   if (loading) {
     return (
@@ -167,8 +140,8 @@ export function SettingsScreen() {
   }
 
   const permissionDenied = useMemo(
-    () => settings.notificationsEnabled && getPermissionStatus() === 'denied',
-    [settings.notificationsEnabled]
+    () => settings!.notificationsEnabled && getPermissionStatus() === 'denied',
+    [settings!.notificationsEnabled]
   );
 
   return (
@@ -184,7 +157,7 @@ export function SettingsScreen() {
       </h2>
       <div className="settings-card settings-card-stack">
         <SettingsToggle
-          enabled={settings.notificationsEnabled}
+          enabled={settings!.notificationsEnabled}
           onChange={handleNotificationToggle}
           label="Push Notifications"
           description="Get notified when items are about to expire"
@@ -196,11 +169,11 @@ export function SettingsScreen() {
           </div>
         )}
         <SettingsStepper
-          value={settings.alertWindowDays}
+          value={settings!.alertWindowDays}
           onChange={handleAlertWindowChange}
           min={1}
           max={30}
-          disabled={!settings.notificationsEnabled}
+          disabled={!settings!.notificationsEnabled}
           label="Alert Window"
           helperText="We'll notify you this many days before an item expires"
         />
@@ -237,8 +210,8 @@ export function SettingsScreen() {
           onClick={handleThemeCycle}
           className="settings-row"
         >
-          {THEME_ICON[settings.theme]}
-          <span>Theme: {THEME_LABEL[settings.theme]}</span>
+          {THEME_ICON[settings!.theme]}
+          <span>Theme: {THEME_LABEL[settings!.theme]}</span>
         </button>
       </div>
 

@@ -9,7 +9,7 @@ export async function getBatch(batchId: string): Promise<Batch | undefined> {
 
 export async function getAllBatches(): Promise<Batch[]> {
   const db = await getDB();
-  return db.getAllFromIndex('inventory', 'by-expiry');
+  return db.getAll('inventory');
 }
 
 export async function getBatchesByBarcode(barcode: string): Promise<Batch[]> {

@@ -80,17 +80,23 @@ export async function lookupOpenFoodFacts(
 
 /**
  * Look up a product by barcode.
- * Checks local catalog first, then Open Food Facts API.
+ * Checks local catalog first (unless skipLocal is true), then Open Food Facts API.
  * Returns a manual placeholder if neither source has the product.
  * Throws LookupError on network/HTTP/parse errors.
+ * 
+ * Bug fix #4: Added skipLocal option to avoid redundant getProduct call
+ * when caller has already checked local catalog.
  */
 export async function lookupProduct(
-  barcode: string
+  barcode: string,
+  options?: { skipLocal?: boolean }
 ): Promise<ProductLookupResult> {
-  // Step 1: Check local catalog
-  const local = await getProduct(barcode);
-  if (local) {
-    return { product: local, source: 'local' };
+  // Step 1: Check local catalog (skip if caller already checked)
+  if (!options?.skipLocal) {
+    const local = await getProduct(barcode);
+    if (local) {
+      return { product: local, source: 'local' };
+    }
   }
 
   // Step 2: Try Open Food Facts API

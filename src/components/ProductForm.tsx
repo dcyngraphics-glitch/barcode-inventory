@@ -139,7 +139,16 @@ export function ProductForm({
             type="text"
             inputMode="decimal"
             value={formData.price}
-            onChange={(e) => updateField('price', e.target.value)}
+            onChange={(e) => {
+              // Sanitize: strip non-numeric characters (keep decimal point)
+              const sanitized = e.target.value.replace(/[^0-9.]/g, '');
+              // Prevent multiple decimal points
+              const parts = sanitized.split('.');
+              const cleaned = parts.length > 2
+                ? parts[0] + '.' + parts.slice(1).join('')
+                : sanitized;
+              updateField('price', cleaned);
+            }}
             placeholder="0.00"
             className={`form-input form-currency-input${validationErrors.price ? ' form-input-error' : ''}`}
             aria-invalid={!!validationErrors.price}

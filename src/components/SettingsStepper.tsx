@@ -42,7 +42,7 @@ export function SettingsStepper({
         style={{
           fontSize: '16px',
           fontWeight: 500,
-          color: '#0f172a',
+          color: 'var(--color-foreground)',
           marginBottom: '8px',
         }}
       >
@@ -63,9 +63,9 @@ export function SettingsStepper({
             width: '44px',
             height: '44px',
             borderRadius: '8px',
-            border: '1px solid #e6e8ea',
-            background: '#ffffff',
-            color: '#334155',
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-card)',
+            color: 'var(--color-foreground)',
             cursor: disabled || value <= min ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -83,7 +83,7 @@ export function SettingsStepper({
             textAlign: 'center',
             fontSize: '18px',
             fontWeight: 600,
-            color: '#0f172a',
+            color: 'var(--color-foreground)',
           }}
         >
           {value}
@@ -96,9 +96,9 @@ export function SettingsStepper({
             width: '44px',
             height: '44px',
             borderRadius: '8px',
-            border: '1px solid #e6e8ea',
-            background: '#ffffff',
-            color: '#334155',
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-card)',
+            color: 'var(--color-foreground)',
             cursor: disabled || value >= max ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -113,7 +113,7 @@ export function SettingsStepper({
         <div
           style={{
             fontSize: '14px',
-            color: '#475569',
+            color: 'var(--color-muted-foreground)',
           }}
         >
           days
@@ -123,7 +123,7 @@ export function SettingsStepper({
         <div
           style={{
             fontSize: '12px',
-            color: '#475569',
+            color: 'var(--color-muted-foreground)',
             marginTop: '6px',
             lineHeight: 1.4,
           }}

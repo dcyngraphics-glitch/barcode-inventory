@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Batch } from '@/types';
+import type { Batch, InventoryGroup } from '@/types';
 import {
-  getAllBatches,
+  getInventoryGroups,
   addBatch as addBatchService,
   deleteBatch as deleteBatchService,
 } from '@/services/inventoryService';
-import { sortBatchesByFIFO } from '@/services/inventoryService';
 
 export function useInventory() {
-  const [batches, setBatches] = useState<Batch[]>([]);
+  const [groups, setGroups] = useState<InventoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const all = await getAllBatches();
-      setBatches(sortBatchesByFIFO(all));
+      const data = await getInventoryGroups();
+      setGroups(data);
     } finally {
       setLoading(false);
     }
@@ -35,5 +34,5 @@ export function useInventory() {
     await refresh();
   }, [refresh]);
 
-  return { batches, loading, addBatch, deleteBatch, refresh };
+  return { groups, loading, addBatch, deleteBatch, refresh };
 }

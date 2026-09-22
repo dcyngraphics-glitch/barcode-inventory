@@ -4,20 +4,23 @@ import { ScannerScreen } from '@/screens/ScannerScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
+import { SettingsProvider } from '@/context/SettingsContext';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function App() {
   useTheme();
   return (
-    <div className="app-container">
-      <Routes>
-        <Route path="/" element={<ScannerScreen />} />
-        <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-        <Route path="/inventory" element={<InventoryScreen />} />
-        <Route path="/settings" element={<SettingsScreen />} />
-      </Routes>
-      <BottomNav />
-    </div>
+    <SettingsProvider>
+      <div className="app-container">
+        <Routes>
+          <Route path="/" element={<ScannerScreen />} />
+          <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+          <Route path="/inventory" element={<InventoryScreen />} />
+          <Route path="/settings" element={<SettingsScreen />} />
+        </Routes>
+        <BottomNav />
+      </div>
+    </SettingsProvider>
   );
 }
 

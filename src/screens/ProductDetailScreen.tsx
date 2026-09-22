@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Pencil, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { ProductImage } from '@/components/ProductImage';
 import { ProductForm, type ProductFormData } from '@/components/ProductForm';
 import { ProductManagementSheet } from '@/components/ProductManagementSheet';
 import { useProductLookup } from '@/hooks/useProductLookup';
-import { getProduct, saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
+import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
 import { addBatch, getBatchesByBarcode, deleteBatch } from '@/services/inventoryService';
 import { generateId } from '@/utils/helpers';
 import type { Product } from '@/types';
@@ -28,6 +28,9 @@ export function ProductDetailScreen() {
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Bug fix #6: Guard against double-submit navigate race
+  const isSubmittingRef = useRef(false);
+
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -36,25 +39,23 @@ export function ProductDetailScreen() {
     };
   }, []);
 
+  // Bug fix #4: Removed redundant getProduct call — the lookup service handles local catalog check
   // Initial lookup on mount
   useEffect(() => {
     if (!barcode) return;
 
+    const barcodeStr = barcode;
     async function performLookup() {
+      // Fix: Validate barcode format (minimum 8 digits)
+      if (!/^\d{8,}$/.test(barcodeStr)) {
+        setError('Invalid barcode: must be at least 8 digits');
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
-        // Step 1: Check local catalog
-        const existingProduct = await getProduct(barcode!);
-        if (existingProduct) {
-          setProduct(existingProduct);
-          setIsNewProduct(false);
-          setLoading(false);
-          return;
-        }
-
-        // Step 2: Try Open Food Facts API
         await lookup(barcode!);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Lookup failed');
@@ -67,6 +68,8 @@ export function ProductDetailScreen() {
   }, [barcode, lookup]);
 
   // Handle lookup result
+  // Bug fix #1: When product is null AND lookupSource is null (error), set isNewProduct(true)
+  // so the form renders in "Create" mode with a retry option
   useEffect(() => {
     if (lookedUpProduct) {
       setProduct(lookedUpProduct);
@@ -75,8 +78,12 @@ export function ProductDetailScreen() {
       // Manual entry: no product found, show empty form
       setProduct(null);
       setIsNewProduct(true);
+    } else if (lookupError && !lookupLoading && !product) {
+      // Bug fix #1: API failure case — set isNewProduct to true so user can retry or create manually
+      setProduct(null);
+      setIsNewProduct(true);
     }
-  }, [lookedUpProduct, lookupSource]);
+  }, [lookedUpProduct, lookupSource, lookupError, lookupLoading, product]);
 
   // Surface lookup errors (network, HTTP, parse)
   useEffect(() => {
@@ -84,6 +91,20 @@ export function ProductDetailScreen() {
       setError(lookupError);
     }
   }, [lookupError]);
+
+  // Bug fix #3: Retry handler
+  const handleRetry = useCallback(async () => {
+    if (!barcode) return;
+    setError(null);
+    setLoading(true);
+    try {
+      await lookup(barcode);
+    } catch {
+      // error is set by the hook
+    } finally {
+      setLoading(false);
+    }
+  }, [barcode, lookup]);
 
   const getInitialFormData = useCallback((): ProductFormData => {
     if (!product) {
@@ -124,6 +145,32 @@ export function ProductDetailScreen() {
 
   const handleSubmit = async (data: ProductFormData) => {
     if (!barcode) return;
+
+    // Fix: Defensive guards (last-resort if ProductForm validation is bypassed)
+    const priceNum = parseFloat(data.price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setError('Price must be greater than 0');
+      return;
+    }
+    if (!data.name.trim()) {
+      setError('Product name is required');
+      return;
+    }
+    if (data.quantity < 1) {
+      setError('Quantity must be at least 1');
+      return;
+    }
+
+    // Bug fix #1: Guard — if product is null AND lookupSource is null (error state),
+    // show error and prevent submit to avoid orphaned batch
+    if (!product && !lookupSource && lookupError) {
+      setError('Cannot save: lookup failed. Please retry or switch to manual entry.');
+      return;
+    }
+
+    // Bug fix #6: Prevent double-submit
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
     setLoading(true);
     setError(null);
@@ -177,6 +224,7 @@ export function ProductDetailScreen() {
       }
 
       showToast('Added!', 'success');
+      // Bug fix #6: Clear any existing navigate timer before setting a new one
       if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
       navigateTimerRef.current = setTimeout(() => navigate('/inventory'), 1500);
     } catch (err) {
@@ -185,6 +233,7 @@ export function ProductDetailScreen() {
       showToast(message, 'error');
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -281,6 +330,9 @@ export function ProductDetailScreen() {
       </div>
     );
   }
+
+  // Bug fix #3: Show retry option when lookup has failed
+  const showRetryOption = lookupError && !product && isNewProduct;
 
   return (
     <div
@@ -436,6 +488,33 @@ export function ProductDetailScreen() {
           </p>
         </div>
 
+        {/* Bug fix #3: Retry lookup button shown when API failure */}
+        {showRetryOption && (
+          <button
+            onClick={handleRetry}
+            disabled={lookupLoading}
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid #E6E8EA',
+              borderRadius: '12px',
+              padding: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: lookupLoading ? 'not-allowed' : 'pointer',
+              color: '#334155',
+              fontSize: '14px',
+              fontWeight: 500,
+              opacity: lookupLoading ? 0.6 : 1,
+              transition: 'opacity 200ms ease',
+            }}
+          >
+            <RefreshCw size={16} className={lookupLoading ? 'spin' : ''} />
+            {lookupLoading ? 'Retrying...' : 'Retry lookup'}
+          </button>
+        )}
+
         {/* Editable Form */}
         <div
           style={{
@@ -527,6 +606,12 @@ export function ProductDetailScreen() {
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .spin {
+          animation: spin 1s linear infinite;
         }
       `}</style>
     </div>

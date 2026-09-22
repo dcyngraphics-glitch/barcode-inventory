@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   variant?: 'default' | 'destructive';
   onConfirm: () => void;
   onCancel: () => void;
+  confirmDisabled?: boolean;
 }
 
 export function ConfirmDialog({
@@ -20,6 +21,7 @@ export function ConfirmDialog({
   variant = 'default',
   onConfirm,
   onCancel,
+  confirmDisabled = false,
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
@@ -144,6 +146,7 @@ export function ConfirmDialog({
           </button>
           <button
             onClick={onConfirm}
+            disabled={confirmDisabled}
             style={{
               background: isDestructive ? '#dc2626' : '#059669',
               color: '#ffffff',
@@ -151,10 +154,11 @@ export function ConfirmDialog({
               fontWeight: 600,
               fontSize: '14px',
               minHeight: '44px',
-              cursor: 'pointer',
+              cursor: confirmDisabled ? 'not-allowed' : 'pointer',
               border: 'none',
               borderRadius: '8px',
               transition: 'opacity 200ms ease',
+              opacity: confirmDisabled ? 0.6 : 1,
             }}
           >
             {confirmLabel}

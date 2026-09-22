@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScanLine, Keyboard, WifiOff } from 'lucide-react';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
@@ -22,13 +22,13 @@ export function ScannerScreen() {
     };
   }, []);
 
-  const handleBarcodeSubmit = (barcode: string) => {
+  const handleBarcodeSubmit = useCallback((barcode: string) => {
     // Haptic feedback if available
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
     navigate(`/product/${barcode}`);
-  };
+  }, [navigate]);
 
   return (
     <div

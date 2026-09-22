@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Search } from 'lucide-react';
+import { X, Search, AlertCircle } from 'lucide-react';
 
 interface ManualEntrySheetProps {
   open: boolean;
@@ -7,8 +7,25 @@ interface ManualEntrySheetProps {
   onSubmit: (barcode: string) => void;
 }
 
+/**
+ * Validate barcode format.
+ * Returns an error message if invalid, or null if valid.
+ * Bug fix #5: Barcode must be digits-only with minimum length 8.
+ */
+function validateBarcode(barcode: string): string | null {
+  if (!barcode) return null; // Empty is not an error (just disabled button)
+  if (!/^\d+$/.test(barcode)) {
+    return 'Barcode must contain only digits';
+  }
+  if (barcode.length < 8) {
+    return 'Barcode must be at least 8 digits';
+  }
+  return null;
+}
+
 export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetProps) {
   const [barcode, setBarcode] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -51,16 +68,42 @@ export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetPr
     };
   }, [open, handleKeyDown]);
 
+  // Reset state when sheet closes
+  useEffect(() => {
+    if (!open) {
+      setBarcode('');
+      setValidationError(null);
+    }
+  }, [open]);
+
+  // Bug fix #5: Validate barcode on change
+  const handleBarcodeChange = (value: string) => {
+    setBarcode(value);
+    setValidationError(validateBarcode(value));
+  };
+
   if (!open) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = barcode.trim();
-    if (!trimmed) return;
+    
+    // Bug fix #5: Validate before submitting
+    const error = validateBarcode(trimmed);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+    
     onSubmit(trimmed);
     setBarcode('');
+    setValidationError(null);
     onClose();
   };
+
+  const trimmed = barcode.trim();
+  const isInvalid = !!validateBarcode(trimmed);
+  const isSubmitDisabled = !trimmed || isInvalid;
 
   return (
     <>
@@ -170,12 +213,14 @@ export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetPr
               type="text"
               inputMode="numeric"
               value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
+              onChange={(e) => handleBarcodeChange(e.target.value)}
               placeholder="e.g. 4800012345678"
               autoFocus
+              aria-invalid={isInvalid}
+              aria-describedby={validationError ? 'barcode-error' : undefined}
               style={{
                 padding: '12px 16px',
-                border: '1px solid #e6e8ea',
+                border: validationError ? '2px solid #DC2626' : '1px solid #e6e8ea',
                 borderRadius: '8px',
                 fontSize: '16px',
                 fontFamily: 'Inter, sans-serif',
@@ -190,25 +235,44 @@ export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetPr
                 e.target.style.boxShadow = '0 0 0 3px rgba(51, 65, 85, 0.15)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e6e8ea';
+                e.target.style.borderColor = validationError ? '#DC2626' : '#e6e8ea';
                 e.target.style.boxShadow = 'none';
               }}
             />
+            {/* Bug fix #5: Show validation error message */}
+            {validationError && (
+              <div
+                id="barcode-error"
+                role="alert"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginTop: '6px',
+                  color: '#DC2626',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                }}
+              >
+                <AlertCircle size={14} />
+                {validationError}
+              </div>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={!barcode.trim()}
+            disabled={isSubmitDisabled}
             style={{
               width: '100%',
-              background: barcode.trim() ? '#059669' : '#e6e8ea',
-              color: barcode.trim() ? '#ffffff' : '#94a3b8',
+              background: isSubmitDisabled ? '#e6e8ea' : '#059669',
+              color: isSubmitDisabled ? '#94a3b8' : '#ffffff',
               padding: '12px 24px',
               borderRadius: '8px',
               fontWeight: 600,
               fontSize: '16px',
               minHeight: '44px',
-              cursor: barcode.trim() ? 'pointer' : 'not-allowed',
+              cursor: isSubmitDisabled ? 'not-allowed' : 'pointer',
               border: 'none',
               display: 'flex',
               alignItems: 'center',

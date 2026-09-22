@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Product, ProductSource } from '@/types';
 import { lookupProduct, LookupError } from '@/services/productLookupService';
 
@@ -16,6 +16,16 @@ export function useProductLookup(): UseProductLookupResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Bug fix #2: Track mounted state to prevent stale setState on unmounted component
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const lookup = useCallback(async (barcode: string) => {
     setLoading(true);
     setError(null);
@@ -24,6 +34,9 @@ export function useProductLookup(): UseProductLookupResult {
 
     try {
       const result = await lookupProduct(barcode);
+      // Bug fix #2: Check isMounted before setState to avoid race condition
+      if (!isMountedRef.current) return;
+
       if (result.source === 'manual') {
         // Manual entry: discard the placeholder, prompt the user
         setProduct(null);
@@ -33,6 +46,9 @@ export function useProductLookup(): UseProductLookupResult {
         setSource(result.source);
       }
     } catch (err) {
+      // Bug fix #2: Check isMounted before setState
+      if (!isMountedRef.current) return;
+
       if (err instanceof LookupError) {
         setError(err.message);
       } else {
@@ -41,7 +57,9 @@ export function useProductLookup(): UseProductLookupResult {
       setProduct(null);
       setSource(null);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 

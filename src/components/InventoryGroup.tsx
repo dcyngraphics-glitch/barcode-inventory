@@ -19,9 +19,14 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
   const contentRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (contentRef.current) {
-      setHeight(contentRef.current.scrollHeight);
-    }
+    const recalculate = () => {
+      if (contentRef.current) {
+        setHeight(contentRef.current.scrollHeight);
+      }
+    };
+    recalculate();
+    window.addEventListener('resize', recalculate);
+    return () => window.removeEventListener('resize', recalculate);
   }, [group.batches]);
 
   // Calculate unique statuses across all batches

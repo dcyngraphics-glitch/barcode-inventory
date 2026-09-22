@@ -16,11 +16,33 @@ export function getPermissionStatus(): NotificationPermission {
 }
 
 function dateDiffDays(expiryDate: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(expiryDate);
-  expiry.setHours(0, 0, 0, 0);
-  return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  // Use local date extraction for both dates to avoid timezone issues
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Parse YYYY-MM-DD as local (not UTC midnight)
+  const datePart = expiryDate.split('T')[0];
+  if (!datePart) return 0;
+  const parts = datePart.split('-');
+  if (parts.length < 3) return 0;
+  const year = parseInt(parts[0] ?? '0', 10);
+  const month = parseInt(parts[1] ?? '0', 10) - 1;
+  const day = parseInt(parts[2] ?? '0', 10);
+  // Validate parsed parts — malformed input returns 0 instead of NaN
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day) ||
+    month < 0 || month > 11 ||
+    day < 1 || day > 31
+  ) {
+    return 0;
+  }
+  const expiry = new Date(year, month, day);
+  // Final safety check — if Date construction rolled over (e.g. Feb 30), invalid
+  if (expiry.getMonth() !== month || expiry.getDate() !== day) return 0;
+
+  return Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function calculateExpiryStatus(expiryDate: string, alertWindowDays: number): ExpiryStatus {

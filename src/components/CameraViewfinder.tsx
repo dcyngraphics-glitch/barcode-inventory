@@ -12,9 +12,7 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
   const [flashOn, setFlashOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [errorType, setErrorType] = useState<'permission-denied' | 'no-camera' | 'unknown'>('unknown');
-  const { scanning, start, stop } = useBarcodeScanner();
+  const { scanning, error, errorType, start, stop } = useBarcodeScanner();
 
   // Keep ref in sync with latest onScan prop
   useEffect(() => {
@@ -25,30 +23,13 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    // Reset error state when trying to start
-    setError(null);
-    setErrorType('unknown');
-
     start(video, (barcode: string) => {
       onScanRef.current(barcode);
-    }).then(() => {
-      // Start succeeded, now wait for video to play
-      const handlePlaying = () => setInitializing(false);
-      video.addEventListener('playing', handlePlaying);
-      return () => {
-        video.removeEventListener('playing', handlePlaying);
-      };
-    }).catch((err) => {
-      // Start failed
-      const errorType: 'permission-denied' | 'no-camera' | 'unknown' =
-        err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
-          ? 'permission-denied'
-          : err instanceof DOMException && (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError' || err.name === 'OverconstrainedError')
-            ? 'no-camera'
-            : 'unknown';
-      setError(err instanceof Error ? err.message : 'Failed to access camera');
-      setErrorType(errorType);
     });
+
+    // Once the video actually plays, hide the initializing placeholder
+    const handlePlaying = () => setInitializing(false);
+    video.addEventListener('playing', handlePlaying);
 
     // Check if torch is supported (after stream is available)
     const checkTorchSupport = () => {
@@ -72,9 +53,11 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
     }, 2000);
 
     return () => {
+      video.removeEventListener('playing', handlePlaying);
       clearInterval(interval);
       clearTimeout(timeout);
       stop();
+      setInitializing(true);
     };
   }, [start, stop]);
 
@@ -142,6 +125,7 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
               <button
                 onClick={() => {
                   if (videoRef.current) {
+                    setInitializing(true);
                     start(videoRef.current, (barcode: string) => onScanRef.current(barcode));
                   }
                 }}
