@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Zap, ZapOff, Camera, CameraOff, RefreshCw } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play } from 'lucide-react';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
@@ -11,7 +11,8 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
   const onScanRef = useRef(onScan);
   const [flashOn, setFlashOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState(false);
+  const [needsTapToStart, setNeedsTapToStart] = useState(true);
   const { scanning, error, errorType, start, stop } = useBarcodeScanner();
 
   // Keep ref in sync with latest onScan prop
@@ -19,9 +20,20 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
     onScanRef.current = onScan;
   }, [onScan]);
 
-  useEffect(() => {
+  const handleStartCamera = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    setNeedsTapToStart(false);
+    setInitializing(true);
+    start(video, (barcode: string) => {
+      onScanRef.current(barcode);
+    });
+  }, [start]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || needsTapToStart) return;
 
     start(video, (barcode: string) => {
       onScanRef.current(barcode);
@@ -57,9 +69,10 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
       clearInterval(interval);
       clearTimeout(timeout);
       stop();
-      setInitializing(true);
+      setInitializing(false);
+      setNeedsTapToStart(true);
     };
-  }, [start, stop]);
+  }, [needsTapToStart, start, stop]);
 
   const toggleFlash = async () => {
     const video = videoRef.current;
@@ -82,6 +95,13 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
     }
   };
 
+  const handleRetry = () => {
+    setNeedsTapToStart(true);
+    // Small timeout to let state settle before re-rendering the start button
+    setTimeout(() => handleStartCamera(), 100);
+  };
+
+  // Error state
   if (error) {
     const isNoCamera = errorType === 'no-camera';
     const isPermissionDenied = errorType === 'permission-denied';
@@ -96,46 +116,67 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
           )}
           <div className="camera-error-text">
             <p className="camera-error-title">
-              {isNoCamera ? 'No camera available' : 'Camera permission required'}
+              {isNoCamera ? 'No camera found' : 'Camera permission required'}
             </p>
             <p className="camera-error-desc">
               {isNoCamera
-                ? 'No camera hardware detected. You can still enter barcodes manually.'
-                : 'To scan barcodes, please allow camera access for this site.'}
+                ? 'No camera detected. Make sure a camera is connected.'
+                : 'To scan barcodes, please allow camera access.'}
               {isPermissionDenied && (
                 <>
                   <p className="camera-error-instructions">
-                    How to enable camera access:
+                    <strong>How to fix in Edge:</strong>
                   </p>
                   <ol className="camera-error-steps">
-                    <li>
-                      Click the lock/icon next to the website address in the browser's address bar.
-                    </li>
-                    <li>
-                      Set Camera permission to "Allow".
-                    </li>
-                    <li>
-                      Reload the page.
-                    </li>
+                    <li>Click the <strong>lock icon</strong> in the address bar</li>
+                    <li>Set <strong>Camera → Allow</strong></li>
+                    <li>Or go to <code>edge://settings/content/camera</code> and add this site</li>
+                    <li><strong>Reload</strong> the page after granting access</li>
+                  </ol>
+                  <p className="camera-error-instructions">
+                    Also check Windows: <strong>Settings → Privacy & Security → Camera</strong>
+                  </p>
+                  <ol className="camera-error-steps">
+                    <li>Make sure <strong>"Camera access"</strong> is turned on</li>
+                    <li>Ensure <strong>"Let apps access your camera"</strong> is enabled</li>
+                    <li>Check that your browser is in the allowed list</li>
                   </ol>
                 </>
               )}
             </p>
-            {!isNoCamera && (
-              <button
-                onClick={() => {
-                  if (videoRef.current) {
-                    setInitializing(true);
-                    start(videoRef.current, (barcode: string) => onScanRef.current(barcode));
-                  }
-                }}
-                className="camera-retry-btn"
-              >
-                <RefreshCw size={18} />
-                Retry after granting access
-              </button>
-            )}
+            <button
+              onClick={handleRetry}
+              className="camera-retry-btn"
+            >
+              <RefreshCw size={18} />
+              Retry camera access
+            </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Needs user tap to start (required by some browsers/policies)
+  if (needsTapToStart) {
+    return (
+      <div className="camera-start-overlay">
+        <div className="camera-start-content">
+          <Camera size={48} className="camera-start-icon" />
+          <p className="camera-start-title">Camera Scanner</p>
+          <p className="camera-start-desc">
+            Tap the button below to activate your camera and start scanning barcodes.
+          </p>
+          <button
+            onClick={handleStartCamera}
+            className="camera-start-btn"
+          >
+            <Play size={18} />
+            Start Camera
+          </button>
+          <p className="camera-start-hint">
+            You'll be prompted to allow camera access for this site.
+          </p>
         </div>
       </div>
     );

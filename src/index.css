@@ -1137,6 +1137,64 @@ ol {
 /* ==========================================================================
    CAMERA ERROR OVERLAY & CONTENT
    ========================================================================== */
+.camera-start-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  border-radius: 12px;
+}
+.camera-start-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+}
+.camera-start-icon {
+  color: #f8fafc;
+  opacity: 0.9;
+}
+.camera-start-title {
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+.camera-start-desc {
+  color: #cbd5e1;
+  font-size: 14px;
+  margin: 0;
+  max-width: 300px;
+  line-height: 1.4;
+}
+.camera-start-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+.camera-start-btn:active {
+  transform: scale(0.97);
+}
+.camera-start-hint {
+  color: #64748b;
+  font-size: 12px;
+  margin: 0;
+}
+
 .camera-error-overlay {
   position: fixed;
   inset: 0;

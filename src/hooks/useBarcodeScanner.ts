@@ -22,6 +22,8 @@ interface ScannerState {
 /** Cooldown before the same barcode can fire again (debounce across frames). */
 const SCAN_COOLDOWN_MS = 2000;
 
+
+
 export function useBarcodeScanner() {
   const [state, setState] = useState<ScannerState>({ scanning: false, error: null, errorType: 'unknown' });
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -74,9 +76,12 @@ export function useBarcodeScanner() {
       setState({ scanning: true, error: null, errorType: 'unknown' });
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-        });
+  // Request camera — use `ideal` facingMode so devices without a rear camera
+  // fall back to whatever is available instead of throwing OverconstrainedError.
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: 'environment' } },
+    audio: false,
+  });
         streamRef.current = stream;
         video.srcObject = stream;
         await video.play();
