@@ -224,7 +224,11 @@ export function ProductDetailScreen() {
         });
       }
 
-      showToast('Added!', 'success');
+      if (isNewProduct) {
+        showToast(`Product saved! Next time you scan ${barcode}, it'll show automatically.`, 'success');
+      } else {
+        showToast('Added!', 'success');
+      }
       // Bug fix #6: Clear any existing navigate timer before setting a new one
       if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
       navigateTimerRef.current = setTimeout(() => navigate('/inventory'), 1500);

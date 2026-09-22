@@ -29,6 +29,7 @@ export interface Settings {
   alertWindowDays: number;
   notificationsEnabled: boolean;
   theme: 'auto' | 'light' | 'dark';
+  catalogSeeded?: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {

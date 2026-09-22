@@ -1,25 +1,35 @@
+import { useEffect } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import { ScanLine, Package, Settings } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
+import { CartReviewScreen } from '@/screens/CartReviewScreen';
 import { SettingsProvider } from '@/context/SettingsContext';
+import { ScanCartProvider } from '@/context/ScanCartContext';
 import { useTheme } from '@/hooks/useTheme';
+import { seedCatalogIfEmpty } from '@/services/seedService';
 
 export default function App() {
   useTheme();
+  useEffect(() => {
+    seedCatalogIfEmpty();
+  }, []);
   return (
     <SettingsProvider>
-      <div className="app-container">
-        <Routes>
-          <Route path="/" element={<ScannerScreen />} />
-          <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-          <Route path="/inventory" element={<InventoryScreen />} />
-          <Route path="/settings" element={<SettingsScreen />} />
-        </Routes>
-        <BottomNav />
-      </div>
+      <ScanCartProvider>
+        <div className="app-container">
+          <Routes>
+            <Route path="/" element={<ScannerScreen />} />
+            <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+            <Route path="/inventory" element={<InventoryScreen />} />
+            <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/cart" element={<CartReviewScreen />} />
+          </Routes>
+          <BottomNav />
+        </div>
+      </ScanCartProvider>
     </SettingsProvider>
   );
 }
@@ -37,7 +47,7 @@ function BottomNav() {
     <nav className="bottom-nav">
       {navItems.map((item) => {
         const isActive = item.path === '/'
-          ? location.pathname === '/' || location.pathname.startsWith('/product')
+          ? location.pathname === '/' || location.pathname.startsWith('/product') || location.pathname.startsWith('/cart')
           : location.pathname.startsWith(item.path);
         return (
           <Link

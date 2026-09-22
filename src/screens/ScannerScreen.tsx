@@ -1,14 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, Keyboard, WifiOff } from 'lucide-react';
+import { ScanLine, Keyboard, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { ManualEntrySheet } from '@/components/ManualEntrySheet';
+import { QuickEntryModal } from '@/components/QuickEntryModal';
 import { RecentScans } from '@/components/RecentScans';
+import { useScanCart } from '@/context/ScanCartContext';
+import { lookupProduct } from '@/services/productLookupService';
+import type { Product } from '@/types';
 
 export function ScannerScreen() {
   const navigate = useNavigate();
+  const { addItem, totalItems, totalPrice } = useScanCart();
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
+  const [scanToast, setScanToast] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
 
   // Listen for online/offline events
   useEffect(() => {
@@ -22,13 +30,77 @@ export function ScannerScreen() {
     };
   }, []);
 
-  const handleBarcodeSubmit = useCallback((barcode: string) => {
+  const showScanToast = useCallback((message: string) => {
+    setScanToast(message);
+    setTimeout(() => setScanToast(null), 1500);
+  }, []);
+
+  const handleBarcodeSubmit = useCallback(async (barcode: string) => {
+    if (scanning) return; // prevent concurrent scans
+    setScanning(true);
+
     // Haptic feedback if available
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
-    navigate(`/product/${barcode}`);
-  }, [navigate]);
+
+    try {
+      const result = await lookupProduct(barcode);
+
+      if (result.source === 'manual') {
+        // Unknown product — prompt for price and expiry
+        setQuickEntryBarcode(barcode);
+        return;
+      }
+
+      const product: Product = result.product;
+
+      addItem({
+        barcode,
+        product,
+        name: product.name,
+        brand: product.brand,
+        price: product.storePrice,
+        expiryDate: product.defaultExpiry,
+        quantity: 1,
+        needsInfo: false,
+        imageUrl: product.imageUrl,
+        source: result.source,
+      });
+
+      showScanToast(`✓ ${product.name || barcode}`);
+    } catch (err) {
+      // On lookup error, still add to cart with needsInfo
+      const message = err instanceof Error ? err.message : 'Lookup failed';
+      console.warn('Lookup failed:', message);
+      setQuickEntryBarcode(barcode);
+    } finally {
+      setScanning(false);
+    }
+  }, [addItem, showScanToast, scanning]);
+
+  const handleQuickEntrySave = useCallback((price: number, expiryDate: string) => {
+    if (!quickEntryBarcode) return;
+
+    addItem({
+      barcode: quickEntryBarcode,
+      product: null,
+      name: '',
+      brand: '',
+      price,
+      expiryDate,
+      quantity: 1,
+      needsInfo: false,
+      source: 'manual',
+    });
+
+    setQuickEntryBarcode(null);
+    showScanToast('✓ Added to cart');
+  }, [quickEntryBarcode, addItem, showScanToast]);
+
+  const handleQuickEntryCancel = useCallback(() => {
+    setQuickEntryBarcode(null);
+  }, []);
 
   return (
     <div
@@ -67,22 +139,55 @@ export function ScannerScreen() {
           </h1>
         </div>
 
-        {/* Offline indicator */}
-        {!isOnline && (
-          <div
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Offline indicator */}
+          {!isOnline && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: '#94a3b8',
+                fontSize: '12px',
+              }}
+              title="You are offline"
+            >
+              <WifiOff size={16} />
+              <span>Offline</span>
+            </div>
+          )}
+
+          {/* Cart Badge */}
+          <button
+            onClick={() => navigate('/cart')}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              color: '#94a3b8',
-              fontSize: '12px',
+              gap: '6px',
+              background: totalItems > 0 ? '#0f172a' : 'transparent',
+              border: totalItems > 0 ? '1.5px solid #3b82f6' : '1.5px solid transparent',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              cursor: 'pointer',
+              color: '#f8fafc',
+              fontSize: '13px',
+              fontWeight: 600,
+              transition: 'all 200ms ease',
+              position: 'relative',
             }}
-            title="You are offline"
+            aria-label={`Cart with ${totalItems} items`}
           >
-            <WifiOff size={16} />
-            <span>Offline</span>
-          </div>
-        )}
+            <ShoppingCart size={18} />
+            {totalItems > 0 && (
+              <>
+                <span>{totalItems}</span>
+                <span style={{ opacity: 0.7, fontSize: '12px' }}>
+                  ₱{totalPrice.toFixed(2)}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
       </header>
 
       {/* Main content */}
@@ -133,6 +238,47 @@ export function ScannerScreen() {
         onClose={() => setManualEntryOpen(false)}
         onSubmit={handleBarcodeSubmit}
       />
+
+      {/* Quick Entry Modal for unknown products */}
+      {quickEntryBarcode && (
+        <QuickEntryModal
+          barcode={quickEntryBarcode}
+          onSave={handleQuickEntrySave}
+          onCancel={handleQuickEntryCancel}
+        />
+      )}
+
+      {/* Scan Toast */}
+      {scanToast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '72px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#0f172a',
+            color: '#fff',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 500,
+            zIndex: 60,
+            animation: 'fade-in 200ms ease',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          {scanToast}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
