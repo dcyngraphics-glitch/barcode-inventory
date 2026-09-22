@@ -7,6 +7,7 @@ import path from 'path';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  base: '/barcode-inventory/',
   plugins: [
     react(),
     VitePWA({
