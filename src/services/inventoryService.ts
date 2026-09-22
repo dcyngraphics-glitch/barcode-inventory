@@ -1,5 +1,6 @@
-import type { Batch } from '@/types';
+import type { Batch, InventoryGroup } from '@/types';
 import { getDB } from '@/db/database';
+import { getProduct } from './catalogService';
 
 export async function getBatch(batchId: string): Promise<Batch | undefined> {
   const db = await getDB();
@@ -52,4 +53,29 @@ export async function getExpiringBatches(days: number): Promise<Batch[]> {
     expiry.setHours(0, 0, 0, 0);
     return expiry <= cutoff;
   });
+}
+
+export async function getInventoryGroups(): Promise<InventoryGroup[]> {
+  const allBatches = await getAllBatches();
+  const sorted = sortBatchesByFIFO(allBatches);
+
+  const groupMap = new Map<string, Batch[]>();
+  for (const batch of sorted) {
+    const existing = groupMap.get(batch.barcode) ?? [];
+    existing.push(batch);
+    groupMap.set(batch.barcode, existing);
+  }
+
+  const groups: InventoryGroup[] = [];
+  for (const [barcode, batches] of groupMap) {
+    const product = await getProduct(barcode);
+    if (!product) continue;
+
+    const totalQuantity = batches.reduce((sum, b) => sum + b.quantity, 0);
+    const earliestExpiry = batches[0]?.expiryDate ?? '';
+
+    groups.push({ product, batches, totalQuantity, earliestExpiry });
+  }
+
+  return groups;
 }

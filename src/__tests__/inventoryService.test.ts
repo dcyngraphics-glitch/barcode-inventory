@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import 'fake-indexeddb/auto';
 import {
   addBatch,
   getBatchesByBarcode,
@@ -6,8 +7,11 @@ import {
   deleteBatch,
   getExpiringBatches,
   sortBatchesByFIFO,
+  getInventoryGroups,
 } from '../services/inventoryService';
-import type { Batch } from '../types';
+import { saveProduct } from '../services/catalogService';
+import { getDB } from '../db/database';
+import type { Batch, Product } from '../types';
 
 const mockBatch: Batch = {
   batchId: 'batch-1',
@@ -18,6 +22,12 @@ const mockBatch: Batch = {
 };
 
 describe('inventoryService', () => {
+  beforeEach(async () => {
+    const db = await getDB();
+    await db.clear('catalog');
+    await db.clear('inventory');
+    await db.clear('settings');
+  });
   it('should add and retrieve a batch by barcode', async () => {
     await addBatch(mockBatch);
     const batches = await getBatchesByBarcode(mockBatch.barcode);
@@ -42,7 +52,7 @@ describe('inventoryService', () => {
     const expiringBatch: Batch = {
       ...mockBatch,
       batchId: 'batch-expiring',
-      expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!,
     };
     await addBatch(expiringBatch);
     const expiring = await getExpiringBatches(3);
@@ -57,9 +67,9 @@ describe('inventoryService', () => {
       { ...mockBatch, batchId: 'b3', expiryDate: '2026-12-30', scannedAt: '2026-01-01T08:00:00Z' },
     ];
     const sorted = sortBatchesByFIFO(batches);
-    expect(sorted[0].batchId).toBe('b3');
-    expect(sorted[1].batchId).toBe('b2');
-    expect(sorted[2].batchId).toBe('b1');
+    expect(sorted[0]!.batchId).toBe('b3');
+    expect(sorted[1]!.batchId).toBe('b2');
+    expect(sorted[2]!.batchId).toBe('b1');
   });
 
   it('should sort by scannedAt when expiry dates are equal', () => {
@@ -69,8 +79,49 @@ describe('inventoryService', () => {
       { ...mockBatch, batchId: 'b3', expiryDate: '2026-12-31', scannedAt: '2026-01-01T10:00:00Z' },
     ];
     const sorted = sortBatchesByFIFO(batches);
-    expect(sorted[0].batchId).toBe('b2');
-    expect(sorted[1].batchId).toBe('b3');
-    expect(sorted[2].batchId).toBe('b1');
+    expect(sorted[0]!.batchId).toBe('b2');
+    expect(sorted[1]!.batchId).toBe('b3');
+    expect(sorted[2]!.batchId).toBe('b1');
+  });
+
+  it('should group batches by product with FIFO sorting and correct totals', async () => {
+    const product: Product = {
+      barcode: '111',
+      name: 'Group Test',
+      brand: 'Brand',
+      category: 'Cat',
+      storePrice: 5,
+      defaultExpiry: '2026-12-31',
+      source: 'local',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    await saveProduct(product);
+
+    const b1: Batch = { ...mockBatch, batchId: 'g1', barcode: '111', quantity: 3, expiryDate: '2026-12-31', scannedAt: '2026-01-01T10:00:00Z' };
+    const b2: Batch = { ...mockBatch, batchId: 'g2', barcode: '111', quantity: 2, expiryDate: '2026-12-28', scannedAt: '2026-01-01T09:00:00Z' };
+    const b3: Batch = { ...mockBatch, batchId: 'g3', barcode: '111', quantity: 5, expiryDate: '2026-12-30', scannedAt: '2026-01-01T08:00:00Z' };
+
+    await addBatch(b1);
+    await addBatch(b2);
+    await addBatch(b3);
+
+    const groups = await getInventoryGroups();
+    expect(groups.length).toBe(1);
+    const group = groups[0]!;
+    expect(group.product.barcode).toBe('111');
+    expect(group.totalQuantity).toBe(10);
+    expect(group.earliestExpiry).toBe('2026-12-28');
+    // FIFO: earliest expiry first
+    expect(group.batches[0]!.batchId).toBe('g2');
+    expect(group.batches[1]!.batchId).toBe('g3');
+    expect(group.batches[2]!.batchId).toBe('g1');
+  });
+
+  it('should skip batches whose product is not in catalog', async () => {
+    const orphanBatch: Batch = { ...mockBatch, batchId: 'orphan', barcode: 'no-such-product', quantity: 1, expiryDate: '2026-12-31', scannedAt: '2026-01-01T10:00:00Z' };
+    await addBatch(orphanBatch);
+    const groups = await getInventoryGroups();
+    expect(groups.length).toBe(0);
   });
 });

@@ -1,6 +1,20 @@
 import type { ExpiryStatus, Batch } from '@/types';
 import { getProduct } from './catalogService';
 
+export async function requestPermission(): Promise<NotificationPermission> {
+  if (!('Notification' in window)) {
+    return 'denied';
+  }
+  return Notification.requestPermission();
+}
+
+export function getPermissionStatus(): NotificationPermission {
+  if (!('Notification' in window)) {
+    return 'denied';
+  }
+  return Notification.permission;
+}
+
 function dateDiffDays(expiryDate: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
