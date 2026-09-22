@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Search } from 'lucide-react';
 
 interface ManualEntrySheetProps {
@@ -9,6 +9,47 @@ interface ManualEntrySheetProps {
 
 export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetProps) {
   const [barcode, setBarcode] = useState('');
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Focus trap and Escape key handler
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key === 'Tab' && sheetRef.current) {
+        const focusableElements = sheetRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    },
+    [onClose]
+  );
+
+  useEffect(() => {
+    if (open) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Focus the input when sheet opens
+      setTimeout(() => inputRef.current?.focus(), 100);
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [open, handleKeyDown]);
 
   if (!open) return null;
 
@@ -37,6 +78,10 @@ export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetPr
 
       {/* Bottom sheet */}
       <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="manual-entry-title"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -74,6 +119,7 @@ export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetPr
           }}
         >
           <h2
+            id="manual-entry-title"
             style={{
               fontSize: '18px',
               fontWeight: 600,
@@ -119,6 +165,7 @@ export function ManualEntrySheet({ open, onClose, onSubmit }: ManualEntrySheetPr
               Barcode Number
             </label>
             <input
+              ref={inputRef}
               id="barcode-input"
               type="text"
               inputMode="numeric"

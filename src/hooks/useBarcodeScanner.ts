@@ -10,13 +10,16 @@ declare global {
   }
 }
 
+type CameraErrorType = 'permission-denied' | 'no-camera' | 'unknown';
+
 interface ScannerState {
   scanning: boolean;
   error: string | null;
+  errorType: CameraErrorType;
 }
 
 export function useBarcodeScanner() {
-  const [state, setState] = useState<ScannerState>({ scanning: false, error: null });
+  const [state, setState] = useState<ScannerState>({ scanning: false, error: null, errorType: 'unknown' });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -38,14 +41,18 @@ export function useBarcodeScanner() {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-    setState({ scanning: false, error: null });
+    if (canvasRef.current) {
+      canvasRef.current.remove();
+      canvasRef.current = null;
+    }
+    setState({ scanning: false, error: null, errorType: 'unknown' });
   }, []);
 
   const start = useCallback(
     async (video: HTMLVideoElement, onScan: (barcode: string) => void) => {
       videoRef.current = video;
       onScanRef.current = onScan;
-      setState({ scanning: true, error: null });
+      setState({ scanning: true, error: null, errorType: 'unknown' });
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -102,9 +109,16 @@ export function useBarcodeScanner() {
           rafRef.current = requestAnimationFrame(tick);
         }
       } catch (err) {
+        const errorType: CameraErrorType =
+          err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+            ? 'permission-denied'
+            : err instanceof DOMException && (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError' || err.name === 'OverconstrainedError')
+              ? 'no-camera'
+              : 'unknown';
         setState({
           scanning: false,
           error: err instanceof Error ? err.message : 'Failed to access camera',
+          errorType,
         });
       }
     },
@@ -120,6 +134,7 @@ export function useBarcodeScanner() {
   return {
     scanning: state.scanning,
     error: state.error,
+    errorType: state.errorType,
     hasBarcodeDetector,
     start,
     stop,

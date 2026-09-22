@@ -33,6 +33,7 @@ function timeAgo(dateString: string): string {
 export function RecentScans() {
   const [scans, setScans] = useState<RecentScanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function RecentScans() {
         setScans(items);
       } catch (err) {
         console.error('Failed to load recent scans:', err);
+        setError('Failed to load recent scans');
       } finally {
         setLoading(false);
       }
@@ -90,6 +92,28 @@ export function RecentScans() {
               }}
             />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '16px 0' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 16px',
+            background: '#1e293b',
+            borderRadius: '8px',
+            color: '#f87171',
+            fontSize: '14px',
+          }}
+        >
+          <span>⚠️</span>
+          <span>{error}</span>
         </div>
       </div>
     );

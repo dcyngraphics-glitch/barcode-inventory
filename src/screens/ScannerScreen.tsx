@@ -22,15 +22,11 @@ export function ScannerScreen() {
     };
   }, []);
 
-  const handleScan = (barcode: string) => {
+  const handleBarcodeSubmit = (barcode: string) => {
     // Haptic feedback if available
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
-    navigate(`/product/${barcode}`);
-  };
-
-  const handleManualSubmit = (barcode: string) => {
     navigate(`/product/${barcode}`);
   };
 
@@ -100,7 +96,7 @@ export function ScannerScreen() {
         }}
       >
         {/* Camera Viewfinder */}
-        <CameraViewfinder onScan={handleScan} />
+        <CameraViewfinder onScan={handleBarcodeSubmit} />
 
         {/* Manual Entry Button */}
         <button
@@ -135,7 +131,7 @@ export function ScannerScreen() {
       <ManualEntrySheet
         open={manualEntryOpen}
         onClose={() => setManualEntryOpen(false)}
-        onSubmit={handleManualSubmit}
+        onSubmit={handleBarcodeSubmit}
       />
     </div>
   );
