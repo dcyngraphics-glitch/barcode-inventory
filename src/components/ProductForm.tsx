@@ -17,6 +17,7 @@ interface ProductFormProps {
   loading: boolean;
   error: string | null;
   isNewProduct: boolean;
+  sellerMode: boolean;
 }
 
 export function ProductForm({
@@ -25,6 +26,7 @@ export function ProductForm({
   loading,
   error,
   isNewProduct,
+  sellerMode,
 }: ProductFormProps) {
   const [formData, setFormData] = useState<ProductFormData>(initialData);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -235,7 +237,9 @@ export function ProductForm({
             {isNewProduct ? 'Adding...' : 'Updating...'}
           </>
         ) : (
-          isNewProduct ? 'Add to Inventory' : 'Update Inventory'
+          isNewProduct
+            ? 'Add to Inventory'
+            : sellerMode ? 'Update Product' : 'Update Inventory'
         )}
       </button>
     </form>

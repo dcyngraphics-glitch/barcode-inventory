@@ -8,6 +8,7 @@ import { useProductLookup } from '@/hooks/useProductLookup';
 import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
 import { addBatch, getBatchesByBarcode, deleteBatch } from '@/services/inventoryService';
 import { generateId } from '@/utils/helpers';
+import { useSettingsContext } from '@/context/SettingsContext';
 import type { Product } from '@/types';
 
 const BOTTOM_NAV_HEIGHT = 80;
@@ -16,6 +17,8 @@ export function ProductDetailScreen() {
   const { barcode } = useParams<{ barcode: string }>();
   const navigate = useNavigate();
   const { product: lookedUpProduct, source: lookupSource, loading: lookupLoading, error: lookupError, lookup } = useProductLookup();
+  const { settings: contextSettings } = useSettingsContext();
+  const sellerMode = contextSettings?.sellerMode ?? false;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
@@ -205,13 +208,35 @@ export function ProductDetailScreen() {
           scannedAt: now,
         });
       } else {
-        // Existing product: update price if changed
-        if (product && product.storePrice !== price) {
-          await updateProduct({
-            ...product,
-            storePrice: price,
-            updatedAt: now,
-          });
+        // Seller Mode: update ALL fields if changed
+        // Default Mode: update only price if changed
+        if (product) {
+          const needsUpdate = sellerMode
+            ? (product.name !== data.name.trim() ||
+               product.brand !== data.brand.trim() ||
+               product.category !== data.category.trim() ||
+               product.storePrice !== price ||
+               product.defaultExpiry !== data.expiryDate)
+            : (product.storePrice !== price);
+
+          if (needsUpdate) {
+            await updateProduct(sellerMode
+              ? {
+                  ...product,
+                  name: data.name.trim(),
+                  brand: data.brand.trim(),
+                  category: data.category.trim(),
+                  storePrice: price,
+                  defaultExpiry: data.expiryDate,
+                  updatedAt: now,
+                }
+              : {
+                  ...product,
+                  storePrice: price,
+                  updatedAt: now,
+                }
+            );
+          }
         }
 
         // Create new batch
@@ -226,6 +251,8 @@ export function ProductDetailScreen() {
 
       if (isNewProduct) {
         showToast(`Product saved! Next time you scan ${barcode}, it'll show automatically.`, 'success');
+      } else if (sellerMode) {
+        showToast('Product info updated!', 'success');
       } else {
         showToast('Added!', 'success');
       }
@@ -532,6 +559,7 @@ export function ProductDetailScreen() {
           <ProductForm
             initialData={formData}
             isNewProduct={isNewProduct}
+            sellerMode={sellerMode}
             onSubmit={handleSubmit}
             loading={loading}
             error={error}
