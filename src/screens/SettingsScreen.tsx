@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle } from 'lucide-react';
 import type { Settings, Product, Batch } from '@/types';
 import { SETTINGS_ID } from '@/types';
@@ -58,47 +58,11 @@ export function SettingsScreen() {
       .finally(() => setLoading(false));
   }, [showToast]);
 
-  // Handle notification toggle
-  const handleNotificationToggle = useCallback(
-    async (enabled: boolean) => {
-      if (enabled) {
-        const permission = await requestPermission();
-        if (permission === 'granted') {
-          setSettings((prev) => {
-            const updated = { ...prev, notificationsEnabled: true };
-            saveSettings(updated).catch((err) => {
-              console.error('Failed to save settings:', err);
-            });
-            return updated;
-          });
-        } else {
-          showToast('error', 'Notifications blocked by browser');
-          setSettings((prev) => {
-            const updated = { ...prev, notificationsEnabled: false };
-            saveSettings(updated).catch((err) => {
-              console.error('Failed to save settings:', err);
-            });
-            return updated;
-          });
-        }
-      } else {
-        setSettings((prev) => {
-          const updated = { ...prev, notificationsEnabled: false };
-          saveSettings(updated).catch((err) => {
-            console.error('Failed to save settings:', err);
-          });
-          return updated;
-        });
-      }
-    },
-    [showToast]
-  );
-
-  // Handle alert window change
-  const handleAlertWindowChange = useCallback(
-    (days: number) => {
+  // Generic helper to update a single setting and persist it
+  const updateSetting = useCallback(
+    <K extends keyof Settings>(key: K, value: Settings[K]) => {
       setSettings((prev) => {
-        const updated = { ...prev, alertWindowDays: days };
+        const updated = { ...prev, [key]: value };
         saveSettings(updated).catch((err) => {
           console.error('Failed to save settings:', err);
         });
@@ -108,17 +72,37 @@ export function SettingsScreen() {
     []
   );
 
+  // Handle notification toggle
+  const handleNotificationToggle = useCallback(
+    async (enabled: boolean) => {
+      if (enabled) {
+        const permission = await requestPermission();
+        if (permission === 'granted') {
+          updateSetting('notificationsEnabled', true);
+        } else {
+          showToast('error', 'Notifications blocked by browser');
+          updateSetting('notificationsEnabled', false);
+        }
+      } else {
+        updateSetting('notificationsEnabled', false);
+      }
+    },
+    [showToast, updateSetting]
+  );
+
+  // Handle alert window change
+  const handleAlertWindowChange = useCallback(
+    (days: number) => {
+      updateSetting('alertWindowDays', days);
+    },
+    [updateSetting]
+  );
+
   // Handle theme cycle
   const handleThemeCycle = useCallback(() => {
-    setSettings((prev) => {
-      const nextTheme = THEME_CYCLE[prev.theme];
-      const updated = { ...prev, theme: nextTheme };
-      saveSettings(updated).catch((err) => {
-        console.error('Failed to save settings:', err);
-      });
-      return updated;
-    });
-  }, []);
+    const nextTheme = THEME_CYCLE[settings.theme];
+    updateSetting('theme', nextTheme);
+  }, [settings.theme, updateSetting]);
 
   // Handle export
   const handleExport = useCallback(async () => {
@@ -208,8 +192,10 @@ export function SettingsScreen() {
     );
   }
 
-  const permissionDenied =
-    settings.notificationsEnabled && getPermissionStatus() === 'denied';
+  const permissionDenied = useMemo(
+    () => settings.notificationsEnabled && getPermissionStatus() === 'denied',
+    [settings.notificationsEnabled]
+  );
 
   return (
     <div
@@ -232,7 +218,7 @@ export function SettingsScreen() {
       </div>
 
       {/* Notifications Section */}
-      <div
+      <h2
         style={{
           fontSize: '14px',
           fontWeight: 600,
@@ -243,7 +229,7 @@ export function SettingsScreen() {
         }}
       >
         Notifications
-      </div>
+      </h2>
       <div
         style={{
           background: '#ffffff',
@@ -291,7 +277,7 @@ export function SettingsScreen() {
       </div>
 
       {/* Data Section */}
-      <div
+      <h2
         style={{
           fontSize: '14px',
           fontWeight: 600,
@@ -302,7 +288,7 @@ export function SettingsScreen() {
         }}
       >
         Data
-      </div>
+      </h2>
       <div
         style={{
           background: '#ffffff',
@@ -362,7 +348,7 @@ export function SettingsScreen() {
       </div>
 
       {/* Appearance Section */}
-      <div
+      <h2
         style={{
           fontSize: '14px',
           fontWeight: 600,
@@ -373,7 +359,7 @@ export function SettingsScreen() {
         }}
       >
         Appearance
-      </div>
+      </h2>
       <div
         style={{
           background: '#ffffff',
@@ -408,7 +394,7 @@ export function SettingsScreen() {
       </div>
 
       {/* About Section */}
-      <div
+      <h2
         style={{
           fontSize: '14px',
           fontWeight: 600,
@@ -419,7 +405,7 @@ export function SettingsScreen() {
         }}
       >
         About
-      </div>
+      </h2>
       <div
         style={{
           background: '#ffffff',

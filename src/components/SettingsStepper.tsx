@@ -58,7 +58,7 @@ export function SettingsStepper({
         <button
           onClick={handleDecrement}
           disabled={disabled || value <= min}
-          aria-label="Decrease"
+          aria-label={`Decrease ${label.toLowerCase()}`}
           style={{
             width: '44px',
             height: '44px',
@@ -91,7 +91,7 @@ export function SettingsStepper({
         <button
           onClick={handleIncrement}
           disabled={disabled || value >= max}
-          aria-label="Increase"
+          aria-label={`Increase ${label.toLowerCase()}`}
           style={{
             width: '44px',
             height: '44px',
