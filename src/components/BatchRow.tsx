@@ -3,6 +3,7 @@ import { Trash2, Pencil, Package } from 'lucide-react';
 import type { Batch, ExpiryStatus } from '@/types';
 import { calculateExpiryStatus } from '@/services/notificationService';
 import { formatDate } from '@/utils/helpers';
+import { getStatusConfig } from '@/utils/statusConfig';
 
 interface BatchRowProps {
   batch: Batch;
@@ -19,17 +20,9 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
   const [showActions, setShowActions] = useState(false);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const status: ExpiryStatus = calculateExpiryStatus(batch.expiryDate, alertWindowDays);
-
-  const statusConfig = {
-    good: { label: 'Good', bg: '#dcfce7', color: '#166534' },
-    expiring: { label: 'Expiring', bg: '#fef3c7', color: '#92400e' },
-    expired: { label: 'Expired', bg: '#fee2e2', color: '#991b1b' },
-  };
-
-  const statusStyle = statusConfig[status];
+  const statusStyle = getStatusConfig(status);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]!.clientX;
@@ -63,11 +56,17 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
     setShowActions((prev) => !prev);
   }, []);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setShowActions((prev) => !prev);
+    }
+  }, []);
+
   const formattedDate = formatDate(batch.expiryDate);
 
   return (
     <div
-      ref={containerRef}
       style={{
         position: 'relative',
         overflow: 'hidden',
@@ -97,6 +96,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onKeyDown={handleKeyDown}
         onContextMenu={(e) => {
           e.preventDefault();
           handleLongPress();
@@ -170,7 +170,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
             {statusStyle.label}
           </span>
 
-          {/* Action buttons (visible after swipe or long-press) */}
+          {/* Action buttons (visible after swipe, long-press, or keyboard toggle) */}
           {showActions && (
             <div
               style={{
@@ -227,13 +227,6 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

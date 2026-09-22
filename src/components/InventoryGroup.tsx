@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Package } from 'lucide-react';
 import type { InventoryGroup, Batch, ExpiryStatus } from '@/types';
 import { calculateExpiryStatus } from '@/services/notificationService';
 import { formatDate } from '@/utils/helpers';
+import { getStatusConfig } from '@/utils/statusConfig';
 import { BatchRow } from './BatchRow';
 
 interface InventoryGroupProps {
@@ -28,12 +29,6 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
   for (const batch of group.batches) {
     statuses.add(calculateExpiryStatus(batch.expiryDate, alertWindowDays));
   }
-
-  const statusConfig = {
-    good: { label: 'Good', bg: '#dcfce7', color: '#166534' },
-    expiring: { label: 'Expiring', bg: '#fef3c7', color: '#92400e' },
-    expired: { label: 'Expired', bg: '#fee2e2', color: '#991b1b' },
-  };
 
   const earliestExpiryFormatted = formatDate(group.earliestExpiry);
 
@@ -128,7 +123,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
             }}
           >
             {Array.from(statuses).map((status) => {
-              const config = statusConfig[status];
+              const config = getStatusConfig(status);
               return (
                 <span
                   key={status}

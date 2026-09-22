@@ -44,7 +44,7 @@ export function FilterChips({ active, onChange }: FilterChipsProps) {
               whiteSpace: 'nowrap',
               cursor: 'pointer',
               border: 'none',
-              minHeight: '36px',
+              minHeight: '44px',
               transition: 'all 200ms ease',
               flexShrink: 0,
             }}

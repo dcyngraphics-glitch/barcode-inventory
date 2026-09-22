@@ -24,14 +24,18 @@ export function InventoryScreen() {
   const navigate = useNavigate();
   const pullStartY = useRef(0);
   const pullDistance = useRef(0);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Load settings
   useEffect(() => {
-    loadSettings().then((settings) => {
-      setAlertWindowDays(settings.alertWindowDays);
-    });
-  }, []);
+    loadSettings()
+      .then((settings) => {
+        setAlertWindowDays(settings.alertWindowDays);
+      })
+      .catch((err) => {
+        console.error('Failed to load settings:', err);
+        showToast('error', 'Failed to load settings. Using default values.');
+      });
+  }, [showToast]);
 
   // Load inventory groups
   const loadGroups = useCallback(async (isRefresh = false) => {
@@ -90,11 +94,6 @@ export function InventoryScreen() {
       setDeleteTarget(null);
     }
   }, [deleteTarget, showToast, loadGroups]);
-
-  // Edit batch handler (placeholder - would open edit sheet)
-  const handleEditBatch = useCallback((batch: Batch) => {
-    showToast('info', 'Edit batch: ' + batch.batchId);
-  }, [showToast]);
 
   // Pull-to-refresh handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -173,7 +172,6 @@ export function InventoryScreen() {
 
   return (
     <div
-      ref={containerRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -233,7 +231,7 @@ export function InventoryScreen() {
                 group={group}
                 alertWindowDays={alertWindowDays}
                 onDeleteBatch={(batch) => setDeleteTarget(batch)}
-                onEditBatch={handleEditBatch}
+                onEditBatch={() => showToast('info', 'Edit batch functionality coming soon')}
               />
             ))}
           </div>

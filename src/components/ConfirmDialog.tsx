@@ -161,17 +161,6 @@ export function ConfirmDialog({
           </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-up {
-          from { transform: translate(-50%, -50%) translateY(20px); opacity: 0; }
-          to { transform: translate(-50%, -50%) translateY(0); opacity: 1; }
-        }
-      `}</style>
     </>
   );
 }
