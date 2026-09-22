@@ -24,6 +24,9 @@ const DB_VERSION = 1;
 let dbPromise: Promise<IDBPDatabase<BarcodeInventoryDB>> | null = null;
 
 export function getDB(): Promise<IDBPDatabase<BarcodeInventoryDB>> {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB is not available in this environment'));
+  }
   if (!dbPromise) {
     dbPromise = openDB<BarcodeInventoryDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
