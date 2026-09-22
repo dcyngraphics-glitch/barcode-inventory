@@ -6,6 +6,21 @@ import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { useTheme } from '@/hooks/useTheme';
 
+export default function App() {
+  useTheme();
+  return (
+    <div className="app-container">
+      <Routes>
+        <Route path="/" element={<ScannerScreen />} />
+        <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+        <Route path="/inventory" element={<InventoryScreen />} />
+        <Route path="/settings" element={<SettingsScreen />} />
+      </Routes>
+      <BottomNav />
+    </div>
+  );
+}
+
 const navItems = [
   { path: '/', icon: ScanLine, label: 'Scan' },
   { path: '/inventory', icon: Package, label: 'Inventory' },
@@ -33,20 +48,5 @@ function BottomNav() {
         );
       })}
     </nav>
-  );
-}
-
-export default function App() {
-  useTheme();
-  return (
-    <div className="app-container">
-      <Routes>
-        <Route path="/" element={<ScannerScreen />} />
-        <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-        <Route path="/inventory" element={<InventoryScreen />} />
-        <Route path="/settings" element={<SettingsScreen />} />
-      </Routes>
-      <BottomNav />
-    </div>
   );
 }

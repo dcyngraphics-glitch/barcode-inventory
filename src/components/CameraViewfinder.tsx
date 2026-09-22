@@ -69,36 +69,58 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
 
   if (error) {
     const isNoCamera = errorType === 'no-camera';
+    const isPermissionDenied = errorType === 'permission-denied';
+
     return (
-      <div className="camera-error" style={{ color: '#f8fafc', minHeight: '300px' }}>
-        {isNoCamera ? (
-          <CameraOff size={48} className="camera-error-icon" style={{ color: '#f8fafc' }} />
-        ) : (
-          <Camera size={48} className="camera-error-icon" style={{ color: '#f8fafc' }} />
-        )}
-        <div className="camera-error-text">
-          <p className="camera-error-title" style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
-            {isNoCamera ? 'No camera available' : 'Camera permission required'}
-          </p>
-          <p className="camera-error-desc" style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
-            {isNoCamera
-              ? 'No camera hardware detected. Use manual entry instead.'
-              : 'Allow camera access to scan barcodes'}
-          </p>
+      <div className="camera-error-overlay">
+        <div className="camera-error-content">
+          {isNoCamera ? (
+            <CameraOff size={48} className="camera-error-icon" />
+          ) : (
+            <Camera size={48} className="camera-error-icon" />
+          )}
+          <div className="camera-error-text">
+            <p className="camera-error-title">
+              {isNoCamera ? 'No camera available' : 'Camera permission required'}
+            </p>
+            <p className="camera-error-desc">
+              {isNoCamera
+                ? 'No camera hardware detected. You can still enter barcodes manually.'
+                : 'To scan barcodes, please allow camera access for this site.'}
+              {isPermissionDenied && (
+                <>
+                  <p className="camera-error-instructions">
+                    How to enable camera access:
+                  </p>
+                  <ol className="camera-error-steps">
+                    <li>
+                      Click the lock/icon next to the website address in the browser's address bar.
+                    </li>
+                    <li>
+                      Set Camera permission to "Allow".
+                    </li>
+                    <li>
+                      Reload the page.
+                    </li>
+                  </ol>
+                </>
+              )}
+            </p>
+            {!isNoCamera && (
+              <button
+                onClick={() => {
+                  if (videoRef.current) {
+                    start(videoRef.current, (barcode: string) => onScanRef.current(barcode));
+                  }
+                }}
+                className="camera-retry-btn"
+              >
+                <RefreshCw size={18} />
+                Retry after granting access
+              </button>
+            )}
+          </div>
         </div>
-        {!isNoCamera && (
-          <button
-            onClick={() => {
-              if (videoRef.current) {
-                start(videoRef.current, (barcode: string) => onScanRef.current(barcode));
-              }
-            }}
-            className="camera-retry-btn"
-          >
-            <RefreshCw size={18} />
-            Retry
-          </button>
-        )}
       </div>
     );
   }
