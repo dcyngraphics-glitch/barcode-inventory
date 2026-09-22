@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 interface BarcodeDetectorSupported {
   detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>;
@@ -81,7 +82,6 @@ export function useBarcodeScanner() {
           rafRef.current = requestAnimationFrame(tick);
         } else {
           // Fallback: @zxing/browser MultiFormatReader
-          const { BrowserMultiFormatReader } = await import('@zxing/browser');
           const reader = new BrowserMultiFormatReader();
           const tick = async () => {
             if (!videoRef.current) return;
