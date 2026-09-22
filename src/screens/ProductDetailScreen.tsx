@@ -15,7 +15,7 @@ const BOTTOM_NAV_HEIGHT = 80;
 export function ProductDetailScreen() {
   const { barcode } = useParams<{ barcode: string }>();
   const navigate = useNavigate();
-  const { product: lookedUpProduct, loading: lookupLoading, lookup } = useProductLookup();
+  const { product: lookedUpProduct, source: lookupSource, loading: lookupLoading, lookup } = useProductLookup();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
@@ -71,8 +71,12 @@ export function ProductDetailScreen() {
     if (lookedUpProduct) {
       setProduct(lookedUpProduct);
       setIsNewProduct(lookedUpProduct.source === 'manual');
+    } else if (lookupSource === 'manual') {
+      // Manual entry: no product found, show empty form
+      setProduct(null);
+      setIsNewProduct(true);
     }
-  }, [lookedUpProduct]);
+  }, [lookedUpProduct, lookupSource]);
 
   const getInitialFormData = useCallback((): ProductFormData => {
     if (!product) {
