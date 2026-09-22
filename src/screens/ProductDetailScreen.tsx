@@ -68,22 +68,23 @@ export function ProductDetailScreen() {
   }, [barcode, lookup]);
 
   // Handle lookup result
-  // Bug fix #1: When product is null AND lookupSource is null (error), set isNewProduct(true)
-  // so the form renders in "Create" mode with a retry option
+  // Fix: A product with source 'manual' that exists in catalog should NOT be treated as new.
+  // isNewProduct = true only when no product was found at all.
   useEffect(() => {
     if (lookedUpProduct) {
       setProduct(lookedUpProduct);
-      setIsNewProduct(lookedUpProduct.source === 'manual');
+      // Product exists in catalog or API → not new, even if source is 'manual'
+      setIsNewProduct(false);
     } else if (lookupSource === 'manual') {
-      // Manual entry: no product found, show empty form
+      // No product found anywhere — show empty form for manual entry
       setProduct(null);
       setIsNewProduct(true);
-    } else if (lookupError && !lookupLoading && !product) {
-      // Bug fix #1: API failure case — set isNewProduct to true so user can retry or create manually
+    } else if (lookupError && !lookupLoading) {
+      // API failure — show empty form with retry option
       setProduct(null);
       setIsNewProduct(true);
     }
-  }, [lookedUpProduct, lookupSource, lookupError, lookupLoading, product]);
+  }, [lookedUpProduct, lookupSource, lookupError, lookupLoading]);
 
   // Surface lookup errors (network, HTTP, parse)
   useEffect(() => {
