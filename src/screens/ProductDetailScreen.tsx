@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pencil, CheckCircle, AlertCircle } from 'lucide-react';
 import { ProductImage } from '@/components/ProductImage';
@@ -9,6 +9,8 @@ import { getProduct, saveProduct, updateProduct, deleteProduct } from '@/service
 import { addBatch, getBatchesByBarcode, deleteBatch } from '@/services/inventoryService';
 import { generateId } from '@/utils/helpers';
 import type { Product } from '@/types';
+
+const BOTTOM_NAV_HEIGHT = 80;
 
 export function ProductDetailScreen() {
   const { barcode } = useParams<{ barcode: string }>();
@@ -22,6 +24,18 @@ export function ProductDetailScreen() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
 
+  // Store timer IDs in refs for cleanup
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
+    };
+  }, []);
+
   // Initial lookup on mount
   useEffect(() => {
     if (!barcode) return;
@@ -31,7 +45,7 @@ export function ProductDetailScreen() {
       setError(null);
 
       try {
-        // Step: Check local catalog
+        // Step 1: Check local catalog
         const existingProduct = await getProduct(barcode!);
         if (existingProduct) {
           setProduct(existingProduct);
@@ -92,8 +106,9 @@ export function ProductDetailScreen() {
   }, [product, getInitialFormData]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
   };
 
   const handleSubmit = async (data: ProductFormData) => {
@@ -151,7 +166,8 @@ export function ProductDetailScreen() {
       }
 
       showToast('Added!', 'success');
-      setTimeout(() => navigate('/inventory'), 1500);
+      if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
+      navigateTimerRef.current = setTimeout(() => navigate('/inventory'), 1500);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to add to inventory';
       setError(message);
@@ -262,7 +278,7 @@ export function ProductDetailScreen() {
         background: '#F8FAFC',
         display: 'flex',
         flexDirection: 'column',
-        paddingBottom: '80px',
+        paddingBottom: `${BOTTOM_NAV_HEIGHT}px`,
       }}
     >
       {/* Top App Bar */}

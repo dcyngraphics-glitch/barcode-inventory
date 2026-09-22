@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Trash2 } from 'lucide-react';
 import type { Product } from '@/types';
+import { FormField } from './FormField';
 
 interface ProductManagementSheetProps {
   open: boolean;
@@ -9,6 +10,18 @@ interface ProductManagementSheetProps {
   onSave: (product: Product) => Promise<void>;
   onDelete: (barcode: string) => Promise<void>;
 }
+
+const inputStyle: React.CSSProperties = {
+  padding: '12px 16px',
+  border: '1px solid #E6E8EA',
+  borderRadius: '8px',
+  fontSize: '16px',
+  fontFamily: 'Inter, sans-serif',
+  background: '#FFFFFF',
+  color: '#0F172A',
+  width: '100%',
+  boxSizing: 'border-box',
+};
 
 export function ProductManagementSheet({
   open,
@@ -21,18 +34,93 @@ export function ProductManagementSheet({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
-  // Reset form when product changes
-  if (open && product && formData?.barcode !== product.barcode) {
-    setFormData(product);
-    setError(null);
-    setShowDeleteConfirm(false);
-  }
+  // Reset form when product changes — moved from render body to useEffect
+  useEffect(() => {
+    if (open && product) {
+      setFormData(product);
+      setError(null);
+      setShowDeleteConfirm(false);
+      setValidationErrors({});
+    }
+  }, [open, product]);
+
+  // Focus trap: focus first field when sheet opens
+  useEffect(() => {
+    if (open) {
+      firstFieldRef.current?.focus();
+    }
+  }, [open]);
+
+  // Escape key handler
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        onClose();
+      }
+    },
+    [open, onClose],
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Focus trap: keep focus within sheet
+  const handleTabKey = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key !== 'Tab' || !sheetRef.current) return;
+
+      const focusableElements = sheetRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusableElements.length === 0) return;
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    },
+    [],
+  );
 
   if (!open || !product || !formData) return null;
 
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      errors.name = 'Product name is required';
+    }
+    if (formData.storePrice <= 0) {
+      errors.storePrice = 'Price must be greater than 0';
+    }
+    if (!formData.defaultExpiry) {
+      errors.defaultExpiry = 'Expiry date is required';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSave = async () => {
     if (!formData) return;
+
+    if (!validate()) return;
+
     setLoading(true);
     setError(null);
     try {
@@ -60,7 +148,21 @@ export function ProductManagementSheet({
 
   const updateField = (field: keyof Product, value: string | number) => {
     setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
   };
+
+  const getInputStyle = (field: string): React.CSSProperties => ({
+    ...inputStyle,
+    border: `1px solid ${validationErrors[field] ? '#DC2626' : '#E6E8EA'}`,
+  });
+
+  const getErrorId = (field: string) => `edit-${field}-error`;
 
   return (
     <>
@@ -78,6 +180,11 @@ export function ProductManagementSheet({
 
       {/* Bottom Sheet */}
       <div
+        ref={sheetRef}
+        onKeyDown={handleTabKey}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Edit Product"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -149,118 +256,43 @@ export function ProductManagementSheet({
         {/* Form fields */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Product Name */}
-          <div>
-            <label
-              htmlFor="edit-name"
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#0F172A',
-                marginBottom: '4px',
-              }}
-            >
-              Product Name
-            </label>
+          <FormField id="edit-name" label="Product Name" error={validationErrors.name}>
             <input
               id="edit-name"
+              ref={firstFieldRef}
               type="text"
               value={formData.name}
               onChange={(e) => updateField('name', e.target.value)}
-              style={{
-                padding: '12px 16px',
-                border: '1px solid #E6E8EA',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontFamily: 'Inter, sans-serif',
-                background: '#FFFFFF',
-                color: '#0F172A',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              style={getInputStyle('name')}
+              aria-invalid={!!validationErrors.name}
+              aria-describedby={validationErrors.name ? getErrorId('name') : undefined}
             />
-          </div>
+          </FormField>
 
           {/* Brand */}
-          <div>
-            <label
-              htmlFor="edit-brand"
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#0F172A',
-                marginBottom: '4px',
-              }}
-            >
-              Brand
-            </label>
+          <FormField id="edit-brand" label="Brand">
             <input
               id="edit-brand"
               type="text"
               value={formData.brand}
               onChange={(e) => updateField('brand', e.target.value)}
-              style={{
-                padding: '12px 16px',
-                border: '1px solid #E6E8EA',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontFamily: 'Inter, sans-serif',
-                background: '#FFFFFF',
-                color: '#0F172A',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              style={inputStyle}
             />
-          </div>
+          </FormField>
 
           {/* Category */}
-          <div>
-            <label
-              htmlFor="edit-category"
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#0F172A',
-                marginBottom: '4px',
-              }}
-            >
-              Category
-            </label>
+          <FormField id="edit-category" label="Category">
             <input
               id="edit-category"
               type="text"
               value={formData.category}
               onChange={(e) => updateField('category', e.target.value)}
-              style={{
-                padding: '12px 16px',
-                border: '1px solid #E6E8EA',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontFamily: 'Inter, sans-serif',
-                background: '#FFFFFF',
-                color: '#0F172A',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              style={inputStyle}
             />
-          </div>
+          </FormField>
 
           {/* Default Price */}
-          <div>
-            <label
-              htmlFor="edit-price"
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#0F172A',
-                marginBottom: '4px',
-              }}
-            >
-              Default Price (₱)
-            </label>
+          <FormField id="edit-price" label="Default Price (₱)" error={validationErrors.storePrice}>
             <div style={{ position: 'relative' }}>
               <span
                 style={{
@@ -282,56 +314,33 @@ export function ProductManagementSheet({
                 value={formData.storePrice}
                 onChange={(e) => updateField('storePrice', parseFloat(e.target.value) || 0)}
                 style={{
-                  padding: '12px 16px 12px 36px',
-                  border: '1px solid #E6E8EA',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, sans-serif',
-                  background: '#FFFFFF',
-                  color: '#0F172A',
-                  width: '100%',
-                  boxSizing: 'border-box',
+                  ...getInputStyle('storePrice'),
+                  paddingLeft: '36px',
                 }}
+                aria-invalid={!!validationErrors.storePrice}
+                aria-describedby={validationErrors.storePrice ? getErrorId('storePrice') : undefined}
               />
             </div>
-          </div>
+          </FormField>
 
           {/* Default Expiry */}
-          <div>
-            <label
-              htmlFor="edit-expiry"
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#0F172A',
-                marginBottom: '4px',
-              }}
-            >
-              Default Expiry
-            </label>
+          <FormField id="edit-expiry" label="Default Expiry" error={validationErrors.defaultExpiry}>
             <input
               id="edit-expiry"
               type="date"
               value={formData.defaultExpiry}
               onChange={(e) => updateField('defaultExpiry', e.target.value)}
-              style={{
-                padding: '12px 16px',
-                border: '1px solid #E6E8EA',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontFamily: 'Inter, sans-serif',
-                background: '#FFFFFF',
-                color: '#0F172A',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              style={getInputStyle('defaultExpiry')}
+              aria-invalid={!!validationErrors.defaultExpiry}
+              aria-describedby={validationErrors.defaultExpiry ? getErrorId('defaultExpiry') : undefined}
             />
-          </div>
+          </FormField>
 
           {/* Error message */}
           {error && (
             <div
+              role="alert"
+              aria-live="polite"
               style={{
                 padding: '12px 16px',
                 background: '#FEE2E2',

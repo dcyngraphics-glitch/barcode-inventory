@@ -22,10 +22,5 @@ export function useProductLookup() {
     }
   }, []);
 
-  const reset = useCallback(() => {
-    setProduct(null);
-    setError(null);
-  }, []);
-
-  return { product, loading, error, lookup, reset };
+  return { product, loading, error, lookup };
 }

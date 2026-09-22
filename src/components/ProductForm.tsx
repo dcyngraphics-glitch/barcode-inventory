@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, Minus } from 'lucide-react';
+import { FormField } from './FormField';
 
 export interface ProductFormData {
   name: string;
@@ -12,21 +13,35 @@ export interface ProductFormData {
 
 interface ProductFormProps {
   initialData: ProductFormData;
-  isNewProduct?: boolean;
   onSubmit: (data: ProductFormData) => void;
   loading: boolean;
   error: string | null;
+  isNewProduct: boolean;
 }
+
+const inputStyle: React.CSSProperties = {
+  padding: '12px 16px',
+  border: '1px solid #E6E8EA',
+  borderRadius: '8px',
+  fontSize: '16px',
+  fontFamily: 'Inter, sans-serif',
+  background: '#FFFFFF',
+  color: '#0F172A',
+  width: '100%',
+  boxSizing: 'border-box',
+  transition: 'border-color 200ms ease, box-shadow 200ms ease',
+};
 
 export function ProductForm({
   initialData,
-  isNewProduct: _isNewProduct,
   onSubmit,
   loading,
   error,
+  isNewProduct,
 }: ProductFormProps) {
   const [formData, setFormData] = useState<ProductFormData>(initialData);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const fieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -46,6 +61,13 @@ export function ProductForm({
     }
 
     setValidationErrors(errors);
+
+    // Focus first invalid field
+    if (Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0] as string;
+      fieldRefs.current[firstErrorField]?.focus();
+    }
+
     return Object.keys(errors).length === 0;
   };
 
@@ -58,7 +80,6 @@ export function ProductForm({
 
   const updateField = (field: keyof ProductFormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors((prev) => {
         const next = { ...prev };
@@ -78,132 +99,56 @@ export function ProductForm({
     }
   };
 
+  const getInputStyle = (field: string): React.CSSProperties => ({
+    ...inputStyle,
+    border: `1px solid ${validationErrors[field] ? '#DC2626' : '#E6E8EA'}`,
+  });
+
+  const getErrorId = (field: string) => `${field}-error`;
+
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Product Name */}
-      <div>
-        <label
-          htmlFor="product-name"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#0F172A',
-            marginBottom: '4px',
-          }}
-        >
-          Product Name
-        </label>
+      <FormField id="product-name" label="Product Name" error={validationErrors.name}>
         <input
           id="product-name"
+          ref={(el) => { fieldRefs.current.name = el; }}
           type="text"
           value={formData.name}
           onChange={(e) => updateField('name', e.target.value)}
           placeholder="Enter product name"
-          style={{
-            padding: '12px 16px',
-            border: `1px solid ${validationErrors.name ? '#DC2626' : '#E6E8EA'}`,
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontFamily: 'Inter, sans-serif',
-            background: '#FFFFFF',
-            color: '#0F172A',
-            width: '100%',
-            boxSizing: 'border-box',
-            transition: 'border-color 200ms ease, box-shadow 200ms ease',
-          }}
+          style={getInputStyle('name')}
+          aria-invalid={!!validationErrors.name}
+          aria-describedby={validationErrors.name ? getErrorId('name') : undefined}
         />
-        {validationErrors.name && (
-          <span style={{ fontSize: '12px', color: '#DC2626', marginTop: '4px', display: 'block' }}>
-            {validationErrors.name}
-          </span>
-        )}
-      </div>
+      </FormField>
 
       {/* Brand */}
-      <div>
-        <label
-          htmlFor="product-brand"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#0F172A',
-            marginBottom: '4px',
-          }}
-        >
-          Brand
-        </label>
+      <FormField id="product-brand" label="Brand">
         <input
           id="product-brand"
           type="text"
           value={formData.brand}
           onChange={(e) => updateField('brand', e.target.value)}
           placeholder="Enter brand"
-          style={{
-            padding: '12px 16px',
-            border: '1px solid #E6E8EA',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontFamily: 'Inter, sans-serif',
-            background: '#FFFFFF',
-            color: '#0F172A',
-            width: '100%',
-            boxSizing: 'border-box',
-            transition: 'border-color 200ms ease, box-shadow 200ms ease',
-          }}
+          style={inputStyle}
         />
-      </div>
+      </FormField>
 
       {/* Category */}
-      <div>
-        <label
-          htmlFor="product-category"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#0F172A',
-            marginBottom: '4px',
-          }}
-        >
-          Category
-        </label>
+      <FormField id="product-category" label="Category">
         <input
           id="product-category"
           type="text"
           value={formData.category}
           onChange={(e) => updateField('category', e.target.value)}
           placeholder="Enter category"
-          style={{
-            padding: '12px 16px',
-            border: '1px solid #E6E8EA',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontFamily: 'Inter, sans-serif',
-            background: '#FFFFFF',
-            color: '#0F172A',
-            width: '100%',
-            boxSizing: 'border-box',
-            transition: 'border-color 200ms ease, box-shadow 200ms ease',
-          }}
+          style={inputStyle}
         />
-      </div>
+      </FormField>
 
       {/* Price */}
-      <div>
-        <label
-          htmlFor="product-price"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#0F172A',
-            marginBottom: '4px',
-          }}
-        >
-          Price (₱)
-        </label>
+      <FormField id="product-price" label="Price (₱)" error={validationErrors.price}>
         <div style={{ position: 'relative' }}>
           <span
             style={{
@@ -220,85 +165,38 @@ export function ProductForm({
           </span>
           <input
             id="product-price"
+            ref={(el) => { fieldRefs.current.price = el; }}
             type="text"
             inputMode="decimal"
             value={formData.price}
             onChange={(e) => updateField('price', e.target.value)}
             placeholder="0.00"
             style={{
-              padding: '12px 16px 12px 36px',
-              border: `1px solid ${validationErrors.price ? '#DC2626' : '#E6E8EA'}`,
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontFamily: 'Inter, sans-serif',
-              background: '#FFFFFF',
-              color: '#0F172A',
-              width: '100%',
-              boxSizing: 'border-box',
-              transition: 'border-color 200ms ease, box-shadow 200ms ease',
+              ...getInputStyle('price'),
+              paddingLeft: '36px',
             }}
+            aria-invalid={!!validationErrors.price}
+            aria-describedby={validationErrors.price ? getErrorId('price') : undefined}
           />
         </div>
-        {validationErrors.price && (
-          <span style={{ fontSize: '12px', color: '#DC2626', marginTop: '4px', display: 'block' }}>
-            {validationErrors.price}
-          </span>
-        )}
-      </div>
+      </FormField>
 
       {/* Expiry Date */}
-      <div>
-        <label
-          htmlFor="product-expiry"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#0F172A',
-            marginBottom: '4px',
-          }}
-        >
-          Expiry Date
-        </label>
+      <FormField id="product-expiry" label="Expiry Date" error={validationErrors.expiryDate}>
         <input
           id="product-expiry"
+          ref={(el) => { fieldRefs.current.expiryDate = el; }}
           type="date"
           value={formData.expiryDate}
           onChange={(e) => updateField('expiryDate', e.target.value)}
-          style={{
-            padding: '12px 16px',
-            border: `1px solid ${validationErrors.expiryDate ? '#DC2626' : '#E6E8EA'}`,
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontFamily: 'Inter, sans-serif',
-            background: '#FFFFFF',
-            color: '#0F172A',
-            width: '100%',
-            boxSizing: 'border-box',
-            transition: 'border-color 200ms ease, box-shadow 200ms ease',
-          }}
+          style={getInputStyle('expiryDate')}
+          aria-invalid={!!validationErrors.expiryDate}
+          aria-describedby={validationErrors.expiryDate ? getErrorId('expiryDate') : undefined}
         />
-        {validationErrors.expiryDate && (
-          <span style={{ fontSize: '12px', color: '#DC2626', marginTop: '4px', display: 'block' }}>
-            {validationErrors.expiryDate}
-          </span>
-        )}
-      </div>
+      </FormField>
 
       {/* Quantity */}
-      <div>
-        <label
-          htmlFor="product-quantity"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#0F172A',
-            marginBottom: '4px',
-          }}
-        >
-          Quantity
-        </label>
+      <FormField id="product-quantity" label="Quantity" error={validationErrors.quantity}>
         <div
           style={{
             display: 'flex',
@@ -332,6 +230,7 @@ export function ProductForm({
           </button>
           <input
             id="product-quantity"
+            ref={(el) => { fieldRefs.current.quantity = el; }}
             type="text"
             inputMode="numeric"
             value={formData.quantity}
@@ -344,18 +243,12 @@ export function ProductForm({
               }
             }}
             style={{
+              ...getInputStyle('quantity'),
               flex: 1,
-              padding: '12px 16px',
-              border: `1px solid ${validationErrors.quantity ? '#DC2626' : '#E6E8EA'}`,
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontFamily: 'Inter, sans-serif',
-              background: '#FFFFFF',
-              color: '#0F172A',
               textAlign: 'center',
-              boxSizing: 'border-box',
-              transition: 'border-color 200ms ease, box-shadow 200ms ease',
             }}
+            aria-invalid={!!validationErrors.quantity}
+            aria-describedby={validationErrors.quantity ? getErrorId('quantity') : undefined}
           />
           <button
             type="button"
@@ -380,16 +273,13 @@ export function ProductForm({
             <Plus size={20} />
           </button>
         </div>
-        {validationErrors.quantity && (
-          <span style={{ fontSize: '12px', color: '#DC2626', marginTop: '4px', display: 'block' }}>
-            {validationErrors.quantity}
-          </span>
-        )}
-      </div>
+      </FormField>
 
       {/* Error message */}
       {error && (
         <div
+          role="alert"
+          aria-live="polite"
           style={{
             padding: '12px 16px',
             background: '#FEE2E2',
@@ -438,10 +328,10 @@ export function ProductForm({
                 animation: 'spin 1s linear infinite',
               }}
             />
-            Adding...
+            {isNewProduct ? 'Adding...' : 'Updating...'}
           </>
         ) : (
-          'Add to Inventory'
+          isNewProduct ? 'Add to Inventory' : 'Update Inventory'
         )}
       </button>
 
