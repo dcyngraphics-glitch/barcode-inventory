@@ -116,7 +116,6 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
 
     return (
       <div className="camera-viewfinder">
-        <video ref={videoRef} autoPlay playsInline muted style={{ display: 'none' }} />
         <div className="camera-error-overlay">
           <div className="camera-error-content">
             {isNoCamera ? (
@@ -167,13 +166,16 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
 
   return (
     <div className="camera-viewfinder">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        style={cameraActive && !initializing ? undefined : { display: 'none' }}
-      />
+      {/* Only render video when camera is active to avoid residual box artifact */}
+      {cameraActive && (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={initializing ? { display: 'none' } : undefined}
+        />
+      )}
 
       {/* Start overlay — shown before camera is activated */}
       {!cameraActive && (
