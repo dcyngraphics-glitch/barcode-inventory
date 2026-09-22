@@ -5,7 +5,7 @@ import {
   addBatch as addBatchService,
   deleteBatch as deleteBatchService,
 } from '@/services/inventoryService';
-import { sortBatchesByFIFO } from '@/services/notificationService';
+import { sortBatchesByFIFO } from '@/services/inventoryService';
 
 export function useInventory() {
   const [batches, setBatches] = useState<Batch[]>([]);

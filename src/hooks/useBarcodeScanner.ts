@@ -65,8 +65,9 @@ export function useBarcodeScanner() {
                 onScanRef.current(barcodes[0]!.rawValue);
                 return;
               }
-            } catch {
+            } catch (err) {
               // Detection errors are non-fatal, keep scanning
+              console.error('Barcode detection error:', err);
             }
             rafRef.current = requestAnimationFrame(tick);
           };
@@ -92,8 +93,9 @@ export function useBarcodeScanner() {
                 onScanRef.current(result.getText());
                 return;
               }
-            } catch {
+            } catch (err) {
               // No barcode found or decode error, keep scanning
+              console.error('Barcode decode error:', err);
             }
             rafRef.current = requestAnimationFrame(tick);
           };

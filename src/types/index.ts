@@ -1,3 +1,5 @@
+export const SETTINGS_ID = 'settings';
+
 export interface Product {
   barcode: string;
   name: string;
@@ -21,27 +23,18 @@ export interface Batch {
 }
 
 export interface Settings {
-  id: 'settings';
+  id: typeof SETTINGS_ID;
   alertWindowDays: number;
   notificationsEnabled: boolean;
   theme: 'auto' | 'light' | 'dark';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  id: 'settings',
+  id: SETTINGS_ID,
   alertWindowDays: 3,
   notificationsEnabled: false,
   theme: 'auto',
 };
-
-export interface NotificationItem {
-  batchId: string;
-  barcode: string;
-  productName: string;
-  expiryDate: string;
-  daysUntilExpiry: number;
-  read: boolean;
-}
 
 export type ExpiryStatus = 'good' | 'expiring' | 'expired';
 

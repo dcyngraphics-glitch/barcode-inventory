@@ -44,14 +44,3 @@ export function getDB(): Promise<IDBPDatabase<BarcodeInventoryDB>> {
   }
   return dbPromise;
 }
-
-export async function clearAllData(): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction(['catalog', 'inventory', 'settings'], 'readwrite');
-  await Promise.all([
-    tx.objectStore('catalog').clear(),
-    tx.objectStore('inventory').clear(),
-    tx.objectStore('settings').clear(),
-  ]);
-  await tx.done;
-}

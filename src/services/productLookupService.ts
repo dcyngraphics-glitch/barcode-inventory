@@ -58,7 +58,8 @@ async function lookupOpenFoodFacts(barcode: string): Promise<Product | null> {
       createdAt: now,
       updatedAt: now,
     };
-  } catch {
+  } catch (err) {
+    console.error(`lookupOpenFoodFacts: failed for barcode ${barcode}:`, err);
     return null;
   }
 }
