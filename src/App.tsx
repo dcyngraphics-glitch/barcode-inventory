@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import { ScanLine, Package, Settings } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
@@ -22,14 +22,14 @@ function BottomNav() {
           ? location.pathname === '/' || location.pathname.startsWith('/product')
           : location.pathname.startsWith(item.path);
         return (
-          <a
+          <Link
             key={item.path}
-            href={item.path}
+            to={item.path}
             className={`bottom-nav-item${isActive ? ' active' : ''}`}
           >
             <item.icon size={24} />
             <span className="bottom-nav-label">{item.label}</span>
-          </a>
+          </Link>
         );
       })}
     </nav>
