@@ -70,17 +70,17 @@ export function CameraViewfinder({ onScan }: CameraViewfinderProps) {
   if (error) {
     const isNoCamera = errorType === 'no-camera';
     return (
-      <div className="camera-error">
+      <div className="camera-error" style={{ color: '#f8fafc', minHeight: '300px' }}>
         {isNoCamera ? (
-          <CameraOff size={48} className="camera-error-icon" />
+          <CameraOff size={48} className="camera-error-icon" style={{ color: '#f8fafc' }} />
         ) : (
-          <Camera size={48} className="camera-error-icon" />
+          <Camera size={48} className="camera-error-icon" style={{ color: '#f8fafc' }} />
         )}
         <div className="camera-error-text">
-          <p className="camera-error-title">
+          <p className="camera-error-title" style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
             {isNoCamera ? 'No camera available' : 'Camera permission required'}
           </p>
-          <p className="camera-error-desc">
+          <p className="camera-error-desc" style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
             {isNoCamera
               ? 'No camera hardware detected. Use manual entry instead.'
               : 'Allow camera access to scan barcodes'}
