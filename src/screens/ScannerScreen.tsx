@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScanLine, Keyboard, WifiOff, ShoppingCart } from 'lucide-react';
-import { CameraViewfinder } from '@/components/CameraViewfinder';
+import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
 import { ManualEntrySheet } from '@/components/ManualEntrySheet';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
 import { RecentScans } from '@/components/RecentScans';
@@ -41,7 +41,9 @@ export function ScannerScreen() {
   const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
   const [scanToast, setScanToast] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const viewfinderRef = useRef<CameraViewfinderHandle>(null);
 
   const cashierMode = settings?.cashierMode ?? false;
 
@@ -125,6 +127,16 @@ export function ScannerScreen() {
       setScanning(false);
     }
   }, [addItem, showScanToast, scanning, cashierMode, navigate]);
+
+  const handleScanClick = useCallback(async () => {
+    if (processing) return;
+    setProcessing(true);
+    try {
+      await viewfinderRef.current?.triggerScan();
+    } finally {
+      setProcessing(false);
+    }
+  }, [processing]);
 
   const handleQuickEntrySave = useCallback((price: number, expiryDate: string) => {
     if (!quickEntryBarcode) return;
@@ -270,7 +282,7 @@ export function ScannerScreen() {
         }}
       >
         {/* Camera Viewfinder */}
-        <CameraViewfinder onScan={handleBarcodeSubmit} onManualEntry={() => setManualEntryOpen(true)} />
+        <CameraViewfinder ref={viewfinderRef} onScan={handleBarcodeSubmit} onManualEntry={() => setManualEntryOpen(true)} />
 
         {/* Manual Entry Button */}
         <button
@@ -300,6 +312,28 @@ export function ScannerScreen() {
         {/* Recent Scans */}
         <RecentScans />
       </main>
+
+      {/* Floating Scan Button — positioned above bottom nav */}
+      <div className="scan-fab-container">
+        <button
+          className={`scan-fab${processing ? ' scan-fab--processing' : ''}`}
+          onClick={handleScanClick}
+          disabled={processing}
+          aria-label="Scan barcode"
+        >
+          {processing ? (
+            <span className="scan-fab-processing">
+              <span className="scan-fab-dot" />
+              Processing...
+            </span>
+          ) : (
+            <>
+              <ScanLine size={28} />
+              <span>Scan Barcode</span>
+            </>
+          )}
+        </button>
+      </div>
 
             {/* Live region for screen readers */}
             <div

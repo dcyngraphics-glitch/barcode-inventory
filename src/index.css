@@ -1667,8 +1667,162 @@ ol {
 }
 
 /* ==========================================================================
-   TOUCH TARGETS — enforce minimum 44x44px on interactive elements
+   SCAN FAB — floating action button above bottom nav
    ========================================================================== */
+
+.scan-fab-container {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + var(--space-md));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: calc(100% - var(--space-lg) * 2);
+  max-width: calc(var(--app-max-width) - var(--space-lg) * 2);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.scan-fab {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 320px;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-full);
+  border: none;
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  color: #ffffff;
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 4px 14px rgba(5, 150, 105, 0.4),
+    0 0 0 4px rgba(5, 150, 105, 0.15);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-base);
+  min-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.scan-fab:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(5, 150, 105, 0.5),
+    0 0 0 6px rgba(5, 150, 105, 0.2);
+}
+
+.scan-fab:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.scan-fab:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.scan-fab--processing {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  box-shadow:
+    0 4px 14px rgba(100, 116, 139, 0.4),
+    0 0 0 4px rgba(100, 116, 139, 0.15);
+}
+
+.scan-fab-processing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.scan-fab-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: pulse 1.2s infinite;
+}
+
+/* ==========================================================================
+   SCANNER SCREEN — gradient background
+   ========================================================================== */
+
+.app-container {
+  background: linear-gradient(180deg, var(--color-background) 0%, var(--color-muted) 100%);
+}
+
+/* ==========================================================================
+   CAMERA SCAN LINE — animated laser line
+   ========================================================================== */
+
+.camera-scan-line {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #059669 20%, #34d399 50%, #059669 80%, transparent 100%);
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.6);
+  animation: scan-line-move 2s ease-in-out infinite;
+  top: 20%;
+}
+
+@keyframes scan-line-move {
+  0%, 100% { top: 20%; }
+  50% { top: 80%; }
+}
+
+/* ==========================================================================
+   CAMERA VIEWFINDER — enhanced border glow
+   ========================================================================== */
+
+.camera-viewfinder {
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--color-border);
+}
+
+/* ==========================================================================
+   BOTTOM NAV — enhanced with top border glow
+   ========================================================================== */
+
+.bottom-nav {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   APP BAR — gradient
+   ========================================================================== */
+
+.app-bar {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+/* ==========================================================================
+   TOAST — enhanced with gradient
+   ========================================================================== */
+
+.toast {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   RESPONSIVE — FAB sizing
+   ========================================================================== */
+
+@media (min-width: 768px) {
+  .scan-fab {
+    max-width: 360px;
+    padding: var(--space-md) var(--space-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .scan-fab {
+    max-width: 400px;
+  }
+}
 
 button,
 [role="button"],

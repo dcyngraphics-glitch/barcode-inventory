@@ -1,30 +1,45 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard, ScanLine } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard } from 'lucide-react';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
-  onScan: (barcode: string) => void;
-  onManualEntry?: () => void;
+  onScan: (barcode: string) => void,
+  onManualEntry?: () => void,
 }
 
-export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProps) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const onScanRef = useRef(onScan);
-  const [flashOn, setFlashOn] = useState(false);
-  const [torchSupported, setTorchSupported] = useState(false);
-  const [initializing, setInitializing] = useState(false);
-  const [cameraActive, setCameraActive] = useState(false);
-  const { error, errorType, processing, start, stop, captureFrame } = useBarcodeScanner();
+export interface CameraViewfinderHandle {
+  triggerScan: () => void;
+}
 
-  // Keep ref in sync with latest onScan prop
-  useEffect(() => {
-    onScanRef.current = onScan;
-  }, [onScan]);
+export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfinderProps>(
+  function CameraViewfinder({ onScan, onManualEntry }, ref) {
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const onScanRef = useRef(onScan);
+    const [flashOn, setFlashOn] = useState(false);
+    const [torchSupported, setTorchSupported] = useState(false);
+    const [initializing, setInitializing] = useState(false);
+    const [cameraActive, setCameraActive] = useState(false);
+    const { error, errorType, start, stop, captureFrame } = useBarcodeScanner();
 
-  const handleStartCamera = useCallback(() => {
-    setCameraActive(true);
-    setInitializing(true);
-  }, []);
+    // Keep ref in sync with latest onScan prop
+    useEffect(() => {
+      onScanRef.current = onScan;
+    }, [onScan]);
+
+    // Expose scan trigger for external button (positioned above bottom nav)
+    useImperativeHandle(ref, () => ({
+      triggerScan: async () => {
+        const barcode = await captureFrame();
+        if (barcode && onScanRef.current) {
+          onScanRef.current(barcode);
+        }
+      },
+    }), [captureFrame]);
+
+    const handleStartCamera = useCallback(() => {
+      setCameraActive(true);
+      setInitializing(true);
+    }, []);
 
   useEffect(() => {
     if (!cameraActive) return;
@@ -109,13 +124,6 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
     // Small delay to let state settle
     setTimeout(() => setCameraActive(true), 150);
   }, [stop]);
-
-  const handleScan = useCallback(async () => {
-    const barcode = await captureFrame();
-    if (barcode && onScanRef.current) {
-      onScanRef.current(barcode);
-    }
-  }, [captureFrame]);
 
   // Error state
   if (error) {
@@ -227,6 +235,8 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
             <div className="camera-scan-corner camera-scan-corner--bl" />
             <div className="camera-scan-corner camera-scan-corner--br" />
           </div>
+          {/* Animated scan line */}
+          <div className="camera-scan-line" />
         </div>
       )}
 
@@ -245,28 +255,7 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
       {cameraActive && !initializing && (
         <p className="camera-helper-text">Point camera at barcode, then tap Scan</p>
       )}
-
-      {/* Scan Button — manual trigger replaces auto-scan */}
-      {cameraActive && !initializing && (
-        <button
-          className="camera-scan-btn"
-          onClick={handleScan}
-          disabled={processing}
-          aria-label="Scan barcode"
-        >
-          {processing ? (
-            <span className="camera-scan-processing">
-              <span className="camera-scan-dot" />
-              Processing...
-            </span>
-          ) : (
-            <>
-              <ScanLine size={20} />
-              Scan Barcode
-            </>
-          )}
-        </button>
-      )}
     </div>
   );
 }
+);
