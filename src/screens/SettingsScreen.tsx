@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import type { Product, Batch } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { useSettings } from '@/hooks/useSettings';
 import { requestPermission, getPermissionStatus } from '@/services/notificationService';
-import { resetTutorial } from '@/services/tutorialService';
+import { useTutorial } from '@/context/TutorialContext';
 import { getAllProducts } from '@/services/catalogService';
 import { getAllBatches } from '@/services/inventoryService';
 import { getDB } from '@/db/database';
@@ -34,6 +35,8 @@ const THEME_LABEL: Record<ThemeOption, string> = {
 };
 
 export function SettingsScreen() {
+  const navigate = useNavigate();
+  const { reopen } = useTutorial();
   const { settings, updateSettings } = useSettings();
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -127,10 +130,10 @@ export function SettingsScreen() {
   }, [showToast, updateSettings]);
 
   // Handle replay tutorial
-  const handleReplayTutorial = useCallback(async () => {
-    await resetTutorial();
-    window.location.reload();
-  }, []);
+  const handleReplayTutorial = useCallback(() => {
+    reopen();
+    navigate('/');
+  }, [reopen, navigate]);
 
   // Loading state from hook
   const loading = settings === null;
