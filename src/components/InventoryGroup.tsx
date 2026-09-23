@@ -25,8 +25,12 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
       }
     };
     recalculate();
-    window.addEventListener('resize', recalculate);
-    return () => window.removeEventListener('resize', recalculate);
+    // Use ResizeObserver on the content element instead of per-group window.resize
+    const observer = new ResizeObserver(recalculate);
+    if (contentRef.current) {
+      observer.observe(contentRef.current);
+    }
+    return () => observer.disconnect();
   }, [group.batches]);
 
   // Calculate unique statuses across all batches
