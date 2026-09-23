@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { InventoryGroup as InventoryGroupType, Batch } from '@/types';
-import { loadSettings } from '@/services/settingsService';
 import { calculateExpiryStatus } from '@/services/notificationService';
 import { updateBatch } from '@/services/inventoryService';
 import { Toast, useToast } from '@/components/Toast';
@@ -11,13 +10,13 @@ import { SearchBar } from '@/components/SearchBar';
 import { FilterChips, FilterType } from '@/components/FilterChips';
 import { InventoryGroup } from '@/components/InventoryGroup';
 import { useInventory } from '@/hooks/useInventory';
+import { useSettingsContext } from '@/context/SettingsContext';
 import { EditBatchSheet } from '@/components/EditBatchSheet';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
 
 export function InventoryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
-  const [alertWindowDays, setAlertWindowDays] = useState(3);
   const [deleteTarget, setDeleteTarget] = useState<Batch | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [editBatchOpen, setEditBatchOpen] = useState(false);
@@ -29,45 +28,37 @@ export function InventoryScreen() {
   const pullDistance = useRef(0);
 
   const { groups, loading, refresh, deleteBatch } = useInventory();
-
-  // Load settings
-  useEffect(() => {
-    loadSettings()
-      .then((settings) => {
-        setAlertWindowDays(settings.alertWindowDays);
-      })
-      .catch((err) => {
-        console.error('Failed to load settings:', err);
-        showToast('error', 'Failed to load settings. Using default values.');
-      });
-  }, [showToast]);
+  const { settings } = useSettingsContext();
+  const alertWindowDays = settings?.alertWindowDays ?? 3;
 
   // Filter groups by search query and expiry status
-  const filteredGroups: InventoryGroupType[] = groups
-    .filter((group) => {
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesName = group.product.name.toLowerCase().includes(query);
-        const matchesBrand = group.product.brand.toLowerCase().includes(query);
-        if (!matchesName && !matchesBrand) return false;
-      }
-      return true;
-    })
-    .map((group) => {
-      // Filter batches within groups when an expiry filter is active
-      const filteredBatches =
-        filter === 'all'
-          ? group.batches
-          : group.batches.filter((batch: Batch) => {
-              const status = calculateExpiryStatus(batch.expiryDate, alertWindowDays);
-              return status === filter;
-            });
-      // Recompute totals from filtered batches to avoid stale data
-      const totalQuantity = filteredBatches.reduce((s, b) => s + b.quantity, 0);
-      const earliestExpiry = filteredBatches[0]?.expiryDate ?? '';
-      return { ...group, batches: filteredBatches, totalQuantity, earliestExpiry };
-    })
-    .filter((group) => group.batches.length > 0);
+  const filteredGroups: InventoryGroupType[] = useMemo(() => {
+    return groups
+      .filter((group) => {
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          const matchesName = group.product.name.toLowerCase().includes(query);
+          const matchesBrand = group.product.brand.toLowerCase().includes(query);
+          if (!matchesName && !matchesBrand) return false;
+        }
+        return true;
+      })
+      .map((group) => {
+        // Filter batches within groups when an expiry filter is active
+        const filteredBatches =
+          filter === 'all'
+            ? group.batches
+            : group.batches.filter((batch: Batch) => {
+                const status = calculateExpiryStatus(batch.expiryDate, alertWindowDays);
+                return status === filter;
+              });
+        // Recompute totals from filtered batches to avoid stale data
+        const totalQuantity = filteredBatches.reduce((s, b) => s + b.quantity, 0);
+        const earliestExpiry = filteredBatches[0]?.expiryDate ?? '';
+        return { ...group, batches: filteredBatches, totalQuantity, earliestExpiry };
+      })
+      .filter((group) => group.batches.length > 0);
+  }, [groups, searchQuery, filter, alertWindowDays]);
 
   // Delete batch handler
   const handleDeleteBatch = useCallback(async (): Promise<void> => {
