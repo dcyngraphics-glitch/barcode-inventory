@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard } from 'lucide-react';
+import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard, ScanLine } from 'lucide-react';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
@@ -14,7 +14,7 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
   const [torchSupported, setTorchSupported] = useState(false);
   const [initializing, setInitializing] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
-  const { scanning, error, errorType, start, stop } = useBarcodeScanner();
+  const { error, errorType, processing, start, stop, captureFrame } = useBarcodeScanner();
 
   // Keep ref in sync with latest onScan prop
   useEffect(() => {
@@ -32,23 +32,24 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
     const video = videoRef.current;
     if (!video) return;
 
-    let mounted = true;
+    // Add playing listener BEFORE starting stream so we don't miss the event
+    const handlePlaying = () => setInitializing(false);
+    video.addEventListener('playing', handlePlaying);
 
-    const beginScan = async () => {
+    // Fallback: if video is already ready (playing fired before listener attached), clear immediately
+    if (video.readyState >= 2) {
+      setInitializing(false);
+    }
+
+    const beginStream = async () => {
       try {
-        await start(video, (barcode: string) => {
-          if (mounted) onScanRef.current(barcode);
-        });
+        await start(video);
       } catch {
         // start() handles its own errors via state
       }
     };
 
-    beginScan();
-
-    // Once the video actually plays, hide the initializing placeholder
-    const handlePlaying = () => setInitializing(false);
-    video.addEventListener('playing', handlePlaying);
+    beginStream();
 
     // Check if torch is supported (after stream is available)
     const checkTorchSupport = () => {
@@ -72,7 +73,6 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
     }, 2000);
 
     return () => {
-      mounted = false;
       video.removeEventListener('playing', handlePlaying);
       clearInterval(interval);
       clearTimeout(timeout);
@@ -109,6 +109,13 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
     // Small delay to let state settle
     setTimeout(() => setCameraActive(true), 150);
   }, [stop]);
+
+  const handleScan = useCallback(async () => {
+    const barcode = await captureFrame();
+    if (barcode && onScanRef.current) {
+      onScanRef.current(barcode);
+    }
+  }, [captureFrame]);
 
   // Error state
   if (error) {
@@ -180,7 +187,6 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
           autoPlay
           playsInline
           muted
-          style={initializing ? { display: 'none' } : undefined}
         />
       )}
 
@@ -191,7 +197,7 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
             <Camera size={48} className="camera-start-icon" />
             <p className="camera-start-title">Camera Scanner</p>
             <p className="camera-start-desc">
-              Tap the button below to activate your camera and start scanning barcodes.
+              Tap the button below to activate your camera. Then tap the scan button to read barcodes.
             </p>
             <button onClick={handleStartCamera} className="camera-start-btn">
               <Play size={18} />
@@ -213,17 +219,19 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
       )}
 
       {/* Overlay with scan frame cutout */}
-      <div className="scan-overlay">
-        <div className="camera-scan-frame">
-          <div className="camera-scan-corner camera-scan-corner--tl" />
-          <div className="camera-scan-corner camera-scan-corner--tr" />
-          <div className="camera-scan-corner camera-scan-corner--bl" />
-          <div className="camera-scan-corner camera-scan-corner--br" />
+      {cameraActive && !initializing && (
+        <div className="scan-overlay">
+          <div className="camera-scan-frame">
+            <div className="camera-scan-corner camera-scan-corner--tl" />
+            <div className="camera-scan-corner camera-scan-corner--tr" />
+            <div className="camera-scan-corner camera-scan-corner--bl" />
+            <div className="camera-scan-corner camera-scan-corner--br" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Flash toggle button */}
-      {torchSupported && (
+      {torchSupported && cameraActive && !initializing && (
         <button
           onClick={toggleFlash}
           aria-label={flashOn ? 'Turn flash off' : 'Turn flash on'}
@@ -234,14 +242,30 @@ export function CameraViewfinder({ onScan, onManualEntry }: CameraViewfinderProp
       )}
 
       {/* Helper text */}
-      <p className="camera-helper-text">Point camera at barcode</p>
+      {cameraActive && !initializing && (
+        <p className="camera-helper-text">Point camera at barcode, then tap Scan</p>
+      )}
 
-      {/* Scanning indicator */}
-      {scanning && (
-        <div className="camera-scanning">
-          <div className="camera-scanning-dot" />
-          Scanning...
-        </div>
+      {/* Scan Button — manual trigger replaces auto-scan */}
+      {cameraActive && !initializing && (
+        <button
+          className="camera-scan-btn"
+          onClick={handleScan}
+          disabled={processing}
+          aria-label="Scan barcode"
+        >
+          {processing ? (
+            <span className="camera-scan-processing">
+              <span className="camera-scan-dot" />
+              Processing...
+            </span>
+          ) : (
+            <>
+              <ScanLine size={20} />
+              Scan Barcode
+            </>
+          )}
+        </button>
       )}
     </div>
   );

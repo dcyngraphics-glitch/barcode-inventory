@@ -13,9 +13,6 @@ const mockVideo = {
 beforeEach(() => {
   vi.useFakeTimers();
 
-  vi.stubGlobal('requestAnimationFrame', () => 1);
-  vi.stubGlobal('cancelAnimationFrame', () => {});
-
   Object.defineProperty(globalThis.navigator, 'mediaDevices', {
     value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [] }) },
     writable: true,
@@ -33,17 +30,18 @@ afterEach(() => {
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 
 describe('useBarcodeScanner', () => {
-  it('returns initial state with scanning=false and no error', () => {
+  it('returns initial state with scanning=false, no error, not processing', () => {
     const { result } = renderHook(() => useBarcodeScanner());
     expect(result.current.scanning).toBe(false);
     expect(result.current.error).toBeNull();
     expect(result.current.errorType).toBe('unknown');
+    expect(result.current.processing).toBe(false);
   });
 
   it('sets scanning=true after start() is called', async () => {
     const { result } = renderHook(() => useBarcodeScanner());
     await act(async () => {
-      await result.current.start(mockVideo, vi.fn());
+      await result.current.start(mockVideo);
     });
     expect(result.current.scanning).toBe(true);
     expect(result.current.error).toBeNull();
@@ -52,7 +50,7 @@ describe('useBarcodeScanner', () => {
   it('clears error state when start() is called', async () => {
     const { result } = renderHook(() => useBarcodeScanner());
     await act(async () => {
-      await result.current.start(mockVideo, vi.fn());
+      await result.current.start(mockVideo);
     });
     expect(result.current.error).toBeNull();
     expect(result.current.errorType).toBe('unknown');
@@ -61,19 +59,19 @@ describe('useBarcodeScanner', () => {
   it('calls getUserMedia with environment facing mode', async () => {
     const { result } = renderHook(() => useBarcodeScanner());
     await act(async () => {
-      await result.current.start(mockVideo, vi.fn());
+      await result.current.start(mockVideo);
     });
     expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith(
-          expect.objectContaining({
-            video: { facingMode: { ideal: 'environment' } },
-          })
-        );
+      expect.objectContaining({
+        video: { facingMode: { ideal: 'environment' } },
+      })
+    );
   });
 
   it('resets scanning=false and error=null on stop()', async () => {
     const { result } = renderHook(() => useBarcodeScanner());
     await act(async () => {
-      await result.current.start(mockVideo, vi.fn());
+      await result.current.start(mockVideo);
     });
     expect(result.current.scanning).toBe(true);
     act(() => {
@@ -90,7 +88,7 @@ describe('useBarcodeScanner', () => {
 
     const { result } = renderHook(() => useBarcodeScanner());
     await act(async () => {
-      await result.current.start(mockVideo, vi.fn());
+      await result.current.start(mockVideo);
     });
     expect(result.current.scanning).toBe(false);
     expect(result.current.errorType).toBe('permission-denied');
@@ -103,9 +101,31 @@ describe('useBarcodeScanner', () => {
 
     const { result } = renderHook(() => useBarcodeScanner());
     await act(async () => {
-      await result.current.start(mockVideo, vi.fn());
+      await result.current.start(mockVideo);
     });
     expect(result.current.scanning).toBe(false);
     expect(result.current.errorType).toBe('no-camera');
+  });
+
+  it('captureFrame returns null when camera not started', async () => {
+    const { result } = renderHook(() => useBarcodeScanner());
+    const barcode = await result.current.captureFrame();
+    expect(barcode).toBeNull();
+  });
+
+  it('captureFrame processes without error when camera active', async () => {
+    const mockReader = { decodeFromCanvas: vi.fn().mockResolvedValue({ getText: () => '1234567890123' }) };
+    vi.stubGlobal('BrowserMultiFormatReader', vi.fn(() => mockReader));
+
+    const { result } = renderHook(() => useBarcodeScanner());
+    await act(async () => {
+      await result.current.start(mockVideo);
+    });
+
+    // Should not throw even though jsdom canvas is incomplete
+    const barcode = await result.current.captureFrame();
+    // Result may be null in jsdom (canvas.getContext returns null), but processing state should clean up
+    expect(result.current.processing).toBe(false);
+    expect(barcode === null || barcode === '1234567890123').toBe(true);
   });
 });

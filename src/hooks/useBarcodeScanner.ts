@@ -17,32 +17,26 @@ interface ScannerState {
   scanning: boolean;
   error: string | null;
   errorType: CameraErrorType;
+  processing: boolean;
 }
 
-/** Cooldown before the same barcode can fire again (debounce across frames). */
-const SCAN_COOLDOWN_MS = 2000;
-
-
-
 export function useBarcodeScanner() {
-  const [state, setState] = useState<ScannerState>({ scanning: false, error: null, errorType: 'unknown' });
+  const [state, setState] = useState<ScannerState>({
+    scanning: false,
+    error: null,
+    errorType: 'unknown',
+    processing: false,
+  });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const detectorRef = useRef<BarcodeDetectorSupported | null>(null);
-  const onScanRef = useRef<((barcode: string) => void) | null>(null);
-  const lastScanRef = useRef<{ barcode: string; time: number } | null>(null);
-  const scanningRef = useRef(false);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const mountedRef = useRef(true);
 
   const hasBarcodeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
   const stop = useCallback(() => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -54,99 +48,36 @@ export function useBarcodeScanner() {
       canvasRef.current.remove();
       canvasRef.current = null;
     }
-    // Reset @zxing reader to release decoder resources
     const reader = readerRef.current;
     if (reader && 'reset' in reader && typeof (reader as any).reset === 'function') {
       (reader as any).reset();
     }
     readerRef.current = null;
-    scanningRef.current = false;
-    setState({ scanning: false, error: null, errorType: 'unknown' });
+    setState({ scanning: false, error: null, errorType: 'unknown', processing: false });
   }, []);
 
   const start = useCallback(
-    async (video: HTMLVideoElement, onScan: (barcode: string) => void) => {
-      // Guard: prevent double-start from orphaning the first stream/RAF loop
-      if (scanningRef.current) return;
-      scanningRef.current = true;
-
+    async (video: HTMLVideoElement) => {
+      if (state.scanning) return;
       videoRef.current = video;
-      onScanRef.current = onScan;
-      lastScanRef.current = null;
-      setState({ scanning: true, error: null, errorType: 'unknown' });
+      setState({ scanning: true, error: null, errorType: 'unknown', processing: false });
 
       try {
-  // Request camera — use `ideal` facingMode so devices without a rear camera
-  // fall back to whatever is available instead of throwing OverconstrainedError.
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: 'environment' } },
-    audio: false,
-  });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        });
         streamRef.current = stream;
         video.srcObject = stream;
         await video.play();
-
-        // Helper: handle a detected barcode — debounce, stop stream, fire callback.
-        const handleDetected = (barcode: string) => {
-          const now = Date.now();
-          if (
-            lastScanRef.current &&
-            lastScanRef.current.barcode === barcode &&
-            now - lastScanRef.current.time < SCAN_COOLDOWN_MS
-          ) {
-            return false; // same barcode within cooldown — keep scanning
-          }
-          lastScanRef.current = { barcode, time: now };
-          stop();
-          onScanRef.current?.(barcode);
-          return true;
-        };
 
         if (hasBarcodeDetector && window.BarcodeDetector) {
           detectorRef.current = new window.BarcodeDetector({
             formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'],
           });
-          const tick = async () => {
-            if (!detectorRef.current || !videoRef.current) return;
-            try {
-              const barcodes = await detectorRef.current.detect(videoRef.current);
-              if (barcodes.length > 0) {
-                if (handleDetected(barcodes[0]!.rawValue)) return;
-              }
-            } catch (err) {
-              // Detection errors are non-fatal, keep scanning
-              console.error('Barcode detection error:', err);
-            }
-            rafRef.current = requestAnimationFrame(tick);
-          };
-          rafRef.current = requestAnimationFrame(tick);
         } else {
-          // Fallback: @zxing/browser MultiFormatReader
           const reader = new BrowserMultiFormatReader();
           readerRef.current = reader;
-          const tick = async () => {
-            if (!videoRef.current) return;
-            try {
-              if (!canvasRef.current) {
-                canvasRef.current = document.createElement('canvas');
-              }
-              const canvas = canvasRef.current;
-              canvas.width = videoRef.current.videoWidth;
-              canvas.height = videoRef.current.videoHeight;
-              const ctx = canvas.getContext('2d');
-              if (!ctx) return;
-              ctx.drawImage(videoRef.current, 0, 0);
-              const result = await reader.decodeFromCanvas(canvas);
-              if (result) {
-                if (handleDetected(result.getText())) return;
-              }
-            } catch (err) {
-              // No barcode found or decode error, keep scanning
-              console.error('Barcode decode error:', err);
-            }
-            rafRef.current = requestAnimationFrame(tick);
-          };
-          rafRef.current = requestAnimationFrame(tick);
         }
       } catch (err) {
         const errorType: CameraErrorType =
@@ -160,15 +91,55 @@ export function useBarcodeScanner() {
           scanning: false,
           error: err instanceof Error ? err.message : 'Failed to access camera',
           errorType,
+          processing: false,
         });
-        scanningRef.current = false;
       }
     },
-    [hasBarcodeDetector, stop]
+    [hasBarcodeDetector, state.scanning]
   );
 
+  const captureFrame = useCallback(async (): Promise<string | null> => {
+    const video = videoRef.current;
+    if (!video) return null;
+
+    setState((prev) => ({ ...prev, processing: true }));
+
+    try {
+      if (hasBarcodeDetector && detectorRef.current) {
+        const barcodes = await detectorRef.current.detect(video);
+        if (barcodes.length > 0) {
+          return barcodes[0]!.rawValue;
+        }
+      } else if (readerRef.current) {
+        if (!canvasRef.current) {
+          canvasRef.current = document.createElement('canvas');
+        }
+        const canvas = canvasRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(video, 0, 0);
+        const result = await readerRef.current.decodeFromCanvas(canvas);
+        if (result) {
+          return result.getText();
+        }
+      }
+      return null;
+    } catch (err) {
+      console.error('Capture error:', err);
+      return null;
+    } finally {
+      if (mountedRef.current) {
+        setState((prev) => ({ ...prev, processing: false }));
+      }
+    }
+  }, [hasBarcodeDetector]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       stop();
     };
   }, [stop]);
@@ -177,8 +148,10 @@ export function useBarcodeScanner() {
     scanning: state.scanning,
     error: state.error,
     errorType: state.errorType,
+    processing: state.processing,
     hasBarcodeDetector,
     start,
     stop,
+    captureFrame,
   };
 }
