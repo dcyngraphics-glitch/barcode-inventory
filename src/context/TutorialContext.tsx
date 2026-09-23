@@ -45,13 +45,19 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    getTutorialStatus().then((status) => {
-      if (!status.tutorialCompleted) {
-        setCurrentStep(status.tutorialStep);
-        setIsVisible(true);
-      }
-      setLoaded(true);
-    });
+    getTutorialStatus()
+      .then((status) => {
+        if (!status.tutorialCompleted) {
+          setCurrentStep(status.tutorialStep);
+          setIsVisible(true);
+        }
+      })
+      .catch(() => {
+        // If loading fails, don't show the tutorial
+      })
+      .finally(() => {
+        setLoaded(true);
+      });
   }, []);
 
   const persistStep = useCallback((step: number) => {
@@ -59,20 +65,16 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const next = useCallback(() => {
-    setCurrentStep((prev) => {
-      const nextStep = Math.min(prev + 1, TOTAL_TUTORIAL_STEPS - 1);
-      persistStep(nextStep);
-      return nextStep;
-    });
-  }, [persistStep]);
+    const nextStep = Math.min(currentStep + 1, TOTAL_TUTORIAL_STEPS - 1);
+    setCurrentStep(nextStep);
+    persistStep(nextStep);
+  }, [currentStep, persistStep]);
 
   const prev = useCallback(() => {
-    setCurrentStep((prev) => {
-      const prevStep = Math.max(prev - 1, 0);
-      persistStep(prevStep);
-      return prevStep;
-    });
-  }, [persistStep]);
+    const prevStep = Math.max(currentStep - 1, 0);
+    setCurrentStep(prevStep);
+    persistStep(prevStep);
+  }, [currentStep, persistStep]);
 
   const skip = useCallback(() => {
     setTutorialCompleted(true);

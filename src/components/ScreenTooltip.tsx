@@ -19,11 +19,15 @@ export function ScreenTooltip({ screenId, message }: ScreenTooltipProps) {
       setShow(false);
       return;
     }
-    getTutorialStatus().then((status) => {
-      if (!status.screenHintsSeen.includes(screenId)) {
-        setShow(true);
-      }
-    });
+    getTutorialStatus()
+      .then((status) => {
+        if (!status.screenHintsSeen.includes(screenId)) {
+          setShow(true);
+        }
+      })
+      .catch(() => {
+        // If loading fails, don't show the hint
+      });
   }, [screenId, isTutorialVisible]);
 
   const handleDismiss = () => {
