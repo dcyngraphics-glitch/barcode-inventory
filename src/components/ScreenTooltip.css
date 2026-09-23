@@ -1,0 +1,52 @@
+/* ==========================================================================
+   SCREEN TOOLTIP
+   ========================================================================== */
+
+.screen-tooltip {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-total) + var(--space-md));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  max-width: 360px;
+  width: calc(100% - 2 * var(--space-md));
+  animation: slide-up-sheet var(--transition-base) ease;
+}
+
+.screen-tooltip-message {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-foreground);
+  line-height: 1.4;
+}
+
+.screen-tooltip-btn {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  min-height: 36px;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.screen-tooltip-btn:hover {
+  opacity: 0.9;
+}
+
+.screen-tooltip-btn:active {
+  transform: scale(0.97);
+}
