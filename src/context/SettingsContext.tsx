@@ -28,14 +28,29 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (settings) {
-      saveSettings(settings);
-    }
-  }, [settings]);
+      if (settings) {
+        saveSettings(settings).catch(err => {
+          console.error('Failed to save settings:', err);
+        });
+      }
+    }, [settings]);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
-    setSettings((prev) => (prev ? { ...prev, ...patch } : null));
-  }, []);
+      setSettings((prev) => {
+        if (!prev) return null;
+        // Create a copy of previous settings
+        const newSettings = { ...prev };
+        // Only apply non-undefined values from the patch
+        Object.keys(patch).forEach((key) => {
+          const typedKey = key as keyof Settings;
+          if (patch[typedKey] !== undefined) {
+            // @ts-ignore - we know typedKey is a keyof Settings
+            newSettings[typedKey] = patch[typedKey];
+          }
+        });
+        return newSettings;
+      });
+    }, []);
 
   return (
     <SettingsContext.Provider value={{ settings, updateSettings }}>

@@ -63,9 +63,11 @@ describe('useBarcodeScanner', () => {
     await act(async () => {
       await result.current.start(mockVideo, vi.fn());
     });
-    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
-      video: { facingMode: 'environment' },
-    });
+    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith(
+          expect.objectContaining({
+            video: { facingMode: { ideal: 'environment' } },
+          })
+        );
   });
 
   it('resets scanning=false and error=null on stop()', async () => {

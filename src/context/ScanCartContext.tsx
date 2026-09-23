@@ -42,7 +42,7 @@ export function ScanCartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => {
       // If item has a barcode matching an existing item with same expiry, increment quantity
       const existingIdx = prev.findIndex(
-        (p) => p.barcode === newItem.barcode && p.expiryDate === newItem.expiryDate && !p.needsInfo && !newItem.needsInfo
+        (p) => p.barcode === newItem.barcode && p.expiryDate === newItem.expiryDate
       );
       if (existingIdx >= 0) {
         const updated = [...prev];
