@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useTutorial } from '@/context/TutorialContext';
@@ -7,6 +8,69 @@ import './TutorialOverlay.css';
 export function TutorialOverlay() {
   const navigate = useNavigate();
   const { isVisible, currentStep, totalSteps, next, prev, skip, finish } = useTutorial();
+  const ctaRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Focus management: auto-focus CTA, focus trap, Escape handler
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+    
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    
+    // Focus CTA button on open
+    setTimeout(() => {
+      ctaRef.current?.focus();
+    }, 0);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape to close
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        skip();
+        return;
+      }
+      
+      // Focus trap: Tab cycling
+      if (e.key === 'Tab') {
+        const overlay = overlayRef.current;
+        if (!overlay) return;
+        
+        const focusable = overlay.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (focusable.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to previous element
+      previousFocusRef.current?.focus();
+    };
+  }, [isVisible, skip]);
 
   if (!isVisible) return null;
 
@@ -32,7 +96,7 @@ export function TutorialOverlay() {
   };
 
   return (
-    <div className="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+    <div ref={overlayRef} className="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
       <div className="tutorial-card">
         {/* Close (X) for skip */}
         <button
@@ -103,6 +167,7 @@ export function TutorialOverlay() {
 
           {/* Primary CTA */}
           <button
+            ref={ctaRef}
             className="tutorial-btn tutorial-btn-primary"
             onClick={handleCta}
           >
