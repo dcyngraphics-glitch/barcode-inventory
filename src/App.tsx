@@ -10,6 +10,7 @@ import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext'
 import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { ScanCartProvider } from '@/context/ScanCartContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
@@ -22,24 +23,26 @@ export default function App() {
   }, []);
 
   return (
-    <SettingsProvider>
-      <NotificationChecker />
-      <TutorialProvider>
-        <ScanCartProvider>
-          <div className="app-container">
-            <Routes>
-              <Route path="/" element={<ScannerScreen />} />
-              <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-              <Route path="/inventory" element={<InventoryScreen />} />
-              <Route path="/settings" element={<SettingsScreen />} />
-              <Route path="/cart" element={<CartReviewScreen />} />
-            </Routes>
-            <BottomNav />
-          </div>
-          <TutorialOverlay />
-        </ScanCartProvider>
-      </TutorialProvider>
-    </SettingsProvider>
+    <ErrorBoundary>
+      <SettingsProvider>
+        <NotificationChecker />
+        <TutorialProvider>
+          <ScanCartProvider>
+            <div className="app-container">
+              <Routes>
+                <Route path="/" element={<ScannerScreen />} />
+                <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+                <Route path="/inventory" element={<InventoryScreen />} />
+                <Route path="/settings" element={<SettingsScreen />} />
+                <Route path="/cart" element={<CartReviewScreen />} />
+              </Routes>
+              <BottomNav />
+            </div>
+            <TutorialOverlay />
+          </ScanCartProvider>
+        </TutorialProvider>
+      </SettingsProvider>
+    </ErrorBoundary>
   );
 }
 
