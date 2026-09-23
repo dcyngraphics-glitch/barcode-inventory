@@ -24,7 +24,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     description: 'After scanning, review the auto-filled details. Edit name, brand, price, and expiry date. Set your quantity and save to inventory.',
     icon: Package,
     ctaLabel: 'Got It',
-    screenPath: '/product/demo',
+    screenPath: '/inventory',
   },
   {
     id: 'manage',
