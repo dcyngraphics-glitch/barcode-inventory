@@ -35,6 +35,8 @@ export function useBarcodeScanner() {
   const mountedRef = useRef(true);
   // Synchronous guard to prevent double-start race
   const startingRef = useRef(false);
+  // Track scanning via ref so start/stop don't need state in deps
+  const scanningRef = useRef(false);
 
   const hasBarcodeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
@@ -55,6 +57,7 @@ export function useBarcodeScanner() {
       (reader as any).reset();
     }
     readerRef.current = null;
+    scanningRef.current = false;
     setState({ scanning: false, error: null, errorType: 'unknown', processing: false });
   }, []);
 
@@ -64,11 +67,12 @@ export function useBarcodeScanner() {
       if (startingRef.current) return;
       startingRef.current = true;
 
-      if (state.scanning) {
+      if (scanningRef.current) {
         startingRef.current = false;
         return;
       }
       videoRef.current = video;
+      scanningRef.current = true;
       setState({ scanning: true, error: null, errorType: 'unknown', processing: false });
 
       try {
@@ -96,6 +100,7 @@ export function useBarcodeScanner() {
                 (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError' || err.name === 'OverconstrainedError')
               ? 'no-camera'
               : 'unknown';
+        scanningRef.current = false;
         setState({
           scanning: false,
           error: err instanceof Error ? err.message : 'Failed to access camera',
@@ -105,7 +110,7 @@ export function useBarcodeScanner() {
         startingRef.current = false;
       }
     },
-    [hasBarcodeDetector, state.scanning]
+    [hasBarcodeDetector]
   );
 
   const captureFrame = useCallback(async (): Promise<string | null> => {
