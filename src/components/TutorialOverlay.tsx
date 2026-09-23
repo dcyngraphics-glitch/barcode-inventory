@@ -11,13 +11,14 @@ export function TutorialOverlay() {
   const ctaRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const isAdvancingRef = useRef(false);
 
   // Focus management: auto-focus CTA, focus trap, Escape handler
   useEffect(() => {
     if (!isVisible) {
       return;
     }
-    
+    isAdvancingRef.current = false;
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     
     // Focus CTA button on open
@@ -81,6 +82,9 @@ export function TutorialOverlay() {
   const isFirstStep = currentStep === 0;
 
   const handleCta = () => {
+    if (isAdvancingRef.current) return;
+    isAdvancingRef.current = true;
+    
     if (step.screenPath) {
       navigate(step.screenPath);
     }
@@ -89,6 +93,11 @@ export function TutorialOverlay() {
     } else {
       next();
     }
+    
+    // Reset guard after a short delay to allow re-focus on next render
+    setTimeout(() => {
+      isAdvancingRef.current = false;
+    }, 100);
   };
 
   const handleSkip = () => {
