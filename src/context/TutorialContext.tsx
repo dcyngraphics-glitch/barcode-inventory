@@ -99,22 +99,24 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
     [currentStep]
   );
 
+  const value = useMemo<TutorialContextValue>(() => ({
+    isVisible,
+    currentStep,
+    totalSteps: TOTAL_TUTORIAL_STEPS,
+    currentStepData,
+    next,
+    prev,
+    skip,
+    finish,
+    reopen,
+  }), [isVisible, currentStep, currentStepData, next, prev, skip, finish, reopen]);
+
   // Don't render anything until loaded to prevent flash
   if (!loaded) return <>{children}</>;
 
   return (
     <TutorialContext.Provider
-      value={{
-        isVisible,
-        currentStep,
-        totalSteps: TOTAL_TUTORIAL_STEPS,
-        currentStepData,
-        next,
-        prev,
-        skip,
-        finish,
-        reopen,
-      }}
+      value={value}
     >
       {children}
     </TutorialContext.Provider>
