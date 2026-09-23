@@ -5,17 +5,18 @@ export function useTheme() {
   const { settings } = useSettings();
 
   useEffect(() => {
-    if (!settings) return;
+    // Default to 'light' when settings not yet loaded to prevent system-preference flash
+    const theme = settings?.theme ?? 'light';
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
 
     const applyTheme = (prefersDark: boolean) => {
-      let themeToApply = settings.theme ?? 'auto';
+      let themeToApply = theme;
       if (themeToApply === 'auto') {
         themeToApply = prefersDark ? 'dark' : 'light';
       }
       document.documentElement.setAttribute('data-theme', themeToApply);
     };
 
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
     applyTheme(mq.matches);
 
     const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);

@@ -53,8 +53,12 @@ export function useBarcodeScanner() {
       canvasRef.current = null;
     }
     const reader = readerRef.current;
-    if (reader && 'reset' in reader && typeof (reader as any).reset === 'function') {
-      (reader as any).reset();
+    if (reader) {
+      // Type-safe reset: BrowserMultiFormatReader may not expose reset() in types
+      const r = reader as unknown as { reset?: () => void };
+      if (typeof r.reset === 'function') {
+        r.reset();
+      }
     }
     readerRef.current = null;
     scanningRef.current = false;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import { ScanLine, Package, Settings } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
@@ -15,33 +15,53 @@ import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
+import { AuthProvider } from '@/context/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function App() {
   useTheme();
+  const [isSeeding, setIsSeeding] = useState(true);
+
   useEffect(() => {
-    seedCatalogIfEmpty();
+    seedCatalogIfEmpty()
+      .finally(() => setIsSeeding(false));
   }, []);
+
+  if (isSeeding) {
+    return (
+      <div className="screen-center">
+        <div className="loading-spinner" role="status" aria-label="Loading">
+          <div className="spinner" />
+          <p>Setting up catalog...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>
-      <SettingsProvider>
-        <NotificationChecker />
-        <TutorialProvider>
-          <ScanCartProvider>
-            <div className="app-container">
-              <Routes>
-                <Route path="/" element={<ScannerScreen />} />
-                <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-                <Route path="/inventory" element={<InventoryScreen />} />
-                <Route path="/settings" element={<SettingsScreen />} />
-                <Route path="/cart" element={<CartReviewScreen />} />
-              </Routes>
-              <BottomNav />
-            </div>
-            <TutorialOverlay />
-          </ScanCartProvider>
-        </TutorialProvider>
-      </SettingsProvider>
+      <AuthProvider>
+        <SettingsProvider>
+          <NotificationChecker />
+          <TutorialProvider>
+            <ScanCartProvider>
+              <ProtectedRoute>
+                <div className="app-container">
+                  <Routes>
+                    <Route path="/" element={<ScannerScreen />} />
+                    <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+                    <Route path="/inventory" element={<InventoryScreen />} />
+                    <Route path="/settings" element={<SettingsScreen />} />
+                    <Route path="/cart" element={<CartReviewScreen />} />
+                  </Routes>
+                  <BottomNav />
+                </div>
+                <TutorialOverlay />
+              </ProtectedRoute>
+            </ScanCartProvider>
+          </TutorialProvider>
+        </SettingsProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

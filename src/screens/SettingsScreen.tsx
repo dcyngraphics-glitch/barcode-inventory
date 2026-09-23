@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import type { Product, Batch } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { useSettings } from '@/hooks/useSettings';
@@ -38,10 +39,15 @@ export function SettingsScreen() {
   const navigate = useNavigate();
   const { reopen } = useTutorial();
   const { settings, updateSettings } = useSettings();
+  const { user: authUser, logout } = useAuth();
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const { toasts, showToast, dismissToast } = useToast();
+
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
 
   // Handle notification toggle
   const handleNotificationToggle = useCallback(
@@ -135,8 +141,9 @@ export function SettingsScreen() {
     navigate('/');
   }, [reopen, navigate]);
 
-  // Loading state from hook
+  // Loading state from hook — derive without early return to keep hooks order stable
   const loading = settings === null;
+  const permissionDenied = settings?.notificationsEnabled && getPermissionStatus() === 'denied';
 
   if (loading) {
     return (
@@ -148,11 +155,6 @@ export function SettingsScreen() {
       </div>
     );
   }
-
-  const permissionDenied = useMemo(
-    () => settings!.notificationsEnabled && getPermissionStatus() === 'denied',
-    [settings!.notificationsEnabled]
-  );
 
   return (
     <div className="settings-screen">
@@ -284,6 +286,31 @@ export function SettingsScreen() {
         >
           <HelpCircle size={20} />
           Replay Tutorial
+        </button>
+      </div>
+
+      {/* Account Section */}
+      <h2 className="settings-section-label">
+        Account
+      </h2>
+      <div className="settings-card settings-card-stack-sm">
+        <div className="settings-info-header">
+          <LogOut size={20} className="text-muted" />
+          <div>
+            <div className="settings-info-name">
+              {authUser?.email ?? 'Unknown'}
+            </div>
+            <div className="settings-info-version">
+              Dashboard user
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="settings-row"
+        >
+          <LogOut size={20} />
+          Sign Out
         </button>
       </div>
 

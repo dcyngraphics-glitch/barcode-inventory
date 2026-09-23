@@ -49,9 +49,9 @@ export function ProductDetailScreen() {
 
     const barcodeStr = barcode;
     async function performLookup() {
-      // Fix: Validate barcode format (minimum 8 digits)
-      if (!/^\d{8,}$/.test(barcodeStr)) {
-        setError('Invalid barcode: must be at least 8 digits');
+      // Fix: Validate barcode format — supports EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39
+      if (!/^[0-9A-Za-z\-.\s/]{1,48}$/.test(barcodeStr)) {
+        setError('Invalid barcode: must be 1-48 alphanumeric characters');
         return;
       }
 

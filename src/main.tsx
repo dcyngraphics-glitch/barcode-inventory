@@ -6,7 +6,7 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/barcode-inventory/">
+    <BrowserRouter basename={process.env.NODE_ENV === 'production' ? '/barcode-inventory/' : '/'}>
       <App />
     </BrowserRouter>
   </React.StrictMode>,

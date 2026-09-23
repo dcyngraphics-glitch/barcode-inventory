@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import type { Settings } from '@/types';
 import { useSettingsContext } from '@/context/SettingsContext';
 
