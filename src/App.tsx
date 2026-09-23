@@ -19,7 +19,6 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function App() {
-  useTheme();
   const [isSeeding, setIsSeeding] = useState(true);
 
   useEffect(() => {
@@ -42,7 +41,7 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <SettingsProvider>
-          <NotificationChecker />
+          <ThemeAndNotifications />
           <TutorialProvider>
             <ScanCartProvider>
               <ProtectedRoute>
@@ -64,6 +63,11 @@ export default function App() {
       </AuthProvider>
     </ErrorBoundary>
   );
+}
+
+function ThemeAndNotifications() {
+  useTheme();
+  return <NotificationChecker />;
 }
 
 function NotificationChecker() {
