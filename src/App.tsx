@@ -7,6 +7,8 @@ import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { CartReviewScreen } from '@/screens/CartReviewScreen';
 import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext';
+import { TutorialProvider } from '@/context/TutorialContext';
+import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { ScanCartProvider } from '@/context/ScanCartContext';
 import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
@@ -22,18 +24,21 @@ export default function App() {
   return (
     <SettingsProvider>
       <NotificationChecker />
-      <ScanCartProvider>
-        <div className="app-container">
-          <Routes>
-            <Route path="/" element={<ScannerScreen />} />
-            <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-            <Route path="/inventory" element={<InventoryScreen />} />
-            <Route path="/settings" element={<SettingsScreen />} />
-            <Route path="/cart" element={<CartReviewScreen />} />
-          </Routes>
-          <BottomNav />
-        </div>
-      </ScanCartProvider>
+      <TutorialProvider>
+        <ScanCartProvider>
+          <div className="app-container">
+            <Routes>
+              <Route path="/" element={<ScannerScreen />} />
+              <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+              <Route path="/inventory" element={<InventoryScreen />} />
+              <Route path="/settings" element={<SettingsScreen />} />
+              <Route path="/cart" element={<CartReviewScreen />} />
+            </Routes>
+            <BottomNav />
+          </div>
+          <TutorialOverlay />
+        </ScanCartProvider>
+      </TutorialProvider>
     </SettingsProvider>
   );
 }

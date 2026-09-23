@@ -12,6 +12,7 @@ import { FilterChips, FilterType } from '@/components/FilterChips';
 import { InventoryGroup } from '@/components/InventoryGroup';
 import { useInventory } from '@/hooks/useInventory';
 import { EditBatchSheet } from '@/components/EditBatchSheet';
+import { ScreenTooltip } from '@/components/ScreenTooltip';
 
 export function InventoryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -267,6 +268,11 @@ export function InventoryScreen() {
                             }}
                           />
                         )}
+
+      <ScreenTooltip
+        screenId="inventory"
+        message="Tap a product to expand batches • Use search or filter by expiry status"
+      />
     </div>
   );
 }

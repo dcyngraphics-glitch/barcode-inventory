@@ -5,6 +5,7 @@ import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { ManualEntrySheet } from '@/components/ManualEntrySheet';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
 import { RecentScans } from '@/components/RecentScans';
+import { ScreenTooltip } from '@/components/ScreenTooltip';
 import { useScanCart } from '@/context/ScanCartContext';
 import { useSettings } from '@/hooks/useSettings';
 import { lookupProduct } from '@/services/productLookupService';
@@ -355,6 +356,11 @@ export function ScannerScreen() {
           to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
+
+      <ScreenTooltip
+        screenId="scanner"
+        message="Tap the barcode or use the keyboard icon for manual entry"
+      />
     </div>
   );
 }

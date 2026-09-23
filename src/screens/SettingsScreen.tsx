@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import type { Product, Batch } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { useSettings } from '@/hooks/useSettings';
 import { requestPermission, getPermissionStatus } from '@/services/notificationService';
+import { resetTutorial } from '@/services/tutorialService';
 import { getAllProducts } from '@/services/catalogService';
 import { getAllBatches } from '@/services/inventoryService';
 import { getDB } from '@/db/database';
@@ -124,6 +125,12 @@ export function SettingsScreen() {
       setShowClearDialog(false);
     }
   }, [showToast, updateSettings]);
+
+  // Handle replay tutorial
+  const handleReplayTutorial = useCallback(async () => {
+    await resetTutorial();
+    window.location.reload();
+  }, []);
 
   // Loading state from hook
   const loading = settings === null;
@@ -268,6 +275,13 @@ export function SettingsScreen() {
           <ExternalLink size={20} />
           Licenses
         </a>
+        <button
+          onClick={handleReplayTutorial}
+          className="settings-row"
+        >
+          <HelpCircle size={20} />
+          Replay Tutorial
+        </button>
       </div>
 
       {/* Clear data confirmation dialog */}

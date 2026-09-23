@@ -1,5 +1,4 @@
-import type { Settings } from '@/types';
-import { DEFAULT_SETTINGS, SETTINGS_ID } from '@/types';
+import { DEFAULT_SETTINGS } from '@/types';
 import { loadSettings, saveSettings } from './settingsService';
 
 export interface TutorialStatus {
