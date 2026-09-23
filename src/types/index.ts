@@ -32,6 +32,9 @@ export interface Settings {
   catalogSeeded?: boolean;
   cashierMode: boolean;
   sellerMode: boolean;
+  tutorialCompleted: boolean;
+  tutorialStep: number;
+  screenHintsSeen: string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -41,6 +44,9 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   cashierMode: false,
   sellerMode: false,
+  tutorialCompleted: false,
+  tutorialStep: 0,
+  screenHintsSeen: [],
 };
 
 export type ExpiryStatus = 'good' | 'expiring' | 'expired';
