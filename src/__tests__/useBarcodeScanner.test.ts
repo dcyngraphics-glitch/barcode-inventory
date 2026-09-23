@@ -20,11 +20,18 @@ beforeEach(() => {
   });
 
   vi.stubGlobal('BarcodeDetector', undefined);
+
+  // Mock canvas getContext for jsdom
+  const getContextMock = vi.fn().mockReturnValue({
+    drawImage: vi.fn(),
+  });
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(getContextMock);
 });
 
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';

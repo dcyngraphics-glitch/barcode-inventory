@@ -251,6 +251,20 @@ export function ProductDetailScreen() {
 
       if (isNewProduct) {
         showToast(`Product saved! Next time you scan ${barcode}, it'll show automatically.`, 'success');
+        // Update local state to reflect the newly saved product so the form doesn't reset
+        setProduct({
+          barcode,
+          name: data.name.trim(),
+          brand: data.brand.trim(),
+          category: data.category.trim(),
+          storePrice: price,
+          defaultExpiry: data.expiryDate,
+          imageUrl: product?.imageUrl,
+          source: 'manual',
+          createdAt: now,
+          updatedAt: now,
+        });
+        setIsNewProduct(false);
       } else if (sellerMode) {
         showToast('Product info updated!', 'success');
       } else {

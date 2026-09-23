@@ -36,21 +36,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }, [settings]);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
-      setSettings((prev) => {
-        if (!prev) return null;
-        // Create a copy of previous settings
-        const newSettings = { ...prev };
-        // Only apply non-undefined values from the patch
-        Object.keys(patch).forEach((key) => {
-          const typedKey = key as keyof Settings;
-          if (patch[typedKey] !== undefined) {
-            // @ts-ignore - we know typedKey is a keyof Settings
-            newSettings[typedKey] = patch[typedKey];
-          }
-        });
-        return newSettings;
+    setSettings((prev) => {
+      if (!prev) return null;
+      const newSettings: Settings = { ...prev };
+      (Object.keys(patch) as Array<keyof Settings>).forEach((key) => {
+        const value = patch[key];
+        if (value !== undefined) {
+          (newSettings[key] as Settings[keyof Settings]) = value;
+        }
       });
-    }, []);
+      return newSettings;
+    });
+  }, []);
 
   return (
     <SettingsContext.Provider value={{ settings, updateSettings }}>

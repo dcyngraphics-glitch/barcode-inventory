@@ -33,6 +33,8 @@ export function useBarcodeScanner() {
   const detectorRef = useRef<BarcodeDetectorSupported | null>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const mountedRef = useRef(true);
+  // Synchronous guard to prevent double-start race
+  const startingRef = useRef(false);
 
   const hasBarcodeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
@@ -58,7 +60,14 @@ export function useBarcodeScanner() {
 
   const start = useCallback(
     async (video: HTMLVideoElement) => {
-      if (state.scanning) return;
+      // Synchronous guard: prevent double-start from concurrent calls
+      if (startingRef.current) return;
+      startingRef.current = true;
+
+      if (state.scanning) {
+        startingRef.current = false;
+        return;
+      }
       videoRef.current = video;
       setState({ scanning: true, error: null, errorType: 'unknown', processing: false });
 
@@ -93,6 +102,7 @@ export function useBarcodeScanner() {
           errorType,
           processing: false,
         });
+        startingRef.current = false;
       }
     },
     [hasBarcodeDetector, state.scanning]

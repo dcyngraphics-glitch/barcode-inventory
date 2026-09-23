@@ -118,10 +118,14 @@ describe('inventoryService', () => {
     expect(group.batches[2]!.batchId).toBe('g1');
   });
 
-  it('should skip batches whose product is not in catalog', async () => {
+  it('should include orphan batches with placeholder product when not in catalog', async () => {
     const orphanBatch: Batch = { ...mockBatch, batchId: 'orphan', barcode: 'no-such-product', quantity: 1, expiryDate: '2026-12-31', scannedAt: '2026-01-01T10:00:00Z' };
     await addBatch(orphanBatch);
     const groups = await getInventoryGroups();
-    expect(groups.length).toBe(0);
+    // Orphan batches should NOT be silently dropped — show with placeholder
+    expect(groups.length).toBe(1);
+    expect(groups[0]!.product.name).toBe('Unknown Product');
+    expect(groups[0]!.product.barcode).toBe('no-such-product');
+    expect(groups[0]!.batches[0]!.batchId).toBe('orphan');
   });
 });

@@ -66,10 +66,36 @@ export async function getInventoryGroups(): Promise<InventoryGroup[]> {
     groupMap.set(batch.barcode, existing);
   }
 
+  // Batch-fetch all products in parallel to avoid N sequential awaits
+  const barcodes = Array.from(groupMap.keys());
+  const productPromises = barcodes.map((b) => getProduct(b));
+  const products = await Promise.all(productPromises);
+
   const groups: InventoryGroup[] = [];
-  for (const [barcode, batches] of groupMap) {
-    const product = await getProduct(barcode);
-    if (!product) continue;
+  for (let i = 0; i < barcodes.length; i++) {
+    const barcode = barcodes[i]!;
+    const batches = groupMap.get(barcode)!;
+    const product = products[i];
+    if (!product) {
+      // Orphan batch with no catalog product — show with placeholder instead of dropping
+      groups.push({
+        product: {
+          barcode,
+          name: 'Unknown Product',
+          brand: '',
+          category: '',
+          storePrice: 0,
+          defaultExpiry: '',
+          source: 'manual',
+          createdAt: '',
+          updatedAt: '',
+        },
+        batches,
+        totalQuantity: batches.reduce((s, b) => s + b.quantity, 0),
+        earliestExpiry: batches[0]?.expiryDate ?? '',
+      });
+      continue;
+    }
 
     const totalQuantity = batches.reduce((sum, b) => sum + b.quantity, 0);
     const earliestExpiry = batches[0]?.expiryDate ?? '';
