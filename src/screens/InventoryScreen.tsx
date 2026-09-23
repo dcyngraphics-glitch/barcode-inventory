@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { InventoryGroup as InventoryGroupType, Batch } from '@/types';
 import { loadSettings } from '@/services/settingsService';
 import { calculateExpiryStatus } from '@/services/notificationService';
+import { updateBatch } from '@/services/inventoryService';
 import { Toast, useToast } from '@/components/Toast';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
@@ -10,15 +11,18 @@ import { SearchBar } from '@/components/SearchBar';
 import { FilterChips, FilterType } from '@/components/FilterChips';
 import { InventoryGroup } from '@/components/InventoryGroup';
 import { useInventory } from '@/hooks/useInventory';
+import { EditBatchSheet } from '@/components/EditBatchSheet';
 
 export function InventoryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const [alertWindowDays, setAlertWindowDays] = useState(3);
   const [deleteTarget, setDeleteTarget] = useState<Batch | null>(null);
-  const [deleting, setDeleting] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [editBatchOpen, setEditBatchOpen] = useState(false);
+    const [editBatch, setEditBatch] = useState<Batch | null>(null);
 
-  const { toasts, showToast, dismissToast } = useToast();
+    const { toasts, showToast, dismissToast } = useToast();
   const navigate = useNavigate();
   const pullStartY = useRef(0);
   const pullDistance = useRef(0);
@@ -109,26 +113,26 @@ export function InventoryScreen() {
   // Loading skeleton
   if (loading) {
     return (
-      <div style={{ padding: '16px' }}>
-        <div style={{ marginBottom: '16px' }}>
+      <div style={{ padding: 'var(--space-md)' }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <div
             style={{
               height: '44px',
-              background: '#f2f3f4',
-              borderRadius: '8px',
+              background: 'var(--color-muted)',
+              borderRadius: 'var(--radius-md)',
               animation: 'shimmer 1.5s infinite',
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-xs)', marginBottom: 'var(--space-md)' }}>
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               style={{
                 height: '36px',
                 width: i === 1 ? '100px' : '80px',
-                background: '#f2f3f4',
-                borderRadius: '999px',
+                background: 'var(--color-muted)',
+                borderRadius: 'var(--radius-full)',
                 animation: 'shimmer 1.5s infinite',
               }}
             />
@@ -139,9 +143,9 @@ export function InventoryScreen() {
             key={i}
             style={{
               height: '100px',
-              background: '#f2f3f4',
-              borderRadius: '12px',
-              marginBottom: '12px',
+              background: 'var(--color-muted)',
+              borderRadius: 'var(--radius-lg)',
+              marginBottom: 'var(--space-sm)',
               animation: 'shimmer 1.5s infinite',
             }}
           />
@@ -163,7 +167,7 @@ export function InventoryScreen() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        padding: '16px',
+        padding: 'var(--space-md)',
         paddingBottom: 'calc(16px + 64px + env(safe-area-inset-bottom))',
         overscrollBehavior: 'contain',
         minHeight: '100vh',
@@ -172,17 +176,17 @@ export function InventoryScreen() {
       {/* Header */}
       <div
         style={{
-          fontSize: '24px',
+          fontSize: 'var(--text-2xl)',
           fontWeight: 600,
-          color: '#0f172a',
-          marginBottom: '16px',
+          color: 'var(--color-foreground)',
+          marginBottom: 'var(--space-md)',
         }}
       >
         My Inventory
       </div>
 
       {/* Search bar */}
-      <div style={{ marginBottom: '12px' }}>
+      <div style={{ marginBottom: 'var(--space-sm)' }}>
         <SearchBar
           value={searchQuery}
           onChange={setSearchQuery}
@@ -195,7 +199,7 @@ export function InventoryScreen() {
       <FilterChips active={filter} onChange={setFilter} />
 
       {/* Content */}
-      <div style={{ marginTop: '16px' }}>
+      <div style={{ marginTop: 'var(--space-md)' }}>
         {filteredGroups.length === 0 && searchQuery ? (
           <EmptyState
             title="No products found"
@@ -214,16 +218,16 @@ export function InventoryScreen() {
             onCta={() => navigate('/')}
           />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             {filteredGroups.map((group: InventoryGroupType) => (
-              <InventoryGroup
-                key={group.product.barcode}
-                group={group}
-                alertWindowDays={alertWindowDays}
-                onDeleteBatch={(batch) => setDeleteTarget(batch)}
-                onEditBatch={() => showToast('info', 'Edit batch functionality coming soon')}
-              />
-            ))}
+                          <InventoryGroup
+                            key={group.product.barcode}
+                            group={group}
+                            alertWindowDays={alertWindowDays}
+                            onDeleteBatch={(batch) => setDeleteTarget(batch)}
+                            onEditBatch={(batch) => { setEditBatch(batch); setEditBatchOpen(true); }}
+                          />
+                        ))}
           </div>
         )}
       </div>
@@ -242,7 +246,27 @@ export function InventoryScreen() {
       />
 
       {/* Toast notifications */}
-      <Toast toasts={toasts} onDismiss={dismissToast} />
+            <Toast toasts={toasts} onDismiss={dismissToast} />
+            {/* Edit batch sheet */}
+                        {editBatch && (
+                          <EditBatchSheet
+                            open={editBatchOpen}
+                            batch={editBatch}
+                            onCancel={() => setEditBatchOpen(false)}
+                            onSave={async (batch) => {
+                              try {
+                                await updateBatch(batch);
+                                showToast('success', 'Batch updated');
+                              } catch (err) {
+                                console.error('Failed to update batch:', err);
+                                showToast('error', 'Failed to update batch');
+                              } finally {
+                                setEditBatchOpen(false);
+                                setEditBatch(null);
+                              }
+                            }}
+                          />
+                        )}
     </div>
   );
 }

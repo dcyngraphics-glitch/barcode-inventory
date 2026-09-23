@@ -67,26 +67,26 @@ export function RecentScans() {
 
   if (loading) {
     return (
-      <div style={{ padding: '16px 0' }}>
+      <div style={{ padding: 'var(--space-md) 0' }}>
         <div
           style={{
             height: '20px',
             width: '120px',
-            background: '#334155',
-            borderRadius: '4px',
-            marginBottom: '12px',
+            background: 'var(--color-primary)',
+            borderRadius: 'var(--radius-sm)',
+            marginBottom: 'var(--space-sm)',
             animation: 'shimmer 1.5s infinite',
           }}
         />
-        <div style={{ display: 'flex', gap: '12px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', overflow: 'hidden' }}>
           {[1, 2, 3].map((i) => (
             <div
               key={i}
               style={{
                 width: '120px',
                 height: '140px',
-                background: '#1e293b',
-                borderRadius: '12px',
+                background: 'var(--color-card)',
+                borderRadius: 'var(--radius-lg)',
                 flexShrink: 0,
                 animation: 'shimmer 1.5s infinite',
               }}
@@ -99,17 +99,17 @@ export function RecentScans() {
 
   if (error) {
     return (
-      <div style={{ padding: '16px 0' }}>
+      <div style={{ padding: 'var(--space-md) 0' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: 'var(--space-xs)',
             padding: '12px 16px',
-            background: '#1e293b',
-            borderRadius: '8px',
-            color: '#f87171',
-            fontSize: '14px',
+            background: 'var(--color-card)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--color-destructive)',
+            fontSize: 'var(--text-sm)',
           }}
         >
           <span>⚠️</span>
@@ -124,20 +124,20 @@ export function RecentScans() {
   }
 
   return (
-    <div style={{ padding: '16px 0' }}>
+    <div style={{ padding: 'var(--space-md) 0' }}>
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '12px',
+          marginBottom: 'var(--space-sm)',
         }}
       >
         <h3
           style={{
-            fontSize: '14px',
+            fontSize: 'var(--text-sm)',
             fontWeight: 600,
-            color: '#94a3b8',
+            color: 'var(--color-muted-foreground)',
             margin: 0,
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
@@ -151,13 +151,13 @@ export function RecentScans() {
             background: 'transparent',
             border: 'none',
             color: '#059669',
-            fontSize: '14px',
+            fontSize: 'var(--text-sm)',
             fontWeight: 500,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            padding: '4px 8px',
+            gap: 'var(--space-xs)',
+            padding: 'var(--space-xs) var(--space-sm)',
             minHeight: '44px',
           }}
         >
@@ -169,31 +169,32 @@ export function RecentScans() {
       <div
         style={{
           display: 'flex',
-          gap: '12px',
+          gap: 'var(--space-sm)',
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
-          paddingBottom: '8px',
+          paddingBottom: 'var(--space-xs)',
           WebkitOverflowScrolling: 'touch',
         }}
       >
         {scans.map(({ product, batch }) => (
           <button
-            key={batch.batchId}
-            onClick={() => navigate(`/product/${product.barcode}`)}
-            style={{
+                      key={batch.batchId}
+                      onClick={() => navigate(`/product/${product.barcode}`)}
+                      aria-label={`${product.name} scanned ${timeAgo(batch.scannedAt)}`}
+                      style={{
               width: '120px',
               flexShrink: 0,
-              background: '#1e293b',
+              background: 'var(--color-card)',
               border: '1px solid #334155',
-              borderRadius: '12px',
-              padding: '12px',
+              borderRadius: 'var(--radius-lg)',
+              padding: 'var(--space-sm)',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '8px',
+              gap: 'var(--space-xs)',
               scrollSnapAlign: 'start',
-              transition: 'all 200ms ease',
+              transition: 'var(--transition-base)',
               textAlign: 'center',
             }}
           >
@@ -202,8 +203,8 @@ export function RecentScans() {
               style={{
                 width: '64px',
                 height: '64px',
-                borderRadius: '8px',
-                background: '#334155',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -228,9 +229,9 @@ export function RecentScans() {
             {/* Product name */}
             <div
               style={{
-                fontSize: '12px',
+                fontSize: 'var(--text-xs)',
                 fontWeight: 500,
-                color: '#f8fafc',
+                color: 'var(--color-on-primary)',
                 width: '100%',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -243,8 +244,8 @@ export function RecentScans() {
             {/* Time ago */}
             <div
               style={{
-                fontSize: '11px',
-                color: '#94a3b8',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--color-muted-foreground)',
               }}
             >
               {timeAgo(batch.scannedAt)}

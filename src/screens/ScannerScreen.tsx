@@ -150,34 +150,38 @@ export function ScannerScreen() {
 
   return (
     <div
-      style={{
-        minHeight: '100vh',
-        background: '#0f172a',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+          style={{
+            minHeight: '100vh',
+            background: 'var(--color-background)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+        {/* Visually hidden live region for screen readers */}
+                <div style={{position: 'absolute', width: '1px', height: '1px', padding: 0, margin: 'calc(-1 * var(--space-xs))', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0}} aria-live="polite">
+                          {totalItems} items, ₱{totalPrice.toFixed(2)}
+                        </div>
       {/* Top App Bar */}
       <header
         style={{
-          height: '56px',
-          background: '#334155',
+          height: 'var(--appbar-height)',
+          background: 'var(--color-primary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 16px',
+          padding: '0 var(--space-md)',
           position: 'sticky',
           top: 0,
           zIndex: 30,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           <ScanLine size={24} color="#f8fafc" />
           <h1
             style={{
-              fontSize: '18px',
+              fontSize: 'var(--text-lg)',
               fontWeight: 600,
-              color: '#f8fafc',
+              color: 'var(--color-on-primary)',
               margin: 0,
             }}
           >
@@ -185,18 +189,20 @@ export function ScannerScreen() {
           </h1>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {/* Offline indicator */}
           {!isOnline && (
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: '#94a3b8',
-                fontSize: '12px',
-              }}
-              title="You are offline"
+                          role="status"
+                          aria-live="polite"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--space-xs)',
+                            color: 'var(--color-muted-foreground)',
+                            fontSize: 'var(--text-xs)',
+                          }}
+                          title="You are offline"
             >
               <WifiOff size={16} />
               <span>Offline</span>
@@ -209,16 +215,16 @@ export function ScannerScreen() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: 'var(--space-xs)',
               background: totalItems > 0 ? '#0f172a' : 'transparent',
               border: totalItems > 0 ? '1.5px solid #3b82f6' : '1.5px solid transparent',
-              borderRadius: '8px',
-              padding: '6px 12px',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-xs) var(--space-sm)',
               cursor: 'pointer',
-              color: '#f8fafc',
-              fontSize: '13px',
+              color: 'var(--color-on-primary)',
+              fontSize: 'var(--text-xs)',
               fontWeight: 600,
-              transition: 'all 200ms ease',
+              transition: 'var(--transition-base)',
               position: 'relative',
             }}
             aria-label={`Cart with ${totalItems} items`}
@@ -227,14 +233,30 @@ export function ScannerScreen() {
             {totalItems > 0 && (
               <>
                 <span>{totalItems}</span>
-                <span style={{ opacity: 0.7, fontSize: '12px' }}>
+                <span style={{ opacity: 0.7, fontSize: 'var(--text-xs)' }}>
                   ₱{totalPrice.toFixed(2)}
                 </span>
               </>
             )}
           </button>
         </div>
-      </header>
+      {/* Visually hidden live region for screen readers */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: 1,
+                    height: 1,
+                    padding: 0,
+                    margin: -1,
+                    overflow: 'hidden',
+                    clip: 'rect(0, 0, 0, 0)',
+                    border: 0
+                  }}
+                  aria-live="polite"
+                >
+                  {`Cart: ${totalItems} items, ₱${totalPrice.toFixed(2)}`}
+                </div>
+        </header>
 
       {/* Main content */}
       <main
@@ -242,8 +264,8 @@ export function ScannerScreen() {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px',
-          gap: '16px',
+          padding: 'var(--space-md)',
+          gap: 'var(--space-md)',
         }}
       >
         {/* Camera Viewfinder */}
@@ -255,19 +277,19 @@ export function ScannerScreen() {
           style={{
             width: '100%',
             background: 'transparent',
-            color: '#f8fafc',
+            color: 'var(--color-on-primary)',
             border: '2px solid #334155',
-            padding: '12px 24px',
-            borderRadius: '8px',
+            padding: 'var(--space-md) var(--space-lg)',
+            borderRadius: 'var(--radius-md)',
             fontWeight: 600,
-            fontSize: '16px',
+            fontSize: 'var(--text-base)',
             minHeight: '44px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
-            transition: 'all 200ms ease',
+            gap: 'var(--space-sm)',
+            transition: 'var(--transition-base)',
           }}
         >
           <Keyboard size={20} />
@@ -278,7 +300,15 @@ export function ScannerScreen() {
         <RecentScans />
       </main>
 
-      {/* Manual Entry Bottom Sheet */}
+            {/* Live region for screen readers */}
+            <div
+              style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+              aria-live="polite"
+            >
+              Cart has {totalItems} items, total price ₱{totalPrice.toFixed(2)}
+            </div>
+
+            {/* Manual Entry Bottom Sheet */}
       <ManualEntrySheet
         open={manualEntryOpen}
         onClose={() => setManualEntryOpen(false)}
@@ -302,11 +332,11 @@ export function ScannerScreen() {
             bottom: '72px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#0f172a',
+            background: 'var(--color-background)',
             color: '#fff',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            fontSize: '14px',
+            padding: 'var(--space-xs) var(--space-md)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--text-sm)',
             fontWeight: 500,
             zIndex: 60,
             animation: 'fade-in 200ms ease',
