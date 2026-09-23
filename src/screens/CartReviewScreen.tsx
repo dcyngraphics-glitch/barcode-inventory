@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Package, Loader2 } from 'lucide-react';
 import { useScanCart } from '@/context/ScanCartContext';
@@ -11,10 +11,24 @@ export function CartReviewScreen() {
   const { items, removeItem, updateItem, clearCart, totalPrice, totalItems } = useScanCart();
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
+    };
+  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 3000);
   }, []);
 
   const handleAddAll = async () => {
@@ -60,7 +74,11 @@ export function CartReviewScreen() {
 
       showToast(`Added ${totalItems} item${totalItems !== 1 ? 's' : ''} to inventory`, 'success');
       clearCart();
-      setTimeout(() => navigate('/inventory'), 800);
+      if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
+      navigateTimerRef.current = setTimeout(() => {
+        navigate('/inventory');
+        navigateTimerRef.current = null;
+      }, 800);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save items';
       showToast(message, 'error');
