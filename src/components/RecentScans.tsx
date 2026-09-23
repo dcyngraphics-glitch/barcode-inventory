@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, ChevronRight } from 'lucide-react';
 import type { Product, Batch } from '@/types';
@@ -35,8 +35,10 @@ export function RecentScans() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     async function loadRecentScans() {
       try {
         const allBatches = await getAllBatches();
@@ -46,23 +48,38 @@ export function RecentScans() {
         );
         const recent = sorted.slice(0, 5);
 
+        // Parallel product lookups
+        const productResults = await Promise.all(
+          recent.map((batch) => getProduct(batch.barcode))
+        );
+
+        if (!isMounted.current) return;
+
         const items: RecentScanItem[] = [];
-        for (const batch of recent) {
-          const product = await getProduct(batch.barcode);
+        recent.forEach((batch, index) => {
+          const product = productResults[index];
           if (product) {
             items.push({ product, batch });
           }
-        }
+        });
+
         setScans(items);
       } catch (err) {
         console.error('Failed to load recent scans:', err);
-        setError('Failed to load recent scans');
+        if (isMounted.current) {
+          setError('Failed to load recent scans');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted.current) {
+          setLoading(false);
+        }
       }
     }
 
     loadRecentScans();
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   if (loading) {
