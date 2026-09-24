@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, Keyboard, WifiOff, ShoppingCart } from 'lucide-react';
+import { ScanLine, Keyboard, WifiOff, ShoppingCart, LogOut } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
 import { ManualEntrySheet } from '@/components/ManualEntrySheet';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
@@ -8,6 +8,7 @@ import { RecentScans } from '@/components/RecentScans';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
 import { useScanCart } from '@/context/ScanCartContext';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/context/AuthContext';
 import { lookupProduct } from '@/services/productLookupService';
 import type { Product } from '@/types';
 
@@ -36,6 +37,7 @@ export function ScannerScreen() {
   const navigate = useNavigate();
   const { addItem, totalItems, totalPrice } = useScanCart();
   const { settings } = useSettings();
+  const { logout } = useAuth();
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
@@ -44,6 +46,10 @@ export function ScannerScreen() {
   const [processing, setProcessing] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewfinderRef = useRef<CameraViewfinderHandle>(null);
+
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
 
   const cashierMode = settings?.cashierMode ?? false;
 
@@ -251,6 +257,29 @@ export function ScannerScreen() {
                 </span>
               </>
             )}
+          </button>
+
+          {/* Logout / Switch Account */}
+          <button
+            onClick={handleLogout}
+            aria-label="Switch account"
+            title="Switch account"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              background: 'transparent',
+              border: '1.5px solid rgba(255,255,255,0.15)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--color-on-primary)',
+              cursor: 'pointer',
+              transition: 'var(--transition-base)',
+              opacity: 0.8,
+            }}
+          >
+            <LogOut size={16} />
           </button>
         </div>
       {/* Visually hidden live region for screen readers */}
