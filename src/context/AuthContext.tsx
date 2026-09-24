@@ -7,6 +7,7 @@ import {
   getStoredToken,
   storeToken,
   clearToken,
+  trackDeviceWithDashboard,
 } from '@/services/authService';
 
 interface AuthContextValue {
@@ -41,6 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setStatus('locked');
           } else {
             setStatus('active');
+            // Track device on returning visit (non-blocking)
+            trackDeviceWithDashboard(token).catch(() => {});
           }
         } else {
           clearToken();
@@ -66,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus('locked');
       } else {
         setStatus('active');
+        // Track device with dashboard (non-blocking)
+        trackDeviceWithDashboard(response.token).catch(() => {});
       }
     } catch (err) {
       clearToken();
