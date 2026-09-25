@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: subscription-dashboard
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    plan: free
+    region: oregon
+    disk:
+      name: dashboard-data
+      mount_path: /app/backend
+      size: 1GB
