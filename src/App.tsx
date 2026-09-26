@@ -22,8 +22,24 @@ export default function App() {
   const [isSeeding, setIsSeeding] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    const seedTimer = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('App: catalog seeding timed out after 8s, continuing');
+        setIsSeeding(false);
+      }
+    }, 8000);
     seedCatalogIfEmpty()
-      .finally(() => setIsSeeding(false));
+      .then(() => {
+        clearTimeout(seedTimer);
+        if (!cancelled) setIsSeeding(false);
+      })
+      .catch((err) => {
+        clearTimeout(seedTimer);
+        console.error('App: catalog seeding failed, continuing without seed:', err);
+        if (!cancelled) setIsSeeding(false);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   if (isSeeding) {
