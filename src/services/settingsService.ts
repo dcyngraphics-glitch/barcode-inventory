@@ -5,7 +5,13 @@ import { getDB } from '@/db/database';
 export async function loadSettings(): Promise<Settings> {
   const db = await getDB();
   const stored = await db.get('settings', SETTINGS_ID);
-  if (!stored) return { ...DEFAULT_SETTINGS };
+  if (!stored) {
+    // DB is empty or settings not yet saved — initialize with defaults
+    // and persist so future calls are fast
+    const defaults: Settings = { ...DEFAULT_SETTINGS };
+    await db.put('settings', defaults).catch(() => {});
+    return defaults;
+  }
   return { ...DEFAULT_SETTINGS, ...stored };
 }
 

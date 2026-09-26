@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
   alertWindowDays: 3,
   notificationsEnabled: false,
   theme: 'auto',
+  catalogSeeded: false,
   cashierMode: false,
   sellerMode: false,
   tutorialCompleted: false,
