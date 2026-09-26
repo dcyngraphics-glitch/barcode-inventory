@@ -1,0 +1,3 @@
+{
+  "verification": "The onSave handler in InventoryScreen.tsx correctly calls updateBatch(batch) and closes the sheet by setting editBatchOpen to false and editBatch to null in the finally block."
+}
