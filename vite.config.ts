@@ -10,6 +10,9 @@ const base = isVercel ? '/' : (isProduction ? '/barcode-inventory/' : '/');
 
 export default defineConfig({
   base,
+  define: {
+    'process.env': JSON.stringify({ NODE_ENV: 'development' }),
+  },
   plugins: [
     react(),
     VitePWA({
