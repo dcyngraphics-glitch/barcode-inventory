@@ -4,10 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isProduction = process.env.NODE_ENV === 'production';
+const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV || process.env.VERCEL_URL);
+const base = isVercel ? '/' : (isProduction ? '/barcode-inventory/' : '/');
 
 export default defineConfig({
-  base: process.env.VERCEL ? '/' : (process.env.NODE_ENV === 'production' ? '/barcode-inventory/' : '/'),
+  base,
   plugins: [
     react(),
     VitePWA({

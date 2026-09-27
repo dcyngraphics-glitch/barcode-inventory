@@ -5,7 +5,8 @@ import App from './App';
 import './index.css';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isVercel = !!process.env.VERCEL;
+// Vercel injects VERCEL=1 and VERCEL_ENV at build time; VERCEL_URL at runtime
+const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV || process.env.VERCEL_URL);
 const basename = (isProduction && !isVercel) ? '/barcode-inventory/' : '/';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

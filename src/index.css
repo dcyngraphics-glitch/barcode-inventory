@@ -1175,8 +1175,8 @@ ol {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
 }
-   CAMERA ERROR OVERLAY & CONTENT
-   ========================================================================== */
+   /* CAMERA ERROR OVERLAY & CONTENT
+   * ========================================================================== */
 .camera-start-overlay {
   position: absolute;
   inset: 0;
