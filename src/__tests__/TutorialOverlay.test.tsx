@@ -38,7 +38,7 @@ describe('TutorialOverlay', () => {
     await waitFor(() => {
       expect(screen.getByText('Scan')).toBeInTheDocument();
     });
-    expect(screen.getByText(/Point your camera/)).toBeInTheDocument();
+    expect(screen.getByText(/Scan barcodes with your camera/)).toBeInTheDocument();
   });
 
   it('should not render when already completed', async () => {
@@ -113,8 +113,11 @@ describe('TutorialOverlay', () => {
       </BrowserRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText('Skip')).toBeInTheDocument();
+      expect(screen.getByText('Scan')).toBeInTheDocument();
     });
+    // There are two Skip buttons - one in actions, one below
+    const skipButtons = screen.getAllByText('Skip');
+    expect(skipButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('should hide on Skip click', async () => {
@@ -126,10 +129,12 @@ describe('TutorialOverlay', () => {
       </BrowserRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText('Skip')).toBeInTheDocument();
+      expect(screen.getByText('Scan')).toBeInTheDocument();
     });
+    // Click the Skip button in the tutorial actions area
+    const skipButton = screen.getAllByText('Skip')[0];
     await act(async () => {
-      screen.getByText('Skip').click();
+      skipButton.click();
     });
     await waitFor(() => {
       expect(screen.queryByText('Scan')).not.toBeInTheDocument();
@@ -147,15 +152,37 @@ describe('TutorialOverlay', () => {
     await waitFor(() => {
       expect(screen.getByText('Scan')).toBeInTheDocument();
     });
-    // Navigate to last step (4th)
-    for (let i = 0; i < 3; i++) {
-      await act(async () => {
-        screen.getByText('Next').click();
-      });
-    }
+    // Navigate through all steps using their actual CTA labels
+    // Step 1: "Try Scanning" → Step 2
+    await act(async () => {
+      screen.getByText('Try Scanning').click();
+    });
+    // Wait for the advancing guard to reset (100ms in component)
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 150));
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Save Product')).toBeInTheDocument();
+    });
+    // Step 2: "Got It" → Step 3  
+    await act(async () => {
+      screen.getByText('Got It').click();
+    });
+    // Wait for the advancing guard to reset
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 150));
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Manage Inventory')).toBeInTheDocument();
+    }, { timeout: 2000 });
+    // Step 3: "View Inventory" → Step 4 (last step)
+    await act(async () => {
+      screen.getByText('View Inventory').click();
+    });
     await waitFor(() => {
       expect(screen.getByText('Set Up Alerts')).toBeInTheDocument();
     });
+    // Last step should show "Finish"
     expect(screen.getByText('Finish')).toBeInTheDocument();
   });
 });

@@ -31,9 +31,9 @@ vi.mock('@/components/CameraViewfinder', () => {
 });
 
 // Mock useSettings
-vi.mock('@/hooks/useSettings', () => ({
-  useSettings: () => ({ settings: { cashierMode: false } }),
-}));
+vi.mock('@/hooks/useSettings');
+import { useSettings } from '@/hooks/useSettings';
+useSettings.mockReturnValue({ settings: { cashierMode: false } });
 
 // Mock useAuth
 vi.mock('@/context/AuthContext', () => ({
@@ -53,10 +53,20 @@ vi.mock('@/context/ScanCartContext', () => ({
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', () => ({
-  ...vi.importActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// Mock productLookupService
+vi.mock('@/services/productLookupService', () => ({
+  lookupProduct: vi.fn()
 }));
+
+import { lookupProduct } from '@/services/productLookupService';
 
 describe('ScannerScreen', () => {
   beforeEach(() => {
@@ -136,4 +146,24 @@ describe('ScannerScreen', () => {
     expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('/product/TESTBARCODE123'));
   });
+
+  it('should show quick entry modal when product lookup fails (not-found)', async () => {
+      // Override useSettings to return cashierMode: true for this test
+      useSettings.mockReturnValueOnce({ settings: { cashierMode: true } });
+
+      // Mock lookupProduct to return not-found
+      lookupProduct.mockResolvedValueOnce({ success: false, reason: 'not-found', source: 'manual' });
+
+      render(<ScannerScreen />);
+
+      const viewfinder = screen.getByTestId('mock-camera-viewfinder');
+      act(() => {
+        const scanButton = viewfinder.querySelector('button');
+        if (scanButton) scanButton.click();
+      });
+
+      // Wait for the quick entry modal to appear
+      expect(await screen.findByText('TESTBARCODE123')).toBeInTheDocument();
+      expect(await screen.findByText('Quick Entry')).toBeInTheDocument();
+    });
 });
