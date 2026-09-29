@@ -5,7 +5,6 @@ import { FormField } from './FormField';
 export interface ProductFormData {
   name: string;
   brand: string;
-  category: string;
   price: string;
   expiryDate: string;
   quantity: number;
@@ -115,18 +114,6 @@ export function ProductForm({
           value={formData.brand}
           onChange={(e) => updateField('brand', e.target.value)}
           placeholder="Enter brand"
-          className="form-input"
-        />
-      </FormField>
-
-      {/* Category */}
-      <FormField id="product-category" label="Category">
-        <input
-          id="product-category"
-          type="text"
-          value={formData.category}
-          onChange={(e) => updateField('category', e.target.value)}
-          placeholder="Enter category"
           className="form-input"
         />
       </FormField>

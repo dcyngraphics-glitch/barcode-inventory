@@ -39,13 +39,43 @@ export function ScannerScreen() {
   const { settings } = useSettings();
   const { logout } = useAuth();
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
-  const [scanToast, setScanToast] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const viewfinderRef = useRef<CameraViewfinderHandle>(null);
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
+    const [scanToast, setScanToast] = useState<string | null>(null);
+    const [scanning, setScanning] = useState(false);
+    const [processing, setProcessing] = useState(false);
+    const [cameraActive, setCameraActive] = useState(true);
+    const [hasScannedSuccessfully, setHasScannedSuccessfully] = useState(false);
+      const [scanMode, setScanMode] = useState<'auto' | 'manual'>('auto');
+        const [manualScanAllowed, setManualScanAllowed] = useState<boolean>(false);
+
+      const isScanAllowed = scanMode === 'auto' || manualScanAllowed;
+    const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const viewfinderRef = useRef<CameraViewfinderHandle>(null);
+
+    // Start scanning on mount and when window gains focus
+        useEffect(() => {
+          setCameraActive(true);
+          setHasScannedSuccessfully(false);
+          const handleFocus = () => {
+            setCameraActive(true);
+            setHasScannedSuccessfully(false);
+            if (scanMode === 'manual') {
+              // In manual mode, allow a scan when focus returns (user can tap scan button)
+              setManualScanAllowed(true);
+              setTriggeredByButton(true);
+            }
+          };
+          window.addEventListener('focus', handleFocus);
+          return () => window.removeEventListener('focus', handleFocus);
+        }, [scanMode]);
+
+    // Stop scanning after first successful scan
+    useEffect(() => {
+      if (hasScannedSuccessfully) {
+        setCameraActive(false);
+      }
+    }, [hasScannedSuccessfully]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -79,60 +109,68 @@ export function ScannerScreen() {
   }, []);
 
   const handleBarcodeSubmit = useCallback(async (barcode: string) => {
-    if (scanning) return; // prevent concurrent scans
-    setScanning(true);
+        if (scanning) return; // prevent concurrent scans
+        setScanning(true);
 
-    // Haptic feedback if available
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
+        // If scanning is not allowed (e.g., in manual mode and we haven't pressed the button yet), we exit.
+        if (!isScanAllowed) {
+          setScanning(false);
+          return;
+        }
 
-    // Beep on successful scan
-    playBeep();
+        // Haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
 
-    // Spec flow (default): navigate to Product Detail
-    if (!cashierMode) {
-      navigate(`/product/${encodeURIComponent(barcode)}`);
-      setScanning(false);
-      return;
-    }
+      // Beep on successful scan
+      playBeep();
 
-    // Cashier Mode (opt-in): add to cart and keep scanning
-    try {
-      const result = await lookupProduct(barcode);
-
-      if (result.source === 'manual') {
-        // Unknown product — prompt for price and expiry
-        setQuickEntryBarcode(barcode);
+      // Spec flow (default): navigate to Product Detail
+      if (!cashierMode) {
+        navigate(`/product/${encodeURIComponent(barcode)}`);
         setScanning(false);
+        setHasScannedSuccessfully(true);
         return;
       }
 
-      const product: Product = result.product;
+      // Cashier Mode (opt-in): add to cart and keep scanning
+      try {
+        const result = await lookupProduct(barcode);
 
-      addItem({
-        barcode,
-        product,
-        name: product.name,
-        brand: product.brand,
-        price: product.storePrice,
-        expiryDate: product.defaultExpiry,
-        quantity: 1,
-        needsInfo: false,
-        imageUrl: product.imageUrl,
-        source: result.source,
-      });
+        if (result.source === 'manual') {
+          // Unknown product — prompt for price and expiry
+          setQuickEntryBarcode(barcode);
+          setScanning(false);
+          return;
+        }
 
-      showScanToast(`✓ ${product.name || barcode}`);
-    } catch (err) {
-      // On lookup error, still add to cart with needsInfo
-      const message = err instanceof Error ? err.message : 'Lookup failed';
-      console.warn('Lookup failed:', message);
-      setQuickEntryBarcode(barcode);
-    } finally {
-      setScanning(false);
-    }
-  }, [addItem, showScanToast, scanning, cashierMode, navigate]);
+        const product: Product = result.product;
+
+        addItem({
+          barcode,
+          product,
+          name: product.name,
+          brand: product.brand,
+          price: product.storePrice,
+          expiryDate: product.defaultExpiry,
+          quantity: 1,
+          needsInfo: false,
+          imageUrl: product.imageUrl,
+          source: result.source,
+        });
+
+        showScanToast(`✓ ${product.name || barcode}`);
+        setHasScannedSuccessfully(true);
+      } catch (err) {
+        // On lookup error, still add to cart with needsInfo
+        const message = err instanceof Error ? err.message : 'Lookup failed';
+        console.warn('Lookup failed:', message);
+        setQuickEntryBarcode(barcode);
+      } finally {
+        setScanning(false);
+      }
+    }, [addItem, showScanToast, scanning, cashierMode, navigate, setHasScannedSuccessfully]);
 
   const handleScanClick = useCallback(async () => {
     if (processing) return;
@@ -209,26 +247,67 @@ export function ScannerScreen() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          {/* Offline indicator */}
-          {!isOnline && (
-            <div
-                          role="status"
-                          aria-live="polite"
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 'var(--space-xs)',
-                            color: 'var(--color-muted-foreground)',
-                            fontSize: 'var(--text-xs)',
-                          }}
-                          title="You are offline"
-            >
-              <WifiOff size={16} />
-              <span>Offline</span>
-            </div>
-          )}
+                  {/* Offline indicator */}
+                  {!isOnline && (
+                    <div
+                                  role="status"
+                                  aria-live="polite"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 'var(--space-xs)',
+                                    color: 'var(--color-muted-foreground)',
+                                    fontSize: 'var(--text-xs)',
+                                  }}
+                                  title="You are offline"
+                    >
+                      <WifiOff size={16} />
+                      <span>Offline</span>
+                    </div>
+                  )}
 
-          {/* Cart Badge */}
+                  {/* Scan Mode Toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-on-primary)' }}>
+                      Scan Mode:
+                    </span>
+                    <button
+                      onClick={() => {
+                        setScanMode(prev => prev === 'auto' ? 'manual' : 'auto');
+                        if (scanMode === 'auto') {
+                          setManualScanAllowed(true);
+                          setTriggeredByButton(true);
+                        } else {
+                          setManualScanAllowed(false);
+                          setTriggeredByButton(false);
+                          setHasScannedSuccessfully(false);
+                          setCameraActive(true);
+                        }
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-xs)',
+                        background: scanMode === 'manual' ? '#0f172a' : 'transparent',
+                        border: scanMode === 'manual' ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.15)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: 'var(--space-xs) var(--space-sm)',
+                        cursor: 'pointer',
+                        color: 'var(--color-on-primary)',
+                        fontSize: 'var(--text-xs)',
+                        fontWeight: 600,
+                        transition: 'var(--transition-base)',
+                      }}
+                      aria-label={`Scan mode: ${scanMode === 'auto' ? 'Automatic' : 'Manual'}`}
+                    >
+                      <span>{scanMode === 'auto' ? 'Auto' : 'Manual'}</span>
+                      {scanMode === 'manual' && (
+                        <span style={{ opacity: 0.7, fontSize: 'var(--text-xs)' }}>(Tap to scan)</span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Cart Badge */}
           <button
             onClick={() => navigate('/cart')}
             style={{
@@ -311,7 +390,7 @@ export function ScannerScreen() {
         }}
       >
         {/* Camera Viewfinder */}
-        <CameraViewfinder ref={viewfinderRef} onScan={handleBarcodeSubmit} onManualEntry={() => setManualEntryOpen(true)} />
+        {/* Camera Viewfinder */}\n        <CameraViewfinder ref={viewfinderRef} onScan={handleBarcodeSubmit} onManualEntry={() => setManualEntryOpen(true)} cameraActive={cameraActive} />
 
         {/* Manual Entry Button */}
         <button

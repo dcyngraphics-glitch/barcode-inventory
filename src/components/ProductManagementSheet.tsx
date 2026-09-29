@@ -280,17 +280,6 @@ export function ProductManagementSheet({
             />
           </FormField>
 
-          {/* Category */}
-          <FormField id="edit-category" label="Category">
-            <input
-              id="edit-category"
-              type="text"
-              value={formData.category}
-              onChange={(e) => updateField('category', e.target.value)}
-              style={inputStyle}
-            />
-          </FormField>
-
           {/* Default Price */}
           <FormField id="edit-price" label="Default Price (₱)" error={validationErrors.storePrice}>
             <div style={{ position: 'relative' }}>

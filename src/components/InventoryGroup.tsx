@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, Package } from 'lucide-react';
 import type { InventoryGroup, Batch, ExpiryStatus } from '@/types';
 import { calculateExpiryStatus } from '@/services/notificationService';
 import { formatDate } from '@/utils/helpers';
@@ -14,24 +14,12 @@ interface InventoryGroupProps {
 }
 
 export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBatch }: InventoryGroupProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [height, setHeight] = useState(0);
-  const contentRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const recalculate = () => {
-      if (contentRef.current) {
-        setHeight(contentRef.current.scrollHeight);
-      }
-    };
-    recalculate();
-    // Use ResizeObserver on the content element instead of per-group window.resize
-    const observer = new ResizeObserver(recalculate);
-    if (contentRef.current) {
-      observer.observe(contentRef.current);
-    }
-    return () => observer.disconnect();
-  }, [group.batches]);
+  // Navigate to product detail when header is clicked
+  const handleHeaderClick = () => {
+    navigate(`/product/${encodeURIComponent(group.product.barcode)}`);
+  };
 
   // Calculate unique statuses across all batches
   const statuses = new Set<ExpiryStatus>();
@@ -51,10 +39,10 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
         transition: 'box-shadow 200ms ease',
       }}
     >
-      {/* Product header */}
+      {/* Product header — tap to view details */}
       <button
-        onClick={() => setExpanded((prev) => !prev)}
-        aria-expanded={expanded}
+        onClick={handleHeaderClick}
+        aria-label={`View details for ${group.product.name}`}
         style={{
           width: '100%',
           background: 'transparent',
@@ -156,7 +144,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
           </div>
         </div>
 
-        {/* Chevron */}
+        {/* Arrow indicator */}
         <div
           style={{
             flexShrink: 0,
@@ -165,35 +153,26 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
             alignItems: 'center',
           }}
         >
-          {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          <ChevronRight size={20} />
         </div>
       </button>
 
       {/* Expandable batch list */}
       <div
         style={{
-          maxHeight: expanded ? `${height}px` : '0px',
-          overflow: 'hidden',
-          transition: 'max-height 200ms ease',
+          borderTop: '1px solid #e6e8ea',
+          padding: '0 16px 12px',
         }}
       >
-        <div
-          ref={contentRef}
-          style={{
-            padding: '0 16px 12px',
-            borderTop: '1px solid #e6e8ea',
-          }}
-        >
-          {group.batches.map((batch) => (
-            <BatchRow
-              key={batch.batchId}
-              batch={batch}
-              alertWindowDays={alertWindowDays}
-              onDelete={onDeleteBatch}
-              onEdit={onEditBatch}
-            />
-          ))}
-        </div>
+        {group.batches.map((batch) => (
+          <BatchRow
+            key={batch.batchId}
+            batch={batch}
+            alertWindowDays={alertWindowDays}
+            onDelete={onDeleteBatch}
+            onEdit={onEditBatch}
+          />
+        ))}
       </div>
     </div>
   );

@@ -115,7 +115,6 @@ export function ProductDetailScreen() {
       return {
         name: '',
         brand: '',
-        category: '',
         price: '',
         expiryDate: '',
         quantity: 1,
@@ -125,7 +124,6 @@ export function ProductDetailScreen() {
     return {
       name: product.name,
       brand: product.brand,
-      category: product.category,
       price: product.storePrice > 0 ? product.storePrice.toString() : '',
       expiryDate: product.defaultExpiry || '',
       quantity: 1,
@@ -189,7 +187,6 @@ export function ProductDetailScreen() {
           barcode,
           name: data.name.trim(),
           brand: data.brand.trim(),
-          category: data.category.trim(),
           storePrice: price,
           defaultExpiry: data.expiryDate,
           imageUrl: product?.imageUrl,
@@ -214,7 +211,6 @@ export function ProductDetailScreen() {
           const needsUpdate = sellerMode
             ? (product.name !== data.name.trim() ||
                product.brand !== data.brand.trim() ||
-               product.category !== data.category.trim() ||
                product.storePrice !== price ||
                product.defaultExpiry !== data.expiryDate)
             : (product.storePrice !== price);
@@ -225,7 +221,6 @@ export function ProductDetailScreen() {
                   ...product,
                   name: data.name.trim(),
                   brand: data.brand.trim(),
-                  category: data.category.trim(),
                   storePrice: price,
                   defaultExpiry: data.expiryDate,
                   updatedAt: now,
@@ -256,7 +251,6 @@ export function ProductDetailScreen() {
           barcode,
           name: data.name.trim(),
           brand: data.brand.trim(),
-          category: data.category.trim(),
           storePrice: price,
           defaultExpiry: data.expiryDate,
           imageUrl: product?.imageUrl,
@@ -478,7 +472,7 @@ export function ProductDetailScreen() {
                     margin: 0,
                   }}
                 >
-                  {[product.brand, product.category].filter(Boolean).join(' · ')}
+                  {[product.brand].filter(Boolean).join(' · ')}
                 </p>
               )}
             </>
