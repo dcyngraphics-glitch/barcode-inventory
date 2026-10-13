@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import type { Product, Batch } from '@/types';
@@ -133,7 +133,13 @@ export function SettingsScreen() {
     navigate('/');
   }, [reopen, navigate]);
 
-  const permissionDenied = settings.notificationsEnabled && getPermissionStatus() === 'denied';
+  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | null>(null);
+
+  useEffect(() => {
+    setPermissionStatus(getPermissionStatus());
+  }, [settings?.notificationsEnabled]);
+
+  const permissionDenied = settings?.notificationsEnabled && permissionStatus === 'denied';
   return (
     <div className="settings-screen">
       {/* Header */}
@@ -217,7 +223,7 @@ export function SettingsScreen() {
       <div className="settings-card">
         <button
           onClick={handleThemeCycle}
-          className="settings-row theme-button"
+          className="settings-row"
         >
           {THEME_ICON[settings.theme]}
           <span>Theme: {THEME_LABEL[settings.theme]}</span>
