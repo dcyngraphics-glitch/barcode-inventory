@@ -334,23 +334,53 @@ export function ScannerScreen() {
 
           {/* Cart Badge */}
           <button
-      {/* Visually hidden live region for screen readers */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    width: 1,
-                    height: 1,
-                    padding: 0,
-                    margin: -1,
-                    overflow: 'hidden',
-                    clip: 'rect(0, 0, 0, 0)',
-                    border: 0
-                  }}
-                  aria-live="polite"
-                >
-                  {`Cart: ${totalItems} items, ₱${totalPrice.toFixed(2)}`}
-                </div>
-        </header>
+            onClick={() => navigate('/cart')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-xs)',
+              background: totalItems > 0 ? '#0f172a' : 'transparent',
+              border: totalItems > 0 ? '1.5px solid #3b82f6' : '1.5px solid transparent',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-xs) var(--space-sm)',
+              cursor: 'pointer',
+              color: 'var(--color-on-primary)',
+              fontSize: 'var(--text-xs)',
+              fontWeight: 600,
+              transition: 'var(--transition-base)',
+              position: 'relative',
+            }}
+            aria-label={`Cart with ${totalItems} items`}
+          >
+            <ShoppingCart size={18} />
+            {totalItems > 0 && (
+              <>
+                <span>{totalItems}</span>
+                <span style={{ opacity: 0.7, fontSize: 'var(--text-xs)' }}>
+                  ₱{totalPrice.toFixed(2)}
+                </span>
+              </>
+            )}
+          </button>
+
+          {/* Visually hidden live region for screen readers */}
+          <div
+            style={{
+              position: 'absolute',
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              border: 0
+            }}
+            aria-live="polite"
+          >
+            {`Cart: ${totalItems} items, ₱${totalPrice.toFixed(2)}`}
+          </div>
+        </div>
+      </header>
 
       {/* Main content */}
       <main
