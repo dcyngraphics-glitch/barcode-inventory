@@ -241,7 +241,7 @@ export function SettingsScreen() {
           </div>
         </div>
         <a
-          href="https://github.com"
+          href="https://github.com/dcyngraphics-glitch/barcode-inventory"
           target="_blank"
           rel="noopener noreferrer"
           className="settings-info-row"
@@ -250,7 +250,7 @@ export function SettingsScreen() {
           View on GitHub
         </a>
         <a
-          href="https://github.com/blob/main/LICENSE"
+          href="https://github.com/dcyngraphics-glitch/barcode-inventory#license"
           target="_blank"
           rel="noopener noreferrer"
           className="settings-info-row"
