@@ -48,6 +48,7 @@ export function SettingsToggle({
         )}
       </div>
       <button
+        className="settings-toggle"
         role="switch"
         aria-checked={enabled}
         aria-label={label}

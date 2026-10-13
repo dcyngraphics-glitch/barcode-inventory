@@ -245,7 +245,7 @@ ol {
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-accent, #059669);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -1520,6 +1520,27 @@ ol {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: var(--radius-full);
+}
+
+/* Settings components */
+.settings-toggle:focus-visible {
+  outline: 2px solid var(--color-accent, #059669);
+  outline-offset: 2px;
+  border-radius: var(--radius-full);
+}
+
+.settings-stepper-button:focus-visible {
+  outline: 2px solid var(--color-accent, #059669);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+.settings-row:focus-visible,
+.settings-info-row:focus-visible,
+.theme-button:focus-visible {
+  outline: 2px solid var(--color-accent, #059669);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 /* ==========================================================================

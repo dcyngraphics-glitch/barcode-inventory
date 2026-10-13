@@ -217,7 +217,7 @@ export function SettingsScreen() {
       <div className="settings-card">
         <button
           onClick={handleThemeCycle}
-          className="settings-row"
+          className="settings-row theme-button"
         >
           {THEME_ICON[settings.theme]}
           <span>Theme: {THEME_LABEL[settings.theme]}</span>
