@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import type { Product, Batch } from '@/types';
@@ -133,11 +133,9 @@ export function SettingsScreen() {
     navigate('/');
   }, [reopen, navigate]);
 
-  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | null>(null);
-
-  useEffect(() => {
-    setPermissionStatus(getPermissionStatus());
-  }, [settings?.notificationsEnabled]);
+  // Read permission status once via a lazy state initializer — no effect, no
+  // re-read on every render, and no one-frame flash of null on mount.
+  const [permissionStatus] = useState<NotificationPermission>(() => getPermissionStatus());
 
   const permissionDenied = settings?.notificationsEnabled && permissionStatus === 'denied';
   return (

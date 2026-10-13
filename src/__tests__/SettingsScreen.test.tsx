@@ -1,23 +1,59 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { TutorialProvider } from '@/context/TutorialContext';
+import { useSettings } from '@/hooks/useSettings';
+import { DEFAULT_SETTINGS } from '@/types';
+import { getPermissionStatus } from '@/services/notificationService';
+
+// Mock the notification service so getPermissionStatus calls can be counted.
+// requestPermission is unused in this test but must exist since SettingsScreen imports it.
+vi.mock('@/services/notificationService', () => ({
+  getPermissionStatus: vi.fn(() => 'granted' as NotificationPermission),
+  requestPermission: vi.fn(),
+}));
+
+// Mock useSettings with notifications enabled — the render-cycle call being
+// guarded against only runs when notifications are on, so the spy must
+// actually be exercised for the regression signal to be meaningful.
+vi.mock('@/hooks/useSettings');
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(useSettings).mockReturnValue({
+    settings: { ...DEFAULT_SETTINGS, notificationsEnabled: true },
+    updateSettings: vi.fn(),
+  });
+});
+
+const renderSettings = () =>
+  render(
+    <MemoryRouter>
+      <SettingsProvider>
+        <TutorialProvider>
+          <SettingsScreen />
+        </TutorialProvider>
+      </SettingsProvider>
+    </MemoryRouter>
+  );
 
 describe('SettingsScreen permission status', () => {
   it('should not call getPermissionStatus on every render', () => {
-    const { getByText } = render(
-      <MemoryRouter>
-        <SettingsProvider>
-          <TutorialProvider>
-            <SettingsScreen />
-          </TutorialProvider>
-        </SettingsProvider>
-      </MemoryRouter>
-    );
-    // This is more of a code review check — we verify the component renders correctly
+    const { getByText } = renderSettings();
+
+    // Sanity check: the component renders with the Settings header
     expect(getByText('Settings')).toBeTruthy();
+
+    // The lazy state initializer reads permission status exactly once on mount
+    expect(getPermissionStatus).toHaveBeenCalledTimes(1);
+
+    // Force a re-render through a local state change (opens the clear-data dialog)
+    fireEvent.click(getByText('Delete Everything'));
+
+    // Re-render must NOT trigger another getPermissionStatus call
+    expect(getPermissionStatus).toHaveBeenCalledTimes(1);
   });
 });
 
