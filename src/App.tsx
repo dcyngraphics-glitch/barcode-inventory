@@ -15,8 +15,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
-import { AuthProvider } from '@/context/AuthContext';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function App() {
   const [isSeeding, setIsSeeding] = useState(true);
@@ -39,7 +37,9 @@ export default function App() {
         console.error('App: catalog seeding failed, continuing without seed:', err);
         if (!cancelled) setIsSeeding(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (isSeeding) {
@@ -55,28 +55,24 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <SettingsProvider>
-          <ThemeAndNotifications />
-          <TutorialProvider>
-            <ScanCartProvider>
-              <ProtectedRoute>
-                <div className="app-container">
-                  <Routes>
-                    <Route path="/" element={<ScannerScreen />} />
-                    <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-                    <Route path="/inventory" element={<InventoryScreen />} />
-                    <Route path="/settings" element={<SettingsScreen />} />
-                    <Route path="/cart" element={<CartReviewScreen />} />
-                  </Routes>
-                  <BottomNav />
-                </div>
-                <TutorialOverlay />
-              </ProtectedRoute>
-            </ScanCartProvider>
-          </TutorialProvider>
-        </SettingsProvider>
-      </AuthProvider>
+      <SettingsProvider>
+        <ThemeAndNotifications />
+        <TutorialProvider>
+          <ScanCartProvider>
+            <div className="app-container">
+              <Routes>
+                <Route path="/" element={<ScannerScreen />} />
+                <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+                <Route path="/inventory" element={<InventoryScreen />} />
+                <Route path="/settings" element={<SettingsScreen />} />
+                <Route path="/cart" element={<CartReviewScreen />} />
+              </Routes>
+              <BottomNav />
+            </div>
+            <TutorialOverlay />
+          </ScanCartProvider>
+        </TutorialProvider>
+      </SettingsProvider>
     </ErrorBoundary>
   );
 }
@@ -99,7 +95,6 @@ function NotificationChecker() {
       });
   }, [settings?.notificationsEnabled, settings?.alertWindowDays]);
 
-  // Periodically re-check (e.g., inventory may have changed via other screens)
   useEffect(() => {
     if (!settings?.notificationsEnabled) return;
     if (getPermissionStatus() !== 'granted') return;
@@ -108,7 +103,7 @@ function NotificationChecker() {
       getAllBatches()
         .then((batches) => notifyExpiringItems(batches, alertWindowDays))
         .catch(() => {});
-    }, 60 * 60 * 1000); // every hour
+    }, 60 * 60 * 1000);
     return () => clearInterval(id);
   }, [settings?.notificationsEnabled, settings?.alertWindowDays]);
   return null;

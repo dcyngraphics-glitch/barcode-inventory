@@ -35,13 +35,6 @@ vi.mock('@/hooks/useSettings');
 import { useSettings } from '@/hooks/useSettings';
 useSettings.mockReturnValue({ settings: { cashierMode: false } });
 
-// Mock useAuth
-vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({
-    logout: vi.fn(),
-  }),
-}));
-
 // Mock useScanCart
 vi.mock('@/context/ScanCartContext', () => ({
   useScanCart: () => ({
