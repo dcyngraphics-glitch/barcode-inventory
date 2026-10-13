@@ -39,6 +39,8 @@ export function SettingsScreen() {
   const { reopen } = useTutorial();
   const { settings, updateSettings } = useSettings();
   const { toasts, showToast, dismissToast } = useToast();
+  const [showClearDialog, setShowClearDialog] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Handle notification toggle
   const handleNotificationToggle = useCallback(
@@ -68,7 +70,6 @@ export function SettingsScreen() {
 
   // Handle theme cycle
   const handleThemeCycle = useCallback(() => {
-    if (!settings) return;
     const nextTheme = THEME_CYCLE[settings.theme];
     updateSettings({ theme: nextTheme });
   }, [settings, updateSettings]);
@@ -132,27 +133,13 @@ export function SettingsScreen() {
     navigate('/');
   }, [reopen, navigate]);
 
-  // Loading state from hook — derive without early return to keep hooks order stable
-  const loading = settings === null;
-  const permissionDenied = settings?.notificationsEnabled && getPermissionStatus() === 'denied';
-
-  if (loading) {
-    return (
-      <div className="settings-skeleton">
-        <div className="settings-skeleton-title" />
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="settings-skeleton-card" />
-        ))}
-      </div>
-    );
-  }
-
+  const permissionDenied = settings.notificationsEnabled && getPermissionStatus() === 'denied';
   return (
     <div className="settings-screen">
       {/* Header */}
-      <div className="settings-header">
+      <h1 className="settings-header">
         Settings
-      </div>
+      </h1>
 
       {/* Notifications Section */}
       <h2 className="settings-section-label">
@@ -160,7 +147,7 @@ export function SettingsScreen() {
       </h2>
       <div className="settings-card settings-card-stack">
         <SettingsToggle
-          enabled={settings!.notificationsEnabled}
+          enabled={settings.notificationsEnabled}
           onChange={handleNotificationToggle}
           label="Push Notifications"
           description="Get notified when items are about to expire"
@@ -172,11 +159,11 @@ export function SettingsScreen() {
           </div>
         )}
         <SettingsStepper
-          value={settings!.alertWindowDays}
+          value={settings.alertWindowDays}
           onChange={handleAlertWindowChange}
           min={1}
           max={30}
-          disabled={!settings!.notificationsEnabled}
+          disabled={!settings.notificationsEnabled}
           label="Alert Window"
           helperText="We'll notify you this many days before an item expires"
         />
@@ -188,13 +175,13 @@ export function SettingsScreen() {
       </h2>
       <div className="settings-card settings-card-stack">
         <SettingsToggle
-          enabled={settings!.cashierMode}
+          enabled={settings.cashierMode}
           onChange={(enabled) => updateSettings({ cashierMode: enabled })}
           label="Cashier Mode"
           description="Scan multiple items quickly — adds directly to cart instead of showing product details"
         />
         <SettingsToggle
-          enabled={settings!.sellerMode}
+          enabled={settings.sellerMode}
           onChange={(enabled) => updateSettings({ sellerMode: enabled })}
           label="Seller Mode"
           description="Edit product name, brand, category, and price before adding to inventory"
@@ -232,8 +219,8 @@ export function SettingsScreen() {
           onClick={handleThemeCycle}
           className="settings-row"
         >
-          {THEME_ICON[settings!.theme]}
-          <span>Theme: {THEME_LABEL[settings!.theme]}</span>
+          {THEME_ICON[settings.theme]}
+          <span>Theme: {THEME_LABEL[settings.theme]}</span>
         </button>
       </div>
 

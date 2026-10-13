@@ -1393,27 +1393,6 @@ ol {
   min-height: 100vh;
 }
 
-.settings-skeleton {
-  padding: var(--space-md);
-}
-
-.settings-skeleton-title {
-  height: 28px;
-  width: 120px;
-  background: var(--color-muted);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
-  animation: shimmer 1.5s infinite;
-}
-
-.settings-skeleton-card {
-  height: 80px;
-  background: var(--color-muted);
-  border-radius: var(--radius-lg);
-  margin-bottom: 12px;
-  animation: shimmer 1.5s infinite;
-}
-
 .settings-header {
   font-size: var(--text-2xl);
   font-weight: 600;
