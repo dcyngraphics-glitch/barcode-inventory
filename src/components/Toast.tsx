@@ -57,7 +57,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
   const iconMap = {
     success: <CheckCircle size={18} color="var(--color-accent)" />,
     error: <AlertTriangle size={18} color="var(--color-destructive)" />,
-    info: <AlertTriangle size={18} color="var(--foreground)" />,
+    info: <AlertTriangle size={18} color="var(--color-foreground)" />,
   };
 
   return (
@@ -93,7 +93,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
         style={{
           background: 'transparent',
           border: 'none',
-          color: 'var(--color-muted-foreground, var(--color-foreground))',
+          color: 'var(--color-foreground)',
           cursor: 'pointer',
           padding: '4px',
           display: 'flex',

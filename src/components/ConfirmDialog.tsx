@@ -136,8 +136,8 @@ export function ConfirmDialog({
             onClick={onCancel}
             className="confirm-cancel-btn"
             style={{
-              background: 'transparent',
-              color: 'var(--color-primary)',
+              background: 'var(--color-muted, #f2f3f4)',
+              color: 'var(--color-foreground, #0f172a)',
               padding: '8px 16px',
               fontWeight: 500,
               fontSize: '14px',
@@ -155,8 +155,12 @@ export function ConfirmDialog({
             disabled={confirmDisabled}
             className="confirm-confirm-btn"
             style={{
-              background: isDestructive ? 'var(--color-destructive)' : 'var(--color-primary)',
-              color: 'var(--color-on-primary)',
+              background: isDestructive
+                ? 'var(--color-destructive, #dc2626)'
+                : 'var(--color-primary, #334155)',
+              color: isDestructive
+                ? 'var(--color-on-destructive, #ffffff)'
+                : 'var(--color-on-primary, #ffffff)',
               padding: '8px 16px',
               fontWeight: 600,
               fontSize: '14px',
