@@ -19,6 +19,7 @@ const TOAST_DURATION = 3000;
 export function Toast({ toasts, onDismiss }: ToastProps) {
   return (
     <div
+      className="toast-container"
       style={{
         position: 'fixed',
         bottom: '72px',
@@ -32,9 +33,9 @@ export function Toast({ toasts, onDismiss }: ToastProps) {
         pointerEvents: 'none',
       }}
     >
-      {toasts[0] && (
-        <ToastItem key={toasts[0].id} toast={toasts[0]} onDismiss={onDismiss} />
-      )}
+      {toasts.map((toast) => (
+        <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+      ))}
     </div>
   );
 }
@@ -62,6 +63,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
 
   return (
     <div
+      className="toast"
       role="status"
       aria-live="polite"
       style={{
