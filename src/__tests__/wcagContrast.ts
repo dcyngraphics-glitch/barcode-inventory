@@ -51,12 +51,19 @@ export function contrastRatio(fg: string, bg: string): number {
 /**
  * Extract the design tokens declared inside a CSS block, e.g. the `:root`
  * block or the `[data-theme="dark"]` block of src/index.css.
+ *
+ * The selector is matched as a whole selector (immediately followed by
+ * optional whitespace and `{`), never as a substring — so `:root` matches the
+ * top-level `:root {` block but never `:root:not(...)`. `.exec` returns the
+ * first match, which is the top-level declaration (nested `:root` blocks that
+ * live inside `@media` queries appear later in the file and are never reached).
  */
 function extractTokenBlock(css: string, selector: string): Record<string, string> {
-  const idx = css.indexOf(selector);
-  if (idx === -1) throw new Error(`Selector not found in CSS: ${selector}`);
-  const open = css.indexOf('{', idx);
-  if (open === -1) throw new Error(`No opening brace after ${selector}`);
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const selRe = new RegExp(escaped + '\\s*\\{');
+  const m = selRe.exec(css);
+  if (!m) throw new Error(`Selector not found in CSS: ${selector}`);
+  const open = m.index + m[0].length - 1; // index of the opening `{`
   let depth = 0;
   let end = open;
   for (let i = open; i < css.length; i++) {
@@ -72,9 +79,9 @@ function extractTokenBlock(css: string, selector: string): Record<string, string
   const body = css.slice(open + 1, end);
   const tokens: Record<string, string> = {};
   const decl = /(--[\w-]+)\s*:\s*([^;]+);/g;
-  let m: RegExpExecArray | null;
-  while ((m = decl.exec(body)) !== null) {
-    tokens[m[1]!] = m[2]!.trim();
+  let d: RegExpExecArray | null;
+  while ((d = decl.exec(body)) !== null) {
+    tokens[d[1]!] = d[2]!.trim();
   }
   return tokens;
 }
@@ -88,9 +95,22 @@ const CSS = readFileSync(cssPath, 'utf8');
 
 const LIGHT = extractTokenBlock(CSS, ':root');
 const DARK_OVERRIDES = extractTokenBlock(CSS, '[data-theme="dark"]');
-// The dark block only overrides a subset of tokens; everything else cascades
-// from :root, exactly as the browser would resolve it.
-const DARK: Record<string, string> = { ...LIGHT, ...DARK_OVERRIDES };
+// System-preference dark mode (`prefers-color-scheme: dark`) is a second
+// source of dark overrides via `:root:not([data-theme="light"])`. It mirrors
+// the explicit toggle but is parsed separately so a change to either dark
+// block is caught by these contrast tests.
+const SYSTEM_DARK_OVERRIDES = extractTokenBlock(
+  CSS,
+  ':root:not([data-theme="light"])'
+);
+// The dark blocks only override a subset of tokens; everything else cascades
+// from :root, exactly as the browser would resolve it. Both the explicit
+// toggle and the system-preference overrides are applied on top of :root.
+const DARK: Record<string, string> = {
+  ...LIGHT,
+  ...DARK_OVERRIDES,
+  ...SYSTEM_DARK_OVERRIDES,
+};
 
 export type ThemeName = 'light' | 'dark';
 

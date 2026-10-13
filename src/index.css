@@ -245,7 +245,7 @@ ol {
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid var(--color-accent, #059669);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -558,65 +558,6 @@ ol {
   background: var(--color-border);
   border-radius: var(--radius-full);
   margin: 0 auto var(--space-md);
-}
-
-/* ==========================================================================
-   TOASTS
-   ========================================================================== */
-
-.toast-container {
-  position: fixed;
-  bottom: calc(var(--bottom-nav-total) + var(--space-sm));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-toast);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  align-items: center;
-  pointer-events: none;
-  width: 100%;
-  max-width: var(--app-max-width);
-  padding: 0 var(--space-md);
-}
-
-.toast {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  background: var(--color-foreground);
-  color: var(--color-background);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  box-shadow: var(--shadow-lg);
-  pointer-events: auto;
-  max-width: 90vw;
-  width: auto;
-}
-
-.toast-icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
-
-.toast-dismiss {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  min-height: 24px;
-  padding: var(--space-xs);
-  color: var(--color-muted-foreground);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.toast-dismiss:hover {
-  color: var(--color-foreground);
 }
 
 /* ==========================================================================
@@ -1524,21 +1465,20 @@ ol {
 
 /* Settings components */
 .settings-toggle:focus-visible {
-  outline: 2px solid var(--color-accent, #059669);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: var(--radius-full);
 }
 
 .settings-stepper-button:focus-visible {
-  outline: 2px solid var(--color-accent, #059669);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: var(--radius-md);
 }
 
 .settings-row:focus-visible,
-.settings-info-row:focus-visible,
-.theme-button:focus-visible {
-  outline: 2px solid var(--color-accent, #059669);
+.settings-info-row:focus-visible {
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: var(--radius-md);
 }
@@ -1794,15 +1734,6 @@ ol {
 
 .app-bar {
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-}
-
-/* ==========================================================================
-   TOAST — enhanced with gradient
-   ========================================================================== */
-
-.toast {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ==========================================================================

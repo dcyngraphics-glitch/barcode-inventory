@@ -34,7 +34,14 @@ function inlineColors(el: Element): { color?: string; background?: string } {
     const prop = decl.slice(0, i).trim().toLowerCase();
     const value = decl.slice(i + 1).trim();
     if (prop === 'color' && out.color === undefined) out.color = value;
-    if (prop === 'background' && out.background === undefined) out.background = value;
+    // Accept both the `background` shorthand and the `background-color`
+    // longhand; prefer `background` when both are present.
+    if (
+      (prop === 'background' || prop === 'background-color') &&
+      out.background === undefined
+    ) {
+      out.background = value;
+    }
   }
   return out;
 }
