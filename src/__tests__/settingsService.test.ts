@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { loadSettings, saveSettings } from '../services/settingsService';
 import { DEFAULT_SETTINGS } from '../types';
+import * as dbModule from '../db/database';
 
 describe('settingsService', () => {
   it('should return default settings when none saved', async () => {
@@ -20,5 +21,57 @@ describe('settingsService', () => {
   it('should preserve settings id', async () => {
     const settings = await loadSettings();
     expect(settings.id).toBe('settings');
+  });
+});
+
+describe('settingsService error handling', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should handle database errors on save', async () => {
+    const mockDB = {
+      put: vi.fn().mockRejectedValue(new Error('DB error')),
+    };
+    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+
+    const settings = { ...DEFAULT_SETTINGS, alertWindowDays: 5 };
+    await expect(saveSettings(settings)).rejects.toThrow('DB error');
+  });
+
+  it('should handle database errors on load', async () => {
+    const mockDB = {
+      get: vi.fn().mockRejectedValue(new Error('DB read error')),
+    };
+    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+
+    await expect(loadSettings()).rejects.toThrow('DB read error');
+  });
+
+  it('should log and surface errors when persisting default settings fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mockDB = {
+      get: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockRejectedValue(new Error('DB write error')),
+    };
+    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+
+    await expect(loadSettings()).rejects.toThrow('DB write error');
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to persist default settings:',
+      expect.any(Error),
+    );
+  });
+
+  it('should return defaults merged with stored settings when no error occurs', async () => {
+    const mockDB = {
+      get: vi.fn().mockResolvedValue({ ...DEFAULT_SETTINGS, theme: 'dark' }),
+      put: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+
+    const loaded = await loadSettings();
+    expect(loaded.theme).toBe('dark');
+    expect(mockDB.put).not.toHaveBeenCalled();
   });
 });

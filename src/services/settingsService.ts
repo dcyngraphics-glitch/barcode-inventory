@@ -9,7 +9,12 @@ export async function loadSettings(): Promise<Settings> {
     // DB is empty or settings not yet saved — initialize with defaults
     // and persist so future calls are fast
     const defaults: Settings = { ...DEFAULT_SETTINGS };
-    await db.put('settings', defaults).catch(() => {});
+    try {
+      await db.put('settings', defaults);
+    } catch (err) {
+      console.error('Failed to persist default settings:', err);
+      throw err;
+    }
     return defaults;
   }
   return { ...DEFAULT_SETTINGS, ...stored };
