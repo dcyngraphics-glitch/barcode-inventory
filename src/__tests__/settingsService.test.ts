@@ -75,3 +75,29 @@ describe('settingsService error handling', () => {
     expect(mockDB.put).not.toHaveBeenCalled();
   });
 });
+
+describe('settingsService validation integration', () => {
+  it('should reject invalid settings on save', async () => {
+    const invalid = { ...DEFAULT_SETTINGS, theme: 'invalid' as never };
+    await expect(saveSettings(invalid)).rejects.toThrow('Invalid theme');
+  });
+
+  it('should reject out-of-range alertWindowDays on save', async () => {
+    const invalid = { ...DEFAULT_SETTINGS, alertWindowDays: 0 };
+    await expect(saveSettings(invalid)).rejects.toThrow(
+      'alertWindowDays must be between 1 and 30',
+    );
+  });
+
+  it('should accept valid settings on save', async () => {
+    const valid = { ...DEFAULT_SETTINGS, alertWindowDays: 7, theme: 'dark' as const };
+    await expect(saveSettings(valid)).resolves.toBeUndefined();
+  });
+
+  it('should not persist invalid settings to the database', async () => {
+    const invalid = { ...DEFAULT_SETTINGS, alertWindowDays: -5 };
+    await expect(saveSettings(invalid)).rejects.toThrow();
+    const loaded = await loadSettings();
+    expect(loaded.alertWindowDays).not.toBe(-5);
+  });
+});

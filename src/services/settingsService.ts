@@ -1,6 +1,7 @@
 import type { Settings } from '@/types';
 import { DEFAULT_SETTINGS, SETTINGS_ID } from '@/types';
 import { getDB } from '@/db/database';
+import { validateSettings } from './settingsValidation';
 
 export async function loadSettings(): Promise<Settings> {
   const db = await getDB();
@@ -21,6 +22,7 @@ export async function loadSettings(): Promise<Settings> {
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
+  validateSettings(settings);
   const db = await getDB();
   await db.put('settings', settings);
 }
