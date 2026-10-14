@@ -3,9 +3,8 @@ import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard } from 'lucid
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
-  onScan: (barcode: string) => void,
-  onManualEntry?: () => void,
-  cameraActive?: boolean,
+  onScan: (barcode: string) => void;
+  onManualEntry?: () => void;
 }
 
 export interface CameraViewfinderHandle {
@@ -20,7 +19,7 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     const [torchSupported, setTorchSupported] = useState(false);
     const [initializing, setInitializing] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
-    const [permissionState, setPermissionState] = useState<string | null>(null);
+    const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
     const { error, errorType, start, stop, captureFrame } = useBarcodeScanner();
 
     // Keep ref in sync with latest onScan prop
@@ -142,9 +141,9 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
   }, [stop]);
 
   // Error state (from scanner errors or denied permission)
-  if (error || permissionState === 'denied') {
+  const isPermissionDenied = errorType === 'permission-denied' || permissionState === 'denied';
+  if (error || isPermissionDenied) {
     const isNoCamera = errorType === 'no-camera';
-    const isPermissionDenied = errorType === 'permission-denied' || permissionState === 'denied';
 
     return (
       <div className="camera-viewfinder">
@@ -217,7 +216,16 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
       {/* Start overlay — shown before camera is activated */}
       {!cameraActive && (
         <div className="camera-start-overlay">
-          <div className="camera-start-content"><Camera size={48} className="camera-start-icon" /><p className="camera-start-title">Camera Scanner</p><p className="camera-start-desc">Tap the button below to activate your camera. Then tap the scan button to read barcodes.</p><button onClick={handleStartCamera} className="camera-start-btn"><Play size={18} />Start Camera</button><p className="camera-start-hint">You'll be prompted to allow camera access for this site.</p></div>
+          <div className="camera-start-content">
+            <Camera size={48} className="camera-start-icon" />
+            <p className="camera-start-title">Camera Scanner</p>
+            <p className="camera-start-desc">Tap the button below to activate your camera. Then tap the scan button to read barcodes.</p>
+            <button onClick={handleStartCamera} className="camera-start-btn">
+              <Play size={18} />
+              Start Camera
+            </button>
+            <p className="camera-start-hint">You'll be prompted to allow camera access for this site.</p>
+          </div>
         </div>
       )}
 

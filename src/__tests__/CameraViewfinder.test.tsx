@@ -49,6 +49,9 @@ describe('CameraViewfinder', () => {
     // Should show the video element (camera active)
     const video = document.querySelector('video');
     expect(video).not.toBeNull();
+
+    // start() should have been called to activate the camera stream
+    expect(mockStart).toHaveBeenCalled();
   });
 
   it('shows start button when permission state is prompt', async () => {
@@ -59,6 +62,21 @@ describe('CameraViewfinder', () => {
     });
 
     // Should show start button
+    expect(screen.getByText('Start Camera')).toBeInTheDocument();
+
+    // Should NOT show video element
+    const video = document.querySelector('video');
+    expect(video).toBeNull();
+  });
+
+  it('falls back to prompt when navigator.permissions is unavailable', async () => {
+    mockPermissionsQuery.mockRejectedValue(new Error('Permissions API not supported'));
+
+    await act(async () => {
+      render(<CameraViewfinder onScan={() => {}} />);
+    });
+
+    // Should show start button (permission defaults to 'prompt' on catch)
     expect(screen.getByText('Start Camera')).toBeInTheDocument();
 
     // Should NOT show video element
