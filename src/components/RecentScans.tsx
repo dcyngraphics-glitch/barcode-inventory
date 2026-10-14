@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/EmptyState';
 import type { Product, Batch } from '@/types';
 import { getAllBatches } from '@/services/inventoryService';
 import { getProduct } from '@/services/catalogService';
@@ -137,7 +138,12 @@ export function RecentScans() {
   }
 
   if (scans.length === 0) {
-    return null;
+    return (
+      <EmptyState
+        title="No scans yet"
+        subtitle="Scan a product to see your recent scans here."
+      />
+    );
   }
 
   return (

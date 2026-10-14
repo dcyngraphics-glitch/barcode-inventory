@@ -2039,3 +2039,175 @@ select {
   color: var(--color-error-text);
   font-size: 0.875rem;
 }
+
+
+
+
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-animate {
+  animation: pulse 0.3s ease;
+}
+
+/* ==========================================================================
+   INSTALL PROMOTION BANNER
+   ========================================================================== */
+.install-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  z-index: var(--z-toast);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+  animation: slide-up var(--transition-base) ease;
+}
+.install-banner-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+}
+.install-banner-info {
+  flex: 1 1 200px;
+}
+.install-banner-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-xs);
+}
+.install-banner-description {
+  font-size: var(--text-sm);
+  color: var(--color-muted-foreground);
+}
+.install-banner-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+.install-banner-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-base);
+  min-height: 44px;
+  cursor: pointer;
+  border: none;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+.install-banner-button-install {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.install-banner-button-install:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.install-banner-button-close {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+.install-banner-button-close:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+/* Permission prompt modal overlay */
+.permission-prompt-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+.permission-prompt-modal-content {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+}
+.permission-prompt-modal-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-sm);
+}
+.permission-prompt-modal-description {
+  font-size: var(--text-base);
+  color: var(--color-foreground);
+  margin-bottom: var(--space-lg);
+}
+.permission-prompt-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+}
+.permission-prompt-modal-button {
+  flex: 1;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-base);
+  cursor: pointer;
+  border: none;
+  transition: background var(--transition-base);
+}
+.permission-prompt-modal-button-confirm {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.permission-prompt-modal-button-confirm:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.permission-prompt-modal-button-deny {
+  background: var(--color-muted);
+  color: var(--color-on-primary);
+}
+.permission-prompt-modal-button-deny:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* Additional focus-visible styles for custom components */
+.install-banner-button:focus-visible,
+.permission-prompt-modal-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Ensure toast and other components have focus-visible styles if missing */
+.toast:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}

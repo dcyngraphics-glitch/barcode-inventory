@@ -17,6 +17,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
+import { useScanCart } from '@/context/ScanCartContext';
+import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
 
 export default function App() {
   return (
@@ -39,6 +41,9 @@ function AuthGate() {
 
 function MainApp() {
   const [isSeeding, setIsSeeding] = useState(true);
+  const [installPromptEvent, setInstallPromptEvent] = useState<null | Event>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const { totalItems } = useScanCart();
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +68,45 @@ function MainApp() {
     };
   }, []);
 
+  // Install promotion logic
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setInstallPromptEvent(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (totalItems >= 3 && installPromptEvent !== null) {
+      setShowInstallBanner(true);
+    }
+  }, [totalItems, installPromptEvent]);
+
+  const handleInstall = async () => {
+    if (installPromptEvent) {
+      // Show the prompt
+      installPromptEvent.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await installPromptEvent.userChoice;
+      // Optionally, send analytics event
+      console.log(`Install promotion outcome: ${outcome}`);
+      // We've used the prompt, can't reuse it
+      setInstallPromptEvent(null);
+      setShowInstallBanner(false);
+    }
+  };
+
+  const handleClose = () => {
+    setInstallPromptEvent(null);
+    setShowInstallBanner(false);
+  };
+
   if (isSeeding) {
     return (
       <div className="screen-center">
@@ -81,6 +125,13 @@ function MainApp() {
         <TutorialProvider>
           <ScanCartProvider>
             <div className="app-container">
+              {showInstallBanner && (
+                <InstallPromotionBanner
+                  visible={showInstallBanner}
+                  onInstall={handleInstall}
+                  onClose={handleClose}
+                />
+              )}
               <Routes>
                 <Route path="/" element={<ScannerScreen />} />
                 <Route path="/product/:barcode" element={<ProductDetailScreen />} />

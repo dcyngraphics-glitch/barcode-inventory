@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, within, waitFor } from '@testing-library/react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { vi } from 'vitest';
@@ -64,9 +64,14 @@ import { lookupProduct } from '@/services/productLookupService';
 describe('ScannerScreen', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set camera permission as granted to allow scanning in tests
+    localStorage.setItem('cameraPermissionGranted', 'true');
+    localStorage.setItem('permissionPromptShown', 'true');
+    // Dispatch focus event to trigger the useEffect that sets cameraActive
+    window.dispatchEvent(new Event('focus'));
   });
 
-  it('should start scanning automatically on mount and stop after first successful scan', () => {
+  it('should start scanning automatically on mount and stop after first successful scan', async () => {
     // Render the component
     render(<ScannerScreen />);
 
@@ -74,13 +79,14 @@ describe('ScannerScreen', () => {
     const viewfinder = screen.getByTestId('mock-camera-viewfinder');
     expect(viewfinder).toBeInTheDocument();
 
-    // Initially, the scanner should be active (because we auto-started on mount).
-    // Trigger a scan
+    // Wait for the camera to be active (button not disabled)
+    await waitFor(() => {
+      const scanButton = viewfinder.querySelector('button');
+      expect(scanButton).not.toBeDisabled();
+    });
     act(() => {
       const scanButton = viewfinder.querySelector('button');
-      if (scanButton) {
-        scanButton.click();
-      }
+      if (scanButton) scanButton.click();
     });
 
     // Expect navigate to have been called with a product page
@@ -102,7 +108,7 @@ describe('ScannerScreen', () => {
     expect(mockNavigate).toHaveBeenCalledTimes(0);
   });
 
-  it('should restart scanning when window gains focus after a scan', () => {
+  it('should restart scanning when window gains focus after a scan', async () => {
     // Render the component
     render(<ScannerScreen />);
 
@@ -110,12 +116,14 @@ describe('ScannerScreen', () => {
     const viewfinder = screen.getByTestId('mock-camera-viewfinder');
     expect(viewfinder).toBeInTheDocument();
 
-    // Trigger first scan
+    // Wait for the camera to be active (button not disabled)
+    await waitFor(() => {
+      const scanButton = viewfinder.querySelector('button');
+      expect(scanButton).not.toBeDisabled();
+    });
     act(() => {
       const scanButton = viewfinder.querySelector('button');
-      if (scanButton) {
-        scanButton.click();
-      }
+      if (scanButton) scanButton.click();
     });
 
     // Expect navigate to have been called once
@@ -150,13 +158,47 @@ describe('ScannerScreen', () => {
       render(<ScannerScreen />);
 
       const viewfinder = screen.getByTestId('mock-camera-viewfinder');
+      // Wait for the camera to be active (button not disabled)
+      await waitFor(() => {
+        const scanButton = viewfinder.querySelector('button');
+        expect(scanButton).not.toBeDisabled();
+      });
       act(() => {
         const scanButton = viewfinder.querySelector('button');
         if (scanButton) scanButton.click();
       });
 
+      // Expect lookupProduct to have been called with the barcode
+      expect(lookupProduct).toHaveBeenCalledTimes(1);
+      expect(lookupProduct).toHaveBeenCalledWith('TESTBARCODE123');
+
       // Wait for the quick entry modal to appear
       expect(await screen.findByText('TESTBARCODE123')).toBeInTheDocument();
       expect(await screen.findByText('Quick Entry')).toBeInTheDocument();
     });
+
+  it('should render mode segmented control and change mode correctly', () => {
+    render(<ScannerScreen />);
+
+    // Check that the segmented control is rendered
+    const modeGroup = screen.getByRole('group', { name: /scan mode/i });
+    expect(modeGroup).toBeInTheDocument();
+    expect(within(modeGroup).getByRole('button', { name: /auto/i })).toBeInTheDocument();
+    expect(within(modeGroup).getByRole('button', { name: /manual/i })).toBeInTheDocument();
+
+    // Check initial mode is auto
+    expect(within(modeGroup).getByRole('button', { name: /auto/i })).toHaveClass('active');
+    expect(within(modeGroup).getByRole('button', { name: /manual/i })).not.toHaveClass('active');
+
+    // Click the manual button
+    const manualBtn = within(modeGroup).getByRole('button', { name: /manual/i });
+    act(() => {
+      manualBtn.click();
+    });
+
+    // Now manual should be active
+    expect(within(modeGroup).getByRole('button', { name: /manual/i })).toHaveClass('active');
+    expect(within(modeGroup).getByRole('button', { name: /auto/i })).not.toHaveClass('active');
+
+  });
 });

@@ -4,7 +4,9 @@ import { ScanLine, Keyboard, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
 import { ManualEntrySheet } from '@/components/ManualEntrySheet';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
+import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
 import { RecentScans } from '@/components/RecentScans';
+import { PermissionPromptModal } from '@/components/PermissionPromptModal';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
 import { useScanCart } from '@/context/ScanCartContext';
 import { useSettings } from '@/hooks/useSettings';
@@ -42,21 +44,39 @@ export function ScannerScreen() {
     const [scanToast, setScanToast] = useState<string | null>(null);
     const [scanning, setScanning] = useState(false);
     const [processing, setProcessing] = useState(false);
-    const [cameraActive, setCameraActive] = useState(true);
+    const [cameraActive, setCameraActive] = useState(false);
     const [hasScannedSuccessfully, setHasScannedSuccessfully] = useState(false);
       const [scanMode, setScanMode] = useState<'auto' | 'manual'>('auto');
         const [manualScanAllowed, setManualScanAllowed] = useState<boolean>(false);
+        const [modeAnimationClass, setModeAnimationClass] = useState<string>('');
+    const [permissionPromptShown, setPermissionPromptShown] = useState(false);
+    const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
 
       const isScanAllowed = scanMode === 'auto' || manualScanAllowed;
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const modeAnimationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const viewfinderRef = useRef<CameraViewfinderHandle>(null);
+
+// Load camera permission grant status from localStorage
+useEffect(() => {
+  const granted = localStorage.getItem('cameraPermissionGranted') === 'true';
+  setCameraPermissionGranted(granted);
+  // If permission was previously granted, we can set permissionPromptShown to true to skip the prompt
+  if (granted) {
+    setPermissionPromptShown(true);
+  }
+}, []);
 
     // Start scanning on mount and when window gains focus
         useEffect(() => {
-          setCameraActive(true);
+          if (cameraPermissionGranted) {
+            setCameraActive(true);
+          }
           setHasScannedSuccessfully(false);
           const handleFocus = () => {
-            setCameraActive(true);
+            if (cameraPermissionGranted) {
+              setCameraActive(true);
+            }
             setHasScannedSuccessfully(false);
             if (scanMode === 'manual') {
               // In manual mode, allow a scan when focus returns (user can tap scan button)
@@ -66,7 +86,7 @@ export function ScannerScreen() {
           };
           window.addEventListener('focus', handleFocus);
           return () => window.removeEventListener('focus', handleFocus);
-        }, [scanMode]);
+        }, [scanMode, cameraPermissionGranted]);
 
     // Stop scanning after first successful scan
     useEffect(() => {
@@ -101,6 +121,27 @@ export function ScannerScreen() {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setScanToast(null), 3000);
   }, []);
+
+  const handleModeChange = (newMode: 'auto' | 'manual') => {
+    setScanMode(newMode);
+    if (scanMode === 'auto') {
+      setManualScanAllowed(true);
+      showScanToast('Mode switched to Automatic');
+    } else {
+      setManualScanAllowed(false);
+      setHasScannedSuccessfully(false);
+      setCameraActive(true);
+      showScanToast('Mode switched to Manual');
+    }
+    // Trigger animation
+    setModeAnimationClass('pulse-animate');
+    if (modeAnimationTimerRef.current) {
+      clearTimeout(modeAnimationTimerRef.current);
+    }
+    modeAnimationTimerRef.current = setTimeout(() => {
+      setModeAnimationClass('');
+    }, 300); // match the animation duration
+  };
 
   const handleBarcodeSubmit = useCallback(async (barcode: string) => {
         if (scanning) return; // prevent concurrent scans
@@ -265,40 +306,7 @@ export function ScannerScreen() {
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-on-primary)' }}>
                       Scan Mode:
                     </span>
-                    <button
-                      onClick={() => {
-                        setScanMode(prev => prev === 'auto' ? 'manual' : 'auto');
-                        if (scanMode === 'auto') {
-                          setManualScanAllowed(true);
-                          setTriggeredByButton(true);
-                        } else {
-                          setManualScanAllowed(false);
-                          setTriggeredByButton(false);
-                          setHasScannedSuccessfully(false);
-                          setCameraActive(true);
-                        }
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--space-xs)',
-                        background: scanMode === 'manual' ? '#0f172a' : 'transparent',
-                        border: scanMode === 'manual' ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.15)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: 'var(--space-xs) var(--space-sm)',
-                        cursor: 'pointer',
-                        color: 'var(--color-on-primary)',
-                        fontSize: 'var(--text-xs)',
-                        fontWeight: 600,
-                        transition: 'var(--transition-base)',
-                      }}
-                      aria-label={`Scan mode: ${scanMode === 'auto' ? 'Automatic' : 'Manual'}`}
-                    >
-                      <span>{scanMode === 'auto' ? 'Auto' : 'Manual'}</span>
-                      {scanMode === 'manual' && (
-                        <span style={{ opacity: 0.7, fontSize: 'var(--text-xs)' }}>(Tap to scan)</span>
-                      )}
-                    </button>
+                    <ModeSegmentedControl mode={scanMode} onChange={handleModeChange} className={modeAnimationClass} />
                   </div>
 
                   {/* Cart Badge */}
@@ -475,6 +483,21 @@ export function ScannerScreen() {
         screenId="scanner"
         message="Tap the barcode or use the keyboard icon for manual entry"
       />
+      {(!permissionPromptShown && !cameraPermissionGranted) && (
+        <PermissionPromptModal
+          onConfirm={() => {
+            setCameraPermissionGranted(true);
+            setPermissionPromptShown(true);
+            localStorage.setItem('cameraPermissionGranted', 'true');
+            setCameraActive(true);
+          }}
+          onDeny={() => {
+            setCameraPermissionGranted(false);
+            setPermissionPromptShown(true);
+            localStorage.setItem('cameraPermissionGranted', 'false');
+          }}
+        />
+      )}
     </div>
   );
 }
