@@ -150,7 +150,7 @@ describe('ScannerScreen', () => {
 
   it('should show quick entry modal when product lookup fails (not-found)', async () => {
       // Override useSettings to return cashierMode: true for this test
-      useSettings.mockReturnValueOnce({ settings: { cashierMode: true } });
+      useSettings.mockReturnValue({ settings: { cashierMode: true } });
 
       // Mock lookupProduct to return not-found
       lookupProduct.mockResolvedValueOnce({ success: false, reason: 'not-found', source: 'manual' });

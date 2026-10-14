@@ -56,8 +56,8 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
   }, [toast.id, onDismiss]);
 
   const iconMap = {
-    success: <CheckCircle size={18} color="var(--color-accent)" />,
-    error: <AlertTriangle size={18} color="var(--color-destructive)" />,
+    success: <CheckCircle size={18} color="var(--color-foreground)" />,
+    error: <AlertTriangle size={18} color="var(--color-on-destructive)" />,
     info: <AlertTriangle size={18} color="var(--color-foreground)" />,
   };
 

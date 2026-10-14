@@ -14,6 +14,8 @@
   --color-on-secondary: #f8fafc;     /* On secondary */
   --color-accent: #10b981;           /* Emerald green — CTA, highlights */
   --color-on-accent: #ffffff;        /* On accent — white text on accent */
+  --color-destructive: #dc2626;          /* Red — destructive actions, errors */
+  --color-on-destructive: #ffffff;       /* On destructive — white text */
 
   /* ======================================================================
      SURFACE PALETTE — Layered depth for touch-friendly UI

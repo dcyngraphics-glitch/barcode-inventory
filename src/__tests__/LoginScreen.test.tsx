@@ -26,7 +26,7 @@ describe('LoginScreen', () => {
 
   it('should render a password input', () => {
     renderLoginScreen();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
 
   it('should render an Unlock button', () => {
@@ -41,7 +41,7 @@ describe('LoginScreen', () => {
 
   it('should show error on wrong password', () => {
     renderLoginScreen();
-    const input = screen.getByLabelText(/password/i);
+    const input = screen.getByLabelText('Password');
     const button = screen.getByRole('button', { name: /unlock/i });
 
     fireEvent.change(input, { target: { value: 'wrong-password' } });
@@ -54,7 +54,7 @@ describe('LoginScreen', () => {
     const onLogin = vi.fn();
     renderLoginScreen(onLogin);
 
-    const input = screen.getByLabelText(/password/i);
+    const input = screen.getByLabelText('Password');
     const button = screen.getByRole('button', { name: /unlock/i });
 
     fireEvent.change(input, { target: { value: MASTER_PASSWORD } });
@@ -67,7 +67,7 @@ describe('LoginScreen', () => {
     const onLogin = vi.fn();
     renderLoginScreen(onLogin);
 
-    const input = screen.getByLabelText(/password/i);
+    const input = screen.getByLabelText('Password');
     const button = screen.getByRole('button', { name: /unlock/i });
 
     fireEvent.change(input, { target: { value: 'wrong' } });
@@ -79,7 +79,7 @@ describe('LoginScreen', () => {
   it('should clear error when user types after a failed attempt', () => {
     renderLoginScreen();
 
-    const input = screen.getByLabelText(/password/i);
+    const input = screen.getByLabelText('Password');
     const button = screen.getByRole('button', { name: /unlock/i });
 
     // First: wrong password

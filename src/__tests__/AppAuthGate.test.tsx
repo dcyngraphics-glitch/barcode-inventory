@@ -28,7 +28,8 @@ vi.mock('@/context/TutorialContext', () => ({
   TutorialProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock('@/context/ScanCartContext', () => ({
-  ScanCartProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ScanCartProvider: ({ children }) => <>{children}</>,
+  useScanCart: () => ({ totalItems: 0, totalPrice: 0 }),
 }));
 vi.mock('@/components/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -71,7 +72,7 @@ describe('App Auth Gate', () => {
 
   it('should show LoginScreen when not authenticated', () => {
     renderApp();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /unlock/i })).toBeInTheDocument();
   });
 
@@ -90,7 +91,7 @@ describe('App Auth Gate', () => {
 
   it('should show app routes after successful login', async () => {
     renderApp();
-    const input = screen.getByLabelText(/password/i);
+    const input = screen.getByLabelText('Password');
     const button = screen.getByRole('button', { name: /unlock/i });
 
     fireEvent.change(input, { target: { value: MASTER_PASSWORD } });
@@ -105,13 +106,13 @@ describe('App Auth Gate', () => {
 
   it('should stay on login screen after failed login', () => {
     renderApp();
-    const input = screen.getByLabelText(/password/i);
+    const input = screen.getByLabelText('Password');
     const button = screen.getByRole('button', { name: /unlock/i });
 
     fireEvent.change(input, { target: { value: 'wrong-password' } });
     fireEvent.click(button);
 
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
   });
