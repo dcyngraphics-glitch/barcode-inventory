@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 const AUTH_STORAGE_KEY = 'barcode_inventory_auth';
+const MASTER_PASSWORD_STORAGE_KEY = 'barcode_inventory_master_password';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -21,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [masterPasswordOverride, setMasterPasswordOverride] = useState<string | null>(null);
 
   const getMasterPassword = useCallback((): string => {
-    return masterPasswordOverride ?? import.meta.env.VITE_MASTER_PASSWORD ?? '';
+    return masterPasswordOverride ?? localStorage.getItem(MASTER_PASSWORD_STORAGE_KEY) ?? import.meta.env.VITE_MASTER_PASSWORD ?? '';
   }, [masterPasswordOverride]);
 
   const login = useCallback((password: string): boolean => {
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setMasterPassword = useCallback((password: string): void => {
+    localStorage.setItem(MASTER_PASSWORD_STORAGE_KEY, password);
     setMasterPasswordOverride(password);
   }, []);
 

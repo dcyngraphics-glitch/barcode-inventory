@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { useState } from 'react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 const AUTH_KEY = 'barcode_inventory_auth';
@@ -7,12 +8,14 @@ const MASTER_PASSWORD = 'test-master-123';
 
 function TestConsumer() {
   const { isAuthenticated, login, logout, getMasterPassword, setMasterPassword } = useAuth();
+  const [loginResult, setLoginResult] = useState<string>('none');
   return (
     <div>
       <div data-testid="auth">{String(isAuthenticated)}</div>
       <div data-testid="master-pw">{getMasterPassword()}</div>
-      <button onClick={() => login(MASTER_PASSWORD)}>Login Correct</button>
-      <button onClick={() => login('wrong')}>Login Wrong</button>
+      <div data-testid="login-result">{loginResult}</div>
+      <button onClick={() => setLoginResult(String(login(MASTER_PASSWORD)))}>Login Correct</button>
+      <button onClick={() => setLoginResult(String(login('wrong')))}>Login Wrong</button>
       <button onClick={logout}>Logout</button>
       <button onClick={() => setMasterPassword('override-pw')}>Set Override</button>
     </div>
@@ -93,7 +96,7 @@ describe('AuthContext', () => {
     expect(getByTestId('master-pw')).toHaveTextContent('override-pw');
   });
 
-  it('should authenticate with overridden password but not original', () => {
+  it('should return false for login with original password after override', () => {
     const { getByTestId, getByText } = renderAuth();
     act(() => {
       getByText('Set Override').click();
@@ -104,7 +107,22 @@ describe('AuthContext', () => {
     act(() => {
       getByText('Login Correct').click();
     });
-    // Original password should no longer work
     expect(getByTestId('auth')).toHaveTextContent('false');
+    expect(getByTestId('login-result')).toHaveTextContent('false');
+  });
+
+  it('should persist master password override to localStorage', () => {
+    const { getByTestId, getByText } = renderAuth();
+    act(() => {
+      getByText('Set Override').click();
+    });
+    expect(localStorage.getItem('barcode_inventory_master_password')).toBe('override-pw');
+    expect(getByTestId('master-pw')).toHaveTextContent('override-pw');
+  });
+
+  it('should read master password from localStorage on mount', () => {
+    localStorage.setItem('barcode_inventory_master_password', 'persisted-pw');
+    const { getByTestId } = renderAuth();
+    expect(getByTestId('master-pw')).toHaveTextContent('persisted-pw');
   });
 });
