@@ -1,22 +1,43 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
 import { ScanLine, Package, Settings } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { CartReviewScreen } from '@/screens/CartReviewScreen';
+import { LoginScreen } from '@/screens/LoginScreen';
 import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { ScanCartProvider } from '@/context/ScanCartContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
 
 export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
+  );
+}
+
+function AuthGate() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={() => navigate('/')} />;
+  }
+
+  return <MainApp />;
+}
+
+function MainApp() {
   const [isSeeding, setIsSeeding] = useState(true);
 
   useEffect(() => {
