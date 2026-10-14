@@ -1,13 +1,12 @@
 import { render, screen, act, within, waitFor } from '@testing-library/react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
-import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { vi } from 'vitest';
 
 // Mock the CameraViewfinder
 vi.mock('@/components/CameraViewfinder', () => {
   let scanCalled = false;
   return {
-    CameraViewfinder: vi.fn(({ onScan, onManualEntry, cameraActive, ...props }, ref) => {
+    CameraViewfinder: vi.fn(({ onScan, _onManualEntry, cameraActive }, _ref) => {
       const active = cameraActive ?? true;
       return (
         <div data-testid="mock-camera-viewfinder">

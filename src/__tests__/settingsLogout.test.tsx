@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SettingsScreen } from '@/screens/SettingsScreen';
-import { useAuth } from '@/context/AuthContext';
+
 import { DEFAULT_SETTINGS } from '@/types';
 
 // ---- Module-scope mocks ----

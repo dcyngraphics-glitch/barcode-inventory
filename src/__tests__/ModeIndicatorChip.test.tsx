@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ModeIndicatorChip } from '@/components/ModeIndicatorChip';
 import type { Settings } from '@/types';

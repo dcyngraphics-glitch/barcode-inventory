@@ -9,7 +9,7 @@ vi.mock('@/services/catalogService', () => ({
   getProduct: mockGetProduct,
 }));
 
-import { lookupOpenFoodFacts, lookupProduct, LookupError } from '../services/productLookupService';
+import { lookupProduct } from '../services/productLookupService';
 
 describe('productLookupService', () => {
   beforeEach(() => {
