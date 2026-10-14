@@ -1,8 +1,8 @@
 import { useSettings } from '@/hooks/useSettings'
 
 export const ModeIndicatorChip = ({ mode = 'default' }: { mode?: 'default' | 'cashier' | 'seller' }) => {
-  const { cashierMode, sellerMode } = useSettings()
-  const activeMode = cashierMode ? 'cashier' : sellerMode ? 'seller' : 'default'
+  const { settings } = useSettings()
+  const activeMode = settings.cashierMode ? 'cashier' : settings.sellerMode ? 'seller' : 'default'
 
   const modeConfigs = {
     default: { label: 'Standard', bg: 'bg-gray-100', text: 'text-gray-800' },

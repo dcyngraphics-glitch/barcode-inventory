@@ -1875,6 +1875,7 @@ select {
   width: 100%;
   padding-right: 44px;
   min-height: 44px;
+  color: var(--color-foreground);
 }
 
 .login-password-toggle {
