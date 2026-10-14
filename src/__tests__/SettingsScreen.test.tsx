@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { TutorialProvider } from '@/context/TutorialContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { useSettings } from '@/hooks/useSettings';
 import { DEFAULT_SETTINGS } from '@/types';
 import { getPermissionStatus } from '@/services/notificationService';
@@ -31,11 +32,13 @@ beforeEach(() => {
 const renderSettings = () =>
   render(
     <MemoryRouter>
-      <SettingsProvider>
-        <TutorialProvider>
-          <SettingsScreen />
-        </TutorialProvider>
-      </SettingsProvider>
+      <AuthProvider>
+        <SettingsProvider>
+          <TutorialProvider>
+            <SettingsScreen />
+          </TutorialProvider>
+        </SettingsProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 
@@ -61,11 +64,13 @@ describe('SettingsScreen accessibility', () => {
   it('should use h1 for main header', () => {
     const { container } = render(
       <MemoryRouter>
-        <SettingsProvider>
-          <TutorialProvider>
-            <SettingsScreen />
-          </TutorialProvider>
-        </SettingsProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <TutorialProvider>
+              <SettingsScreen />
+            </TutorialProvider>
+          </SettingsProvider>
+        </AuthProvider>
       </MemoryRouter>
     );
     const h1 = container.querySelector('h1');
@@ -83,11 +88,13 @@ describe('SettingsScreen About links', () => {
   const renderSettings = () =>
     render(
       <MemoryRouter>
-        <SettingsProvider>
-          <TutorialProvider>
-            <SettingsScreen />
-          </TutorialProvider>
-        </SettingsProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <TutorialProvider>
+              <SettingsScreen />
+            </TutorialProvider>
+          </SettingsProvider>
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -117,11 +124,13 @@ describe('SettingsScreen decorative icons', () => {
   const renderSettings = () =>
     render(
       <MemoryRouter>
-        <SettingsProvider>
-          <TutorialProvider>
-            <SettingsScreen />
-          </TutorialProvider>
-        </SettingsProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <TutorialProvider>
+              <SettingsScreen />
+            </TutorialProvider>
+          </SettingsProvider>
+        </AuthProvider>
       </MemoryRouter>
     );
 
