@@ -10,14 +10,13 @@ import { LoginScreen } from '@/screens/LoginScreen';
 import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
-import { ScanCartProvider } from '@/context/ScanCartContext';
+import { ScanCartProvider, useScanCart } from '@/context/ScanCartContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
-import { useScanCart } from '@/context/ScanCartContext';
 import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
 
 export default function App() {
@@ -41,9 +40,6 @@ function AuthGate() {
 
 function MainApp() {
   const [isSeeding, setIsSeeding] = useState(true);
-  const [installPromptEvent, setInstallPromptEvent] = useState<null | Event>(null);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
-  const { totalItems } = useScanCart();
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +63,47 @@ function MainApp() {
       cancelled = true;
     };
   }, []);
+
+  if (isSeeding) {
+    return (
+      <div className="screen-center">
+        <div className="loading-spinner" role="status" aria-label="Loading">
+          <div className="spinner" />
+          <p>Setting up catalog...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <SettingsProvider>
+        <ThemeAndNotifications />
+        <TutorialProvider>
+          <ScanCartProvider>
+            <InstallBanner />
+            <div className="app-container">
+              <Routes>
+                <Route path="/" element={<ScannerScreen />} />
+                <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+                <Route path="/inventory" element={<InventoryScreen />} />
+                <Route path="/settings" element={<SettingsScreen />} />
+                <Route path="/cart" element={<CartReviewScreen />} />
+              </Routes>
+              <BottomNav />
+            </div>
+            <TutorialOverlay />
+          </ScanCartProvider>
+        </TutorialProvider>
+      </SettingsProvider>
+    </ErrorBoundary>
+  );
+}
+
+function InstallBanner() {
+  const { totalItems } = useScanCart();
+  const [installPromptEvent, setInstallPromptEvent] = useState<null | Event>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
 
   // Install promotion logic
   useEffect(() => {
@@ -107,45 +144,14 @@ function MainApp() {
     setShowInstallBanner(false);
   };
 
-  if (isSeeding) {
-    return (
-      <div className="screen-center">
-        <div className="loading-spinner" role="status" aria-label="Loading">
-          <div className="spinner" />
-          <p>Setting up catalog...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!showInstallBanner) return null;
 
   return (
-    <ErrorBoundary>
-      <SettingsProvider>
-        <ThemeAndNotifications />
-        <TutorialProvider>
-          <ScanCartProvider>
-            <div className="app-container">
-              {showInstallBanner && (
-                <InstallPromotionBanner
-                  visible={showInstallBanner}
-                  onInstall={handleInstall}
-                  onClose={handleClose}
-                />
-              )}
-              <Routes>
-                <Route path="/" element={<ScannerScreen />} />
-                <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-                <Route path="/inventory" element={<InventoryScreen />} />
-                <Route path="/settings" element={<SettingsScreen />} />
-                <Route path="/cart" element={<CartReviewScreen />} />
-              </Routes>
-              <BottomNav />
-            </div>
-            <TutorialOverlay />
-          </ScanCartProvider>
-        </TutorialProvider>
-      </SettingsProvider>
-    </ErrorBoundary>
+    <InstallPromotionBanner
+      visible={showInstallBanner}
+      onInstall={handleInstall}
+      onClose={handleClose}
+    />
   );
 }
 
