@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import { useTutorial } from '@/context/TutorialContext';
 import { TUTORIAL_STEPS } from '@/data/tutorialSteps';
 import './TutorialOverlay.css';
 
 export function TutorialOverlay() {
   const navigate = useNavigate();
-  const { isVisible, currentStep, totalSteps, next, prev, skip, finish } = useTutorial();
+  const { isVisible, currentStep, totalSteps, next, skip, finish } = useTutorial();
   const ctaRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -79,7 +79,6 @@ export function TutorialOverlay() {
   if (!step) return null;
 
   const isLastStep = currentStep === totalSteps - 1;
-  const isFirstStep = currentStep === 0;
 
   const handleCta = () => {
     if (isAdvancingRef.current) return;

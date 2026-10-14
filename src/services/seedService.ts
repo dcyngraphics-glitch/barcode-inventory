@@ -1,6 +1,6 @@
 import type { Product } from '@/types';
-import { PH_GROCERY_SEED, type SeedProduct } from '@/data/phGrocerySeed';
-import { saveProduct, getAllProducts } from '@/services/catalogService';
+import { PH_GROCERY_SEED } from '@/data/phGrocerySeed';
+import { getAllProducts } from '@/services/catalogService';
 import { loadSettings, saveSettings } from '@/services/settingsService';
 
 const SEED_FLAG_KEY = 'catalogSeeded';

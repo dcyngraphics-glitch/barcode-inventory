@@ -1,6 +1,6 @@
 import { useSettings } from '@/hooks/useSettings'
 
-export const ModeIndicatorChip = ({ mode = 'default' }: { mode?: 'default' | 'cashier' | 'seller' }) => {
+export const ModeIndicatorChip = () => {
   const { settings } = useSettings()
   const activeMode = settings.cashierMode ? 'cashier' : settings.sellerMode ? 'seller' : 'default'
 

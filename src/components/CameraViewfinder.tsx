@@ -3,8 +3,9 @@ import { Zap, ZapOff, Camera, CameraOff, RefreshCw, Play, Keyboard } from 'lucid
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
-  onScan: (barcode: string) => void;
+  onScan: (barcode: string) => void,
   onManualEntry?: () => void;
+  cameraActive?: boolean;
 }
 
 export interface CameraViewfinderHandle {

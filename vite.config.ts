@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { fileURLToPath } from 'url';
 import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -57,12 +56,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
+        manualChunks: {
+          vendor: ['react', 'react-dom']
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000000,
   },
 });

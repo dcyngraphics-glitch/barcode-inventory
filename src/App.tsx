@@ -19,6 +19,11 @@ import { notifyExpiringItems, getPermissionStatus } from '@/services/notificatio
 import { getAllBatches } from '@/services/inventoryService';
 import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -102,7 +107,7 @@ function MainApp() {
 
 function InstallBanner() {
   const { totalItems } = useScanCart();
-  const [installPromptEvent, setInstallPromptEvent] = useState<null | Event>(null);
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
 
   // Install promotion logic
@@ -111,7 +116,7 @@ function InstallBanner() {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Stash the event so it can be triggered later.
-      setInstallPromptEvent(e);
+      setInstallPromptEvent(e as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => {

@@ -18,7 +18,7 @@ describe('ModeSegmentedControl', () => {
   });
 
   test('highlights active segment', () => {
-    const { container } = render(<ModeSegmentedControl mode="manual" onChange={() => {}} />);
+    render(<ModeSegmentedControl mode="manual" onChange={() => {}} />);
     const autoBtn = screen.getByRole('button', { name: /auto/i });
     const manualBtn = screen.getByRole('button', { name: /manual/i });
     expect(autoBtn).not.toHaveClass('active');

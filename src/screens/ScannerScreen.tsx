@@ -51,6 +51,7 @@ export function ScannerScreen() {
         const [modeAnimationClass, setModeAnimationClass] = useState<string>('');
     const [permissionPromptShown, setPermissionPromptShown] = useState(false);
     const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
+    const [, setTriggeredByButton] = useState(false);
 
       const isScanAllowed = scanMode === 'auto' || manualScanAllowed;
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

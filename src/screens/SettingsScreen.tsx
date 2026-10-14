@@ -40,7 +40,7 @@ export function SettingsScreen() {
   const { reopen } = useTutorial();
   const { settings, updateSettings } = useSettings();
   const { toasts, showToast, dismissToast } = useToast();
-  const { logout, getMasterPassword, setMasterPassword } = useAuth();
+  const { logout, setMasterPassword } = useAuth();
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [masterPasswordInput, setMasterPasswordInput] = useState('');
