@@ -23,9 +23,9 @@ const THEME_CYCLE: Record<ThemeOption, ThemeOption> = {
 };
 
 const THEME_ICON: Record<ThemeOption, React.ReactNode> = {
-  auto: <Monitor size={18} />,
-  light: <Sun size={18} />,
-  dark: <Moon size={18} />,
+  auto: <Monitor size={18} aria-hidden="true" />,
+  light: <Sun size={18} aria-hidden="true" />,
+  dark: <Moon size={18} aria-hidden="true" />,
 };
 
 const THEME_LABEL: Record<ThemeOption, string> = {
@@ -158,7 +158,7 @@ export function SettingsScreen() {
         />
         {permissionDenied && (
           <div className="settings-warning">
-            <AlertTriangle size={16} />
+            <AlertTriangle size={16} aria-hidden="true" />
             Notifications blocked by browser
           </div>
         )}
@@ -202,14 +202,14 @@ export function SettingsScreen() {
           disabled={exporting}
           className="settings-row"
         >
-          <Download size={20} />
+          <Download size={20} aria-hidden="true" />
           {exporting ? 'Exporting...' : 'Export as JSON'}
         </button>
         <button
           onClick={() => setShowClearDialog(true)}
           className="settings-row settings-row-danger"
         >
-          <Trash2 size={20} />
+          <Trash2 size={20} aria-hidden="true" />
           Delete Everything
         </button>
       </div>
@@ -234,7 +234,7 @@ export function SettingsScreen() {
       </h2>
       <div className="settings-card settings-card-stack-sm">
         <div className="settings-info-header">
-          <Info size={20} className="text-muted" />
+          <Info size={20} className="text-muted" aria-hidden="true" />
           <div>
             <div className="settings-info-name">
               Barcode Inventory
@@ -250,7 +250,7 @@ export function SettingsScreen() {
           rel="noopener noreferrer"
           className="settings-info-row"
         >
-          <ExternalLink size={20} />
+          <ExternalLink size={20} aria-hidden="true" />
           View on GitHub
         </a>
         <a
@@ -259,14 +259,14 @@ export function SettingsScreen() {
           rel="noopener noreferrer"
           className="settings-info-row"
         >
-          <ExternalLink size={20} />
+          <ExternalLink size={20} aria-hidden="true" />
           Licenses
         </a>
         <button
           onClick={handleReplayTutorial}
           className="settings-row"
         >
-          <HelpCircle size={20} />
+          <HelpCircle size={20} aria-hidden="true" />
           Replay Tutorial
         </button>
       </div>

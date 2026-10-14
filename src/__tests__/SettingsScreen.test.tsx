@@ -112,3 +112,34 @@ describe('SettingsScreen About links', () => {
     expect(hrefs).not.toContain('https://github.com');
   });
 });
+
+describe('SettingsScreen decorative icons', () => {
+  const renderSettings = () =>
+    render(
+      <MemoryRouter>
+        <SettingsProvider>
+          <TutorialProvider>
+            <SettingsScreen />
+          </TutorialProvider>
+        </SettingsProvider>
+      </MemoryRouter>
+    );
+
+  it('should mark icons inside buttons as aria-hidden', () => {
+    const { container } = renderSettings();
+    const icons = Array.from(container.querySelectorAll('button svg'));
+    expect(icons.length).toBeGreaterThan(0);
+    icons.forEach((svg) => {
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+    });
+  });
+
+  it('should mark icons inside About links as aria-hidden', () => {
+    const { container } = renderSettings();
+    const icons = Array.from(container.querySelectorAll('a svg'));
+    expect(icons.length).toBeGreaterThan(0);
+    icons.forEach((svg) => {
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+    });
+  });
+});

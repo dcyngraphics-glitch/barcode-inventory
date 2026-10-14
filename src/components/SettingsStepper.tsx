@@ -76,7 +76,7 @@ export function SettingsStepper({
             flexShrink: 0,
           }}
         >
-          <Minus size={20} />
+          <Minus size={20} aria-hidden="true" />
         </button>
         <div
           style={{
@@ -110,7 +110,7 @@ export function SettingsStepper({
             flexShrink: 0,
           }}
         >
-          <Plus size={20} />
+          <Plus size={20} aria-hidden="true" />
         </button>
         <div
           style={{
