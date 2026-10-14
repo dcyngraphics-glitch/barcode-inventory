@@ -31,9 +31,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // True once the load attempt has settled (resolved or failed) — saves are
   // skipped until then so defaults in state can't overwrite stored settings.
   const hasLoadedRef = useRef(false);
-  // True once the user has changed something — from then on we save even if
-  // the load never settles.
-  const hasUserEditsRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,10 +53,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Never write before the load attempt settles and the user has edited
-    // something: defaults are in state until then, and saving them could
-    // overwrite stored settings.
-    if (!hasLoadedRef.current && !hasUserEditsRef.current) return;
+    // Never write before the load attempt settles: defaults (or defaults
+    // plus buffered pre-load edits) are in state until then, and saving
+    // them could overwrite stored settings. Pre-load edits are buffered in
+    // pendingPatchRef and applied on top of the loaded settings.
+    if (!hasLoadedRef.current) return;
 
     // Debounce save to reduce write frequency
     if (saveTimeoutRef.current) {
@@ -79,7 +77,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [settings]);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
-    hasUserEditsRef.current = true;
+    // Buffer pre-load edits so the loaded settings don't clobber them and
+    // so no save fires before the load attempt settles.
     if (!hasLoadedRef.current) {
       pendingPatchRef.current = { ...pendingPatchRef.current, ...patch };
     }
