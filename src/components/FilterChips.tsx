@@ -14,22 +14,7 @@ const FILTERS: { key: FilterType; label: string }[] = [
 
 export function FilterChips({ active, onChange }: FilterChipsProps) {
   return (
-    <div
-      role="tablist"
-      aria-label="Filter by expiry status"
-      style={{
-        display: 'flex',
-        gap: '8px',
-        overflowX: 'auto',
-        padding: '4px 0',
-        WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        background: 'var(--color-background)',
-      }}
-    >
+    <div className="filter-chips" role="tablist" aria-label="Filter by expiry status">
       {FILTERS.map((filter) => {
         const isActive = active === filter.key;
         return (
@@ -38,20 +23,7 @@ export function FilterChips({ active, onChange }: FilterChipsProps) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(filter.key)}
-            style={{
-              background: isActive ? '#334155' : '#f2f3f4',
-              color: isActive ? '#ffffff' : '#475569',
-              padding: '6px 16px',
-              borderRadius: '999px',
-              fontSize: '14px',
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              border: 'none',
-              minHeight: '44px',
-              transition: 'all 200ms ease',
-              flexShrink: 0,
-            }}
+            className={`filter-chip ${isActive ? 'filter-chip-active' : 'filter-chip-inactive'}`}
           >
             {filter.label}
           </button>

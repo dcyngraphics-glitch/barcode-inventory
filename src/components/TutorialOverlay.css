@@ -150,35 +150,3 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-/* Navigation arrows */
-.tutorial-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-md);
-}
-
-.tutorial-nav-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-muted-foreground);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  border: none;
-}
-
-.tutorial-nav-btn:hover:not(:disabled) {
-  background: var(--color-muted);
-  color: var(--color-foreground);
-}
-
-.tutorial-nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}

@@ -210,6 +210,7 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
           autoPlay
           playsInline
           muted
+          className="camera-video"
         />
       )}
 

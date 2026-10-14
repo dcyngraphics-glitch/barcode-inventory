@@ -32,7 +32,9 @@ export function ScreenTooltip({ screenId, message }: ScreenTooltipProps) {
 
   const handleDismiss = () => {
     setShow(false);
-    markScreenHintSeen(screenId);
+    markScreenHintSeen(screenId).catch(() => {
+      // Best-effort persistence; ignore failures
+    });
   };
 
   if (!show) return null;

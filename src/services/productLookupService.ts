@@ -90,7 +90,7 @@ export async function lookupOpenFoodFacts(
 export async function lookupProduct(
   barcode: string,
   options?: { skipLocal?: boolean }
-): Promise<ProductLookupResult> {
+): Promise<ProductLookupResult | { success: false; reason: 'not-found'; source: 'manual' }> {
   // Step 1: Check local catalog (skip if caller already checked)
   if (!options?.skipLocal) {
     const local = await getProduct(barcode);
@@ -100,9 +100,16 @@ export async function lookupProduct(
   }
 
   // Step 2: Try Open Food Facts API
-  const offResult = await lookupOpenFoodFacts(barcode);
-  if (offResult) {
-    return { product: offResult, source: 'openfoodfacts' };
+  try {
+    const offResult = await lookupOpenFoodFacts(barcode);
+    if (offResult) {
+      return { product: offResult, source: 'openfoodfacts' };
+    }
+  } catch (err) {
+    if (err instanceof LookupError && err.kind === 'http' && err.message === 'HTTP error 404') {
+      return { success: false, reason: 'not-found', source: 'manual' };
+    }
+    throw err;
   }
 
   // Step 3: Manual entry placeholder

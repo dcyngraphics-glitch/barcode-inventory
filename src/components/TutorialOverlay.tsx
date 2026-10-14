@@ -162,38 +162,26 @@ export function TutorialOverlay() {
           Step {currentStep + 1} of {totalSteps}
         </div>
 
-        {/* Navigation arrows */}
-        <div className="tutorial-nav">
-          <button
-            className="tutorial-nav-btn"
-            onClick={prev}
-            disabled={isFirstStep}
-            aria-label="Previous step"
-          >
-            <ChevronLeft size={20} />
-            <span>Prev</span>
-          </button>
-
-          {/* Primary CTA */}
-          <button
-            ref={ctaRef}
-            className="tutorial-btn tutorial-btn-primary"
-            onClick={handleCta}
-          >
-            {isLastStep ? 'Finish' : step.ctaLabel}
-            {!isLastStep && <ChevronRight size={16} />}
-          </button>
-
-          <button
-            className="tutorial-nav-btn"
-            onClick={next}
-            disabled={isLastStep}
-            aria-label="Next step"
-          >
-            <span>Next</span>
-            <ChevronRight size={20} />
-          </button>
-        </div>
+        {/* Actions */}
+                <div className="tutorial-actions">
+                  <button
+                    ref={ctaRef}
+                    className="tutorial-btn tutorial-btn-primary"
+                    onClick={handleCta}
+                  >
+                    {isLastStep ? 'Finish' : step.ctaLabel}
+                    {!isLastStep && <ChevronRight size={16} />}
+                  </button>
+                  {!isLastStep && (
+                    <button
+                      className="tutorial-btn tutorial-btn-secondary"
+                      onClick={handleSkip}
+                      style={{ marginLeft: 'var(--space-sm)' }}
+                    >
+                      Skip
+                    </button>
+                  )}
+                </div>
 
         {/* Skip link */}
         {!isLastStep && (

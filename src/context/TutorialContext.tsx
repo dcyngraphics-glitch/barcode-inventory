@@ -61,7 +61,9 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const persistStep = useCallback((step: number) => {
-    setTutorialStep(step);
+    setTutorialStep(step).catch(() => {
+      // Best-effort persistence; ignore failures
+    });
   }, []);
 
   const next = useCallback(() => {
@@ -77,20 +79,28 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   }, [currentStep, persistStep]);
 
   const skip = useCallback(() => {
-    setTutorialCompleted(true);
+    setTutorialCompleted(true).catch(() => {
+      // Best-effort persistence; ignore failures
+    });
     setIsVisible(false);
   }, []);
 
   const finish = useCallback(() => {
-    setTutorialCompleted(true);
+    setTutorialCompleted(true).catch(() => {
+      // Best-effort persistence; ignore failures
+    });
     setCurrentStep(0);
     setIsVisible(false);
   }, []);
 
   const reopen = useCallback(() => {
     setCurrentStep(0);
-    setTutorialStep(0);
-    setTutorialCompleted(false);
+    setTutorialStep(0).catch(() => {
+      // Best-effort persistence; ignore failures
+    });
+    setTutorialCompleted(false).catch(() => {
+      // Best-effort persistence; ignore failures
+    });
     setIsVisible(true);
   }, []);
 

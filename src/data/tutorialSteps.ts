@@ -13,7 +13,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'scan',
     title: 'Scan',
-    description: 'Point your camera at a barcode, or tap the keyboard icon to enter it manually. The app looks up product info automatically.',
+    description: 'Scan barcodes with your camera or enter manually.',
     icon: ScanLine,
     ctaLabel: 'Try Scanning',
     screenPath: '/',
@@ -21,7 +21,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'save',
     title: 'Save Product',
-    description: 'After scanning, review the auto-filled details. Edit name, brand, price, and expiry date. Set your quantity and save to inventory.',
+    description: 'Review scanned details, then save to your inventory.',
     icon: Package,
     ctaLabel: 'Got It',
     screenPath: '/inventory',
@@ -29,7 +29,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'manage',
     title: 'Manage Inventory',
-    description: 'All your scanned items are grouped by product with FIFO sorting. Search, filter by expiry status, and tap to edit or remove batches.',
+    description: 'View, search, and edit your scanned items.',
     icon: ClipboardList,
     ctaLabel: 'View Inventory',
     screenPath: '/inventory',
@@ -37,7 +37,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'alerts',
     title: 'Set Up Alerts',
-    description: 'Enable push notifications and set your alert window (days before expiry). Never let items go to waste!',
+    description: 'Get notified before items expire.',
     icon: Bell,
     ctaLabel: 'Open Settings',
     screenPath: '/settings',
