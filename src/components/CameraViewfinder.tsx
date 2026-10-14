@@ -5,6 +5,7 @@ import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 interface CameraViewfinderProps {
   onScan: (barcode: string) => void,
   onManualEntry?: () => void,
+  cameraActive?: boolean,
 }
 
 export interface CameraViewfinderHandle {
@@ -19,12 +20,27 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     const [torchSupported, setTorchSupported] = useState(false);
     const [initializing, setInitializing] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
+    const [permissionState, setPermissionState] = useState<string | null>(null);
     const { error, errorType, start, stop, captureFrame } = useBarcodeScanner();
 
     // Keep ref in sync with latest onScan prop
     useEffect(() => {
       onScanRef.current = onScan;
     }, [onScan]);
+
+    // On mount, query camera permission and auto-start if previously granted
+    useEffect(() => {
+      navigator.permissions.query({ name: 'camera' }).then((status) => {
+        setPermissionState(status.state);
+        if (status.state === 'granted') {
+          setCameraActive(true);
+          setInitializing(true);
+        }
+      }).catch(() => {
+        // Permissions API not available — fall through to manual start
+        setPermissionState('prompt');
+      });
+    }, []);
 
     // Expose scan trigger for external button (positioned above bottom nav)
     useImperativeHandle(ref, () => ({
@@ -125,10 +141,10 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     setTimeout(() => setCameraActive(true), 150);
   }, [stop]);
 
-  // Error state
-  if (error) {
+  // Error state (from scanner errors or denied permission)
+  if (error || permissionState === 'denied') {
     const isNoCamera = errorType === 'no-camera';
-    const isPermissionDenied = errorType === 'permission-denied';
+    const isPermissionDenied = errorType === 'permission-denied' || permissionState === 'denied';
 
     return (
       <div className="camera-viewfinder">
@@ -201,20 +217,7 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
       {/* Start overlay — shown before camera is activated */}
       {!cameraActive && (
         <div className="camera-start-overlay">
-          <div className="camera-start-content">
-            <Camera size={48} className="camera-start-icon" />
-            <p className="camera-start-title">Camera Scanner</p>
-            <p className="camera-start-desc">
-              Tap the button below to activate your camera. Then tap the scan button to read barcodes.
-            </p>
-            <button onClick={handleStartCamera} className="camera-start-btn">
-              <Play size={18} />
-              Start Camera
-            </button>
-            <p className="camera-start-hint">
-              You'll be prompted to allow camera access for this site.
-            </p>
-          </div>
+          <div className="camera-start-content"><Camera size={48} className="camera-start-icon" /><p className="camera-start-title">Camera Scanner</p><p className="camera-start-desc">Tap the button below to activate your camera. Then tap the scan button to read barcodes.</p><button onClick={handleStartCamera} className="camera-start-btn"><Play size={18} />Start Camera</button><p className="camera-start-hint">You'll be prompted to allow camera access for this site.</p></div>
         </div>
       )}
 
