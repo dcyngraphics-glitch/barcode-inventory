@@ -18,6 +18,7 @@ function TestConsumer() {
       <button onClick={() => setLoginResult(String(login('wrong')))}>Login Wrong</button>
       <button onClick={logout}>Logout</button>
       <button onClick={() => setMasterPassword('override-pw')}>Set Override</button>
+      <button onClick={() => setLoginResult(String(login('override-pw')))}>Login Persisted</button>
     </div>
   );
 }
@@ -54,9 +55,7 @@ describe('AuthContext', () => {
 
   it('should return true and set authenticated on correct password', () => {
     const { getByTestId, getByText } = renderAuth();
-    let result: boolean | undefined;
     act(() => {
-      result = true; // we'll check via state
       getByText('Login Correct').click();
     });
     expect(getByTestId('auth')).toHaveTextContent('true');
@@ -124,5 +123,34 @@ describe('AuthContext', () => {
     localStorage.setItem('barcode_inventory_master_password', 'persisted-pw');
     const { getByTestId } = renderAuth();
     expect(getByTestId('master-pw')).toHaveTextContent('persisted-pw');
+  });
+
+  it('should login with persisted password after remount', () => {
+    const first = renderAuth();
+    act(() => {
+      first.getByText('Set Override').click();
+    });
+    first.unmount();
+
+    const second = renderAuth();
+    act(() => {
+      second.getByText('Login Persisted').click();
+    });
+    expect(second.getByTestId('auth')).toHaveTextContent('true');
+    expect(second.getByTestId('login-result')).toHaveTextContent('true');
+  });
+
+  it('should throw when useAuth is used outside AuthProvider', () => {
+    function Orphan() {
+      useAuth();
+      return null;
+    }
+    expect(() => render(<Orphan />)).toThrow('useAuth must be used within AuthProvider');
+  });
+
+  it('should return empty string for getMasterPassword when nothing is set', () => {
+    vi.stubEnv('VITE_MASTER_PASSWORD', '');
+    const { getByTestId } = renderAuth();
+    expect(getByTestId('master-pw')).toHaveTextContent('');
   });
 });

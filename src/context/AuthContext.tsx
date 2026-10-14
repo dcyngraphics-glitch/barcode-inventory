@@ -21,12 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getStoredAuth);
   const [masterPasswordOverride, setMasterPasswordOverride] = useState<string | null>(null);
 
-  const getMasterPassword = useCallback((): string => {
+  const resolveMasterPassword = (): string => {
     return masterPasswordOverride ?? localStorage.getItem(MASTER_PASSWORD_STORAGE_KEY) ?? import.meta.env.VITE_MASTER_PASSWORD ?? '';
+  };
+
+  const getMasterPassword = useCallback((): string => {
+    return resolveMasterPassword();
   }, [masterPasswordOverride]);
 
   const login = useCallback((password: string): boolean => {
-    const correctPassword = masterPasswordOverride ?? import.meta.env.VITE_MASTER_PASSWORD ?? '';
+    const correctPassword = resolveMasterPassword();
     if (password === correctPassword) {
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       setIsAuthenticated(true);
