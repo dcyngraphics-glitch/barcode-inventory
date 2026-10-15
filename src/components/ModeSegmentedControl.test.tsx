@@ -3,25 +3,38 @@ import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
 import { vi } from 'vitest';
 
 describe('ModeSegmentedControl', () => {
-  test('renders two segments', () => {
+  test('renders as a switch with correct initial state', () => {
     render(<ModeSegmentedControl mode="auto" onChange={() => {}} />);
-    expect(screen.getByRole('button', { name: /auto/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /manual/i })).toBeInTheDocument();
+    const toggle = screen.getByRole('switch');
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
   });
 
-  test('calls onChange when a button is clicked', () => {
+  test('shows manual mode as checked', () => {
+    render(<ModeSegmentedControl mode="manual" onChange={() => {}} />);
+    const toggle = screen.getByRole('switch');
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('toggles from auto to manual on click', () => {
     const onChange = vi.fn();
     render(<ModeSegmentedControl mode="auto" onChange={onChange} />);
-    const manualBtn = screen.getByRole('button', { name: /manual/i });
-    fireEvent.click(manualBtn);
+    const toggle = screen.getByRole('switch');
+    fireEvent.click(toggle);
     expect(onChange).toHaveBeenCalledWith('manual');
   });
 
-  test('highlights active segment', () => {
-    render(<ModeSegmentedControl mode="manual" onChange={() => {}} />);
-    const autoBtn = screen.getByRole('button', { name: /auto/i });
-    const manualBtn = screen.getByRole('button', { name: /manual/i });
-    expect(autoBtn).not.toHaveClass('active');
-    expect(manualBtn).toHaveClass('active');
+  test('toggles from manual to auto on click', () => {
+    const onChange = vi.fn();
+    render(<ModeSegmentedControl mode="manual" onChange={onChange} />);
+    const toggle = screen.getByRole('switch');
+    fireEvent.click(toggle);
+    expect(onChange).toHaveBeenCalledWith('auto');
+  });
+
+  test('has accessible label', () => {
+    render(<ModeSegmentedControl mode="auto" onChange={() => {}} />);
+    const toggle = screen.getByRole('switch');
+    expect(toggle.getAttribute('aria-label')).toMatch(/scan mode/i);
   });
 });

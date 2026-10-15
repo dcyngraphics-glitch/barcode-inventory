@@ -24,12 +24,20 @@ export async function deleteProduct(barcode: string): Promise<void> {
 
 export async function updateProduct(product: Product): Promise<void> {
   const db = await getDB();
-  const existing = await db.get('catalog', product.barcode);
+  const tx = db.transaction('catalog', 'readwrite');
+  const store = tx.objectStore('catalog');
+  const existing = await store.get(product.barcode);
   if (!existing) {
     throw new Error(`Product with barcode ${product.barcode} not found`);
   }
-  const updated: Product = { ...product, updatedAt: new Date().toISOString() };
-  await db.put('catalog', updated);
+  const merged: Product = {
+    ...existing,
+    ...product,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+  await store.put(merged);
+  await tx.done;
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {

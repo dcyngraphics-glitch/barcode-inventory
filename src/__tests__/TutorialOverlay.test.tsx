@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -23,13 +23,8 @@ async function setupCompleted() {
 
 describe('TutorialOverlay', () => {
   beforeEach(async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const db = await getDB();
     await db.clear('settings');
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it('should render first step when not completed', async () => {
@@ -157,40 +152,35 @@ describe('TutorialOverlay', () => {
     await waitFor(() => {
       expect(screen.getByText('Scan')).toBeInTheDocument();
     });
-    // Real timers apply until this test finishes (the DB + waitFor above need them).
-    // Fake timers are scoped to the timer-dependent steps below.
-    vi.useFakeTimers();
-    try {
-      // Navigate through all steps using their actual CTA labels
-      // Step 1: "Try Scanning" → Step 2
-      await act(async () => {
-        screen.getByText('Try Scanning').click();
-      });
-      // Wait for the advancing guard to reset (100ms in component). Real-time
-      // setTimeout is frozen, so advance the fake clock instead.
-      await vi.advanceTimersByTime(150);
-      await waitFor(() => {
-        expect(screen.getByText('Save Product')).toBeInTheDocument();
-      });
-      // Step 2: "Got It" → Step 3
-      await act(async () => {
-        screen.getByText('Got It').click();
-      });
-      // Wait for the advancing guard to reset
-      await vi.advanceTimersByTime(150);
-      await waitFor(() => {
-        expect(screen.getByText('Manage Inventory')).toBeInTheDocument();
-      }, { timeout: 2000 });
-      // Step 3: "View Inventory" → Step 4 (last step)
-      await act(async () => {
-        screen.getByText('View Inventory').click();
-      });
-      await waitFor(() => {
-        expect(screen.getByText('Set Up Alerts')).toBeInTheDocument();
-      });
-      // Last step should show "Finish"
-      expect(screen.getByText('Finish')).toBeInTheDocument();
-    } finally {
-      vi.useRealTimers();
-    }
-  });});
+    // Navigate through all steps using their actual CTA labels
+    // Step 1: "Try Scanning" → Step 2
+    await act(async () => {
+      screen.getByText('Try Scanning').click();
+    });
+    // Wait for isAdvancingRef guard to reset (100ms in component)
+    await new Promise(r => setTimeout(r, 150));
+    await waitFor(() => {
+      expect(screen.getByText('Save Product')).toBeInTheDocument();
+    });
+    // Step 2: "Got It" → Step 3
+    await act(async () => {
+      screen.getByText('Got It').click();
+    });
+    // Wait for isAdvancingRef guard to reset
+    await new Promise(r => setTimeout(r, 150));
+    await waitFor(() => {
+      expect(screen.getByText('Manage Inventory')).toBeInTheDocument();
+    });
+    // Step 3: "View Inventory" → Step 4 (last step)
+    await act(async () => {
+      screen.getByText('View Inventory').click();
+    });
+    // Wait for isAdvancingRef guard to reset
+    await new Promise(r => setTimeout(r, 150));
+    await waitFor(() => {
+      expect(screen.getByText('Set Up Alerts')).toBeInTheDocument();
+    });
+    // Last step should show "Finish"
+    expect(screen.getByText('Finish')).toBeInTheDocument();
+  });
+});

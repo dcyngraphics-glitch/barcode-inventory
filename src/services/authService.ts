@@ -43,11 +43,16 @@ export function collectDeviceInfo(): DeviceInfo {
 
 export async function loginWithDashboard(email: string, password: string): Promise<LoginResponse> {
   const deviceInfo = collectDeviceInfo();
-  const res = await fetch(`${DASHBOARD_API_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, device: deviceInfo }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${DASHBOARD_API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, device: deviceInfo }),
+    });
+  } catch {
+    throw new Error('Network error: unable to reach the server');
+  }
 
   if (!res.ok) {
     if (res.status === 401) {
@@ -76,11 +81,16 @@ export async function trackDeviceWithDashboard(token: string): Promise<void> {
 }
 
 export async function validateToken(token: string): Promise<{ valid: boolean; user?: AuthUser }> {
-  const res = await fetch(`${DASHBOARD_API_URL}/api/auth/validate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${DASHBOARD_API_URL}/api/auth/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+  } catch {
+    return { valid: false };
+  }
 
   if (!res.ok) {
     return { valid: false };
@@ -90,13 +100,25 @@ export async function validateToken(token: string): Promise<{ valid: boolean; us
 }
 
 export function getStoredToken(): string | null {
-  return localStorage.getItem('barcode_auth_token');
+  try {
+    return localStorage.getItem('barcode_auth_token');
+  } catch {
+    return null;
+  }
 }
 
 export function storeToken(token: string): void {
-  localStorage.setItem('barcode_auth_token', token);
+  try {
+    localStorage.setItem('barcode_auth_token', token);
+  } catch {
+    // Silently fail — storage may be unavailable (private mode, disabled)
+  }
 }
 
 export function clearToken(): void {
-  localStorage.removeItem('barcode_auth_token');
+  try {
+    localStorage.removeItem('barcode_auth_token');
+  } catch {
+    // Silently fail — storage may be unavailable
+  }
 }

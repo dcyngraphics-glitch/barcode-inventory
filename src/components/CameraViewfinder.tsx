@@ -13,7 +13,7 @@ export interface CameraViewfinderHandle {
 }
 
 export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfinderProps>(
-  function CameraViewfinder({ onScan, onManualEntry }, ref) {
+  function CameraViewfinder({ onScan, onManualEntry, cameraActive: cameraActiveProp }, ref) {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const onScanRef = useRef(onScan);
     const [flashOn, setFlashOn] = useState(false);
@@ -27,6 +27,16 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     useEffect(() => {
       onScanRef.current = onScan;
     }, [onScan]);
+
+    // Respond to cameraActive prop changes from parent
+    useEffect(() => {
+      if (cameraActiveProp && !cameraActive) {
+        setCameraActive(true);
+        setInitializing(true);
+      } else if (!cameraActiveProp && cameraActive) {
+        setCameraActive(false);
+      }
+    }, [cameraActiveProp]);
 
     // On mount, query camera permission and auto-start if previously granted
     useEffect(() => {
@@ -134,11 +144,21 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     }
   };
 
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup retry timer on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
+
   const handleRetry = useCallback(() => {
     stop();
     setCameraActive(false);
     // Small delay to let state settle
-    setTimeout(() => setCameraActive(true), 150);
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = setTimeout(() => setCameraActive(true), 150);
   }, [stop]);
 
   // Error state (from scanner errors or denied permission)

@@ -18,7 +18,8 @@ export async function loadSettings(): Promise<Settings> {
     }
     return defaults;
   }
-  return { ...DEFAULT_SETTINGS, ...stored };
+  const clean = Object.fromEntries(Object.entries(stored).filter(([, v]) => v !== undefined));
+  return { ...DEFAULT_SETTINGS, ...clean };
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {

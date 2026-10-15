@@ -19,6 +19,9 @@ export function useProductLookup(): UseProductLookupResult {
   // Bug fix #2: Track mounted state to prevent stale setState on unmounted component
   const isMountedRef = useRef(true);
 
+  // Bug fix #3: Track request IDs to prevent race conditions from rapid scans
+  const requestIdRef = useRef(0);
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -27,6 +30,9 @@ export function useProductLookup(): UseProductLookupResult {
   }, []);
 
   const lookup = useCallback(async (barcode: string) => {
+    // Bug fix #3: Capture request ID to discard stale responses
+    const currentId = ++requestIdRef.current;
+
     setLoading(true);
     setError(null);
     setProduct(null);
@@ -34,6 +40,10 @@ export function useProductLookup(): UseProductLookupResult {
 
     try {
       const result = await lookupProduct(barcode);
+
+      // Bug fix #3: Only apply result if this is still the latest request
+      if (currentId !== requestIdRef.current) return;
+
       // Bug fix #2: Check isMounted before setState to avoid race condition
       if (!isMountedRef.current) return;
 
@@ -46,6 +56,9 @@ export function useProductLookup(): UseProductLookupResult {
         setSource(result.source);
       }
     } catch (err) {
+      // Bug fix #3: Discard error if a newer request has been made
+      if (currentId !== requestIdRef.current) return;
+
       // Bug fix #2: Check isMounted before setState
       if (!isMountedRef.current) return;
 
@@ -57,7 +70,8 @@ export function useProductLookup(): UseProductLookupResult {
       setProduct(null);
       setSource(null);
     } finally {
-      if (isMountedRef.current) {
+      // Bug fix #3: Only clear loading if this is still the latest request
+      if (currentId === requestIdRef.current && isMountedRef.current) {
         setLoading(false);
       }
     }

@@ -15,6 +15,8 @@ export function useInventory() {
     try {
       const data = await getInventoryGroups();
       setGroups(data);
+    } catch (err) {
+      console.error('Failed to refresh inventory:', err);
     } finally {
       setLoading(false);
     }

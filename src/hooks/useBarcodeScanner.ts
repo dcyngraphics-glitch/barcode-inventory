@@ -39,8 +39,10 @@ export function useBarcodeScanner() {
   const scanningRef = useRef(false);
 
   const hasBarcodeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
+  let cancelled = false;
 
   const stop = useCallback(() => {
+    cancelled = true;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -62,7 +64,9 @@ export function useBarcodeScanner() {
     }
     readerRef.current = null;
     scanningRef.current = false;
-    setState({ scanning: false, error: null, errorType: 'unknown', processing: false });
+    if (mountedRef.current) {
+      setState({ scanning: false, error: null, errorType: 'unknown', processing: false });
+    }
   }, []);
 
   const start = useCallback(
@@ -70,6 +74,7 @@ export function useBarcodeScanner() {
       // Synchronous guard: prevent double-start from concurrent calls
       if (startingRef.current) return;
       startingRef.current = true;
+      cancelled = false;
 
       if (scanningRef.current) {
         startingRef.current = false;
@@ -84,9 +89,11 @@ export function useBarcodeScanner() {
           video: { facingMode: { ideal: 'environment' } },
           audio: false,
         });
+        if (cancelled) return;
         streamRef.current = stream;
         video.srcObject = stream;
         await video.play();
+        if (cancelled) return;
 
         if (hasBarcodeDetector && window.BarcodeDetector) {
           detectorRef.current = new window.BarcodeDetector({
@@ -96,6 +103,7 @@ export function useBarcodeScanner() {
           const reader = new BrowserMultiFormatReader();
           readerRef.current = reader;
         }
+        startingRef.current = false;
       } catch (err) {
         const errorType: CameraErrorType =
           err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')

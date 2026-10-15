@@ -280,20 +280,32 @@ export function ProductDetailScreen() {
   };
 
   const handleEditSave = async (updatedProduct: Product) => {
-    await updateProduct(updatedProduct);
-    setProduct(updatedProduct);
-    showToast('Product updated', 'success');
+    try {
+      await updateProduct(updatedProduct);
+      setProduct(updatedProduct);
+      showToast('Product updated', 'success');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update product';
+      console.error('handleEditSave error:', err);
+      showToast(message, 'error');
+    }
   };
 
   const handleEditDelete = async (barcodeToDelete: string) => {
-    // Delete product and all its batches
-    const batches = await getBatchesByBarcode(barcodeToDelete);
-    for (const batch of batches) {
-      await deleteBatch(batch.batchId);
+    try {
+      // Delete product and all its batches
+      const batches = await getBatchesByBarcode(barcodeToDelete);
+      for (const batch of batches) {
+        await deleteBatch(batch.batchId);
+      }
+      await deleteProduct(barcodeToDelete);
+      showToast('Product deleted', 'success');
+      navigate('/inventory');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete product';
+      console.error('handleEditDelete error:', err);
+      showToast(message, 'error');
     }
-    await deleteProduct(barcodeToDelete);
-    showToast('Product deleted', 'success');
-    navigate('/inventory');
   };
 
   if (!barcode) {

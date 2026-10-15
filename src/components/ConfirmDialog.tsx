@@ -156,8 +156,8 @@ export function ConfirmDialog({
             className="confirm-confirm-btn"
             style={{
               background: isDestructive
-                ? 'var(--color-destructive)'
-                : 'var(--color-primary)',
+                ? 'var(--color-destructive-bg, var(--color-destructive))'
+                : 'var(--color-primary-bg, var(--color-primary))',
               color: isDestructive
                 ? 'var(--color-on-destructive)'
                 : 'var(--color-on-primary)',

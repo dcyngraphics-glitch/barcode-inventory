@@ -45,6 +45,11 @@ export async function seedCatalogIfEmpty(): Promise<void> {
     await store.put(product);
   }
 
-  // Mark as seeded
-  await saveSettings({ ...settings, [SEED_FLAG_KEY]: true });
+  // Mark as seeded — wrap in try/catch so a settings failure doesn't
+  // leave the catalog unmarked (catalog is already seeded at this point)
+  try {
+    await saveSettings({ ...settings, [SEED_FLAG_KEY]: true });
+  } catch (err) {
+    console.warn('Failed to persist seed flag (catalog is already seeded):', err);
+  }
 }

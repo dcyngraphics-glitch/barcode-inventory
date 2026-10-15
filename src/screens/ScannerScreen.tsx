@@ -13,10 +13,25 @@ import { useSettings } from '@/hooks/useSettings';
 import { lookupProduct } from '@/services/productLookupService';
 import type { Product } from '@/types';
 
-// Beep audio using Web Audio API oscillator
+// Beep audio using Web Audio API oscillator — reuse a single AudioContext
+let sharedAudioCtx: AudioContext | null = null;
+function getSharedAudioContext(): AudioContext | null {
+  try {
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
 function playBeep() {
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
     oscillator.connect(gainNode);
@@ -27,8 +42,6 @@ function playBeep() {
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.1);
-    // Clean up after the tone ends
-    setTimeout(() => ctx.close(), 200);
   } catch {
     // Silently ignore if Web Audio API is not available
   }
@@ -43,6 +56,7 @@ export function ScannerScreen() {
     const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
     const [scanToast, setScanToast] = useState<string | null>(null);
     const [scanning, setScanning] = useState(false);
+    const scanningRef = useRef(false);
     const [processing, setProcessing] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
     const [hasScannedSuccessfully, setHasScannedSuccessfully] = useState(false);
@@ -117,6 +131,13 @@ useEffect(() => {
     };
   }, []);
 
+  // Cleanup mode animation timer on unmount
+  useEffect(() => {
+    return () => {
+      if (modeAnimationTimerRef.current) clearTimeout(modeAnimationTimerRef.current);
+    };
+  }, []);
+
   const showScanToast = useCallback((message: string) => {
     setScanToast(message);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -144,8 +165,13 @@ useEffect(() => {
     }, 300); // match the animation duration
   };
 
+  // Keep scanningRef in sync with scanning state
+  useEffect(() => {
+    scanningRef.current = scanning;
+  }, [scanning]);
+
   const handleBarcodeSubmit = useCallback(async (barcode: string) => {
-        if (scanning) return; // prevent concurrent scans
+        if (scanningRef.current) return; // prevent concurrent scans
         setScanning(true);
 
         // If scanning is not allowed (e.g., in manual mode and we haven't pressed the button yet), we exit.
@@ -206,7 +232,7 @@ useEffect(() => {
       } finally {
         setScanning(false);
       }
-    }, [addItem, showScanToast, scanning, cashierMode, navigate, setHasScannedSuccessfully]);
+    }, [addItem, showScanToast, cashierMode, navigate, setHasScannedSuccessfully]);
 
   const handleScanClick = useCallback(async () => {
     if (processing) return;
@@ -303,9 +329,18 @@ useEffect(() => {
                   )}
 
                   {/* Scan Mode Toggle */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-on-primary)' }}>
-                      Scan Mode:
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                    <span
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        color: 'var(--color-on-primary)',
+                        opacity: 0.7,
+                        fontWeight: 500,
+                        letterSpacing: '0.3px',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Mode
                     </span>
                     <ModeSegmentedControl mode={scanMode} onChange={handleModeChange} className={modeAnimationClass} />
                   </div>

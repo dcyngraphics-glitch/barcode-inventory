@@ -92,10 +92,15 @@ export async function lookupProduct(
   options?: { skipLocal?: boolean }
 ): Promise<ProductLookupResult | { success: false; reason: 'not-found'; source: 'manual' }> {
   // Step 1: Check local catalog (skip if caller already checked)
+  // Bug fix #14: Wrap getProduct in try/catch so DB failures don't block OFF lookup
   if (!options?.skipLocal) {
-    const local = await getProduct(barcode);
-    if (local) {
-      return { product: local, source: 'local' };
+    try {
+      const local = await getProduct(barcode);
+      if (local) {
+        return { product: local, source: 'local' };
+      }
+    } catch (dbErr) {
+      console.warn('Local catalog lookup failed, continuing to OFF API:', dbErr);
     }
   }
 
@@ -106,7 +111,7 @@ export async function lookupProduct(
       return { product: offResult, source: 'openfoodfacts' };
     }
   } catch (err) {
-    if (err instanceof LookupError && err.kind === 'http' && err.message === 'HTTP error 404') {
+    if (err instanceof LookupError && err.kind === 'http' && err.message?.includes('404')) {
       return { success: false, reason: 'not-found', source: 'manual' };
     }
     throw err;
