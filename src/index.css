@@ -1874,19 +1874,6 @@ select {
   margin: 0;
 }
 
-.till-header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.till-mode-label {
-  font-size: var(--text-xs);
-  color: #cbd5e1;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .till-main {
   flex: 1;
   display: flex;

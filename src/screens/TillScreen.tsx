@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
-import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
-import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
+import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
 import { Toast, useToast } from '@/components/Toast';
 import { useScanCart, type ScanCartItem } from '@/context/ScanCartContext';
@@ -11,9 +10,17 @@ import { recordSale, undoLastSale, type SaleLineInput } from '@/services/saleSer
 /** How long the Undo stays available after a sale is recorded. */
 export const UNDO_WINDOW_MS = 6000;
 
+/**
+ * A barcode must be OUT of frame this long before the same code can be scanned
+ * again. The viewfinder's continuous loop re-reads a code that is still in frame
+ * every ~2s (CameraViewfinder's SCAN_COOLDOWN), so without this one item held in
+ * front of the camera is added several times and the customer is overcharged.
+ * Must exceed SCAN_COOLDOWN, or the loop re-adds the item anyway.
+ */
+export const REPEAT_WINDOW_MS = 2500;
+
 interface RecordedSale {
   saleId: string;
-  total: number;
   /** The original cart lines, kept so Undo can put the basket back exactly. */
   items: ScanCartItem[];
 }
@@ -39,21 +46,26 @@ export function TillScreen() {
   const { items, addItem, removeItem, updateItem, clearCart, totalPrice, totalItems } = useScanCart();
   const { toasts, showToast, dismissToast } = useToast();
 
-  const [scanMode, setScanMode] = useState<'auto' | 'manual'>('auto');
-  const [cameraActive, setCameraActive] = useState(false);
   const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
 
-  const viewfinderRef = useRef<CameraViewfinderHandle>(null);
   const scanningRef = useRef(false);
-
-  useEffect(() => {
-    setCameraActive(true);
-  }, []);
+  // Last barcode read and when. Refreshed on EVERY read, accepted or not, so a code
+  // that is continuously in frame can never re-arm itself.
+  const lastReadRef = useRef<{ barcode: string; at: number } | null>(null);
 
   const handleBarcode = useCallback(
     async (barcode: string) => {
+      const now = Date.now();
+      const last = lastReadRef.current;
+      const isRepeat = !!last && last.barcode === barcode && now - last.at < REPEAT_WINDOW_MS;
+      lastReadRef.current = { barcode, at: now };
+
+      // Still the same item in frame — ignore it, but the timestamp refresh above
+      // keeps it suppressed for as long as it stays there.
+      if (isRepeat) return;
       if (scanningRef.current) return;
+
       scanningRef.current = true;
       try {
         if (navigator.vibrate) navigator.vibrate(50);
@@ -154,11 +166,7 @@ export function TillScreen() {
     try {
       const snapshot = items.map((i) => ({ ...i }));
       const sale = await recordSale(snapshot.map(toSaleLine));
-      const recordedSale: RecordedSale = {
-        saleId: sale.saleId,
-        total: sale.total,
-        items: snapshot,
-      };
+      const recordedSale: RecordedSale = { saleId: sale.saleId, items: snapshot };
 
       clearCart();
 
@@ -182,18 +190,10 @@ export function TillScreen() {
     <div className="till-screen">
       <header className="till-header">
         <h1 className="till-title">Till</h1>
-        <div className="till-header-right">
-          <span className="till-mode-label">Mode</span>
-          <ModeSegmentedControl mode={scanMode} onChange={setScanMode} />
-        </div>
       </header>
 
       <main className="till-main">
-        <CameraViewfinder
-          ref={viewfinderRef}
-          onScan={handleBarcode}
-          cameraActive={cameraActive}
-        />
+        <CameraViewfinder onScan={handleBarcode} cameraActive />
 
         <section className="till-basket" aria-label="Customer basket">
           {isEmpty ? (

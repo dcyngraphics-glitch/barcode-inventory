@@ -12,10 +12,14 @@ const h = vi.hoisted(() => ({
   recordSale: vi.fn(),
   undoLastSale: vi.fn(),
   lookupProduct: vi.fn(),
+  onScan: null as null | ((barcode: string) => void | Promise<void>),
 }));
 
 vi.mock('@/components/CameraViewfinder', () => ({
-  CameraViewfinder: vi.fn(() => <div data-testid="mock-viewfinder" />),
+  CameraViewfinder: ({ onScan }: { onScan: (barcode: string) => void }) => {
+    h.onScan = onScan;
+    return <div data-testid="mock-viewfinder" />;
+  },
 }));
 
 vi.mock('@/context/ScanCartContext', () => ({
@@ -147,5 +151,58 @@ describe('TillScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: /decrease quantity of Bear Brand/i }));
 
     expect(h.removeItem).toHaveBeenCalledWith('c1');
+  });
+
+  // The viewfinder's continuous loop re-fires onScan every ~2s while a barcode is
+  // still in frame. Without a guard, one item held in front of the camera for a few
+  // seconds is added several times — the customer is overcharged.
+  describe('repeat reads of a barcode that is still in frame', () => {
+    const found = {
+      product: {
+        barcode: 'B1',
+        name: 'Bear Brand',
+        brand: 'Bear Brand',
+        category: '',
+        storePrice: 12.5,
+        defaultExpiry: '2026-06-01',
+        source: 'local',
+        createdAt: '',
+        updatedAt: '',
+      },
+      source: 'local',
+    };
+
+    beforeEach(() => {
+      h.lookupProduct.mockResolvedValue(found);
+    });
+
+    it('adds an item only once while the same code keeps being read', async () => {
+      render(<TillScreen />);
+      expect(h.onScan).toBeTypeOf('function');
+
+      await act(async () => { await h.onScan!('B1'); });
+      await act(async () => { await h.onScan!('B1'); });
+      await act(async () => { await h.onScan!('B1'); });
+
+      expect(h.addItem).toHaveBeenCalledTimes(1);
+    });
+
+    it('accepts the same code again once it has been out of frame long enough', async () => {
+      vi.useFakeTimers();
+      try {
+        render(<TillScreen />);
+
+        await act(async () => { await h.onScan!('B1'); });
+        expect(h.addItem).toHaveBeenCalledTimes(1);
+
+        // The code leaves the frame; time passes beyond the re-arm window.
+        await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+
+        await act(async () => { await h.onScan!('B1'); });
+        expect(h.addItem).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });
