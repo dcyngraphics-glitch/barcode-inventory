@@ -157,7 +157,12 @@ export function useBarcodeScanner() {
       }
       return null;
     } catch (err) {
-      console.error('Capture error:', err);
+      // Silent calls come from the continuous scan loop, where "no barcode in this
+      // frame" is the normal case rather than a failure. Logging it fills the console
+      // with hundreds of errors and buries the real ones.
+      if (!silent) {
+        console.error('Capture error:', err);
+      }
       return null;
     } finally {
       if (!silent && mountedRef.current) {

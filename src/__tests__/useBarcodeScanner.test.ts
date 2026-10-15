@@ -135,4 +135,48 @@ describe('useBarcodeScanner', () => {
     expect(result.current.processing).toBe(false);
     expect(barcode === null || barcode === '1234567890123').toBe(true);
   });
+
+  it('does not log the expected "nothing in frame" errors from the scan loop', async () => {
+    // The continuous loop calls captureFrame({ silent: true }) and most frames hold
+    // no barcode, so the reader rejects. That is the normal case, not a failure.
+    const failingReader = {
+      decodeFromCanvas: vi.fn().mockRejectedValue(new Error('No MultiFormat Readers were able to detect the code.')),
+    };
+    vi.stubGlobal('BrowserMultiFormatReader', vi.fn(() => failingReader));
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useBarcodeScanner());
+    await act(async () => {
+      await result.current.start(mockVideo);
+    });
+
+    await act(async () => {
+      expect(await result.current.captureFrame({ silent: true })).toBeNull();
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it('still logs a failure from a user-initiated capture', async () => {
+    const failingReader = {
+      decodeFromCanvas: vi.fn().mockRejectedValue(new Error('camera disconnected')),
+    };
+    vi.stubGlobal('BrowserMultiFormatReader', vi.fn(() => failingReader));
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useBarcodeScanner());
+    await act(async () => {
+      await result.current.start(mockVideo);
+    });
+
+    await act(async () => {
+      await result.current.captureFrame();
+    });
+
+    expect(errorSpy).toHaveBeenCalledWith('Capture error:', expect.any(Error));
+    errorSpy.mockRestore();
+  });
 });
