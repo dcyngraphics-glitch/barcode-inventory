@@ -579,6 +579,7 @@ export function ProductDetailScreen() {
           }}
         >
           <ProductForm
+            key={product?.barcode || 'new'}
             initialData={formData}
             isNewProduct={isNewProduct}
             sellerMode={sellerMode}

@@ -176,28 +176,23 @@ describe('ScannerScreen', () => {
       expect(await screen.findByText('Quick Entry')).toBeInTheDocument();
     });
 
-  it('should render mode segmented control and change mode correctly', () => {
+  it('should render mode toggle switch and change mode correctly', () => {
     render(<ScannerScreen />);
 
-    // Check that the segmented control is rendered
-    const modeGroup = screen.getByRole('group', { name: /scan mode/i });
-    expect(modeGroup).toBeInTheDocument();
-    expect(within(modeGroup).getByRole('button', { name: /auto/i })).toBeInTheDocument();
-    expect(within(modeGroup).getByRole('button', { name: /manual/i })).toBeInTheDocument();
+    // Check that the toggle switch is rendered
+    const modeToggle = screen.getByRole('switch');
+    expect(modeToggle).toBeInTheDocument();
 
-    // Check initial mode is auto
-    expect(within(modeGroup).getByRole('button', { name: /auto/i })).toHaveClass('active');
-    expect(within(modeGroup).getByRole('button', { name: /manual/i })).not.toHaveClass('active');
+    // Check initial mode is auto (aria-checked=false means auto)
+    expect(modeToggle).toHaveAttribute('aria-checked', 'false');
 
-    // Click the manual button
-    const manualBtn = within(modeGroup).getByRole('button', { name: /manual/i });
+    // Click the toggle to switch to manual
     act(() => {
-      manualBtn.click();
+      modeToggle.click();
     });
 
-    // Now manual should be active
-    expect(within(modeGroup).getByRole('button', { name: /manual/i })).toHaveClass('active');
-    expect(within(modeGroup).getByRole('button', { name: /auto/i })).not.toHaveClass('active');
+    // Now manual should be active (aria-checked=true means manual)
+    expect(modeToggle).toHaveAttribute('aria-checked', 'true');
 
   });
 });

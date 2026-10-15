@@ -153,6 +153,54 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     };
   }, []);
 
+  // Continuous auto-scan loop
+  const isScanningRef = useRef(false);
+  const lastScanTimeRef = useRef(0);
+  const SCAN_INTERVAL = 500; // ms between scan attempts
+  const SCAN_COOLDOWN = 2000; // ms pause after a successful scan
+
+  useEffect(() => {
+    if (!cameraActive || initializing) return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const scanLoop = async () => {
+      if (isScanningRef.current) return; // Skip if already scanning
+
+      const now = Date.now();
+      const elapsed = now - lastScanTimeRef.current;
+      if (elapsed < SCAN_INTERVAL) {
+        timeoutId = setTimeout(scanLoop, SCAN_INTERVAL - elapsed);
+        return;
+      }
+
+      isScanningRef.current = true;
+      lastScanTimeRef.current = now;
+
+      try {
+        const barcode = await captureFrame({ silent: true });
+        if (barcode && onScanRef.current) {
+          onScanRef.current(barcode);
+          // Cooldown after successful scan to let user move to next item
+          timeoutId = setTimeout(scanLoop, SCAN_COOLDOWN);
+        } else {
+          timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
+        }
+      } catch {
+        timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
+      } finally {
+        isScanningRef.current = false;
+      }
+    };
+
+    scanLoop();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      isScanningRef.current = false;
+    };
+  }, [cameraActive, initializing, captureFrame]);
+
   const handleRetry = useCallback(() => {
     stop();
     setCameraActive(false);
@@ -286,7 +334,7 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
 
       {/* Helper text */}
       {cameraActive && !initializing && (
-        <p className="camera-helper-text">Point camera at barcode, then tap Scan</p>
+        <p className="camera-helper-text">Point camera at barcode to scan automatically</p>
       )}
     </div>
   );

@@ -41,7 +41,7 @@ describe('ProductForm', () => {
     expect(screen.getByLabelText('Product Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Brand')).toBeInTheDocument();
     expect(screen.getByLabelText('Price (₱)')).toBeInTheDocument();
-    expect(screen.getByLabelText('Expiry Date')).toBeInTheDocument();
+    expect(screen.getByLabelText('Expiry Date (optional)')).toBeInTheDocument();
     expect(screen.getByLabelText('Quantity')).toBeInTheDocument();
   });
 
@@ -79,7 +79,7 @@ describe('ProductForm', () => {
 
     expect(screen.getByText('Product name is required')).toBeInTheDocument();
     expect(screen.getByText('Price must be greater than 0')).toBeInTheDocument();
-    expect(screen.getByText('Expiry date is required')).toBeInTheDocument();
+    // Expiry date is optional — no validation error expected
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });

@@ -125,11 +125,14 @@ export function useBarcodeScanner() {
     [hasBarcodeDetector]
   );
 
-  const captureFrame = useCallback(async (): Promise<string | null> => {
+  const captureFrame = useCallback(async (options?: { silent?: boolean }): Promise<string | null> => {
     const video = videoRef.current;
     if (!video) return null;
 
-    setState((prev) => ({ ...prev, processing: true }));
+    const { silent } = options ?? {};
+    if (!silent) {
+      setState((prev) => ({ ...prev, processing: true }));
+    }
 
     try {
       if (hasBarcodeDetector && detectorRef.current) {
@@ -157,7 +160,7 @@ export function useBarcodeScanner() {
       console.error('Capture error:', err);
       return null;
     } finally {
-      if (mountedRef.current) {
+      if (!silent && mountedRef.current) {
         setState((prev) => ({ ...prev, processing: false }));
       }
     }

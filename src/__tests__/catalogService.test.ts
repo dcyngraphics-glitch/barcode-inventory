@@ -59,9 +59,13 @@ describe('catalogService', () => {
     expect(retrieved!.updatedAt).not.toBe(mockProduct.updatedAt);
   });
 
-  it('should throw when updating a non-existent product', async () => {
+  it('should upsert when updating a non-existent product', async () => {
     const nonExistent: Product = { ...mockProduct, barcode: 'truly-nonexistent-999' };
-    await expect(updateProduct(nonExistent)).rejects.toThrow();
+    await updateProduct(nonExistent);
+    const retrieved = await getProduct('truly-nonexistent-999');
+    expect(retrieved).toBeDefined();
+    expect(retrieved!.name).toBe(nonExistent.name);
+    expect(retrieved!.barcode).toBe('truly-nonexistent-999');
   });
 
   it('should search products by name (case-insensitive, partial)', async () => {

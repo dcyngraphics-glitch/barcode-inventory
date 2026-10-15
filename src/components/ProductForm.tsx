@@ -41,9 +41,7 @@ export function ProductForm({
     if (!formData.price || isNaN(priceNum) || priceNum <= 0) {
       errors.price = 'Price must be greater than 0';
     }
-    if (!formData.expiryDate) {
-      errors.expiryDate = 'Expiry date is required';
-    }
+    // Expiry date is optional — no validation needed
     if (formData.quantity < 1) {
       errors.quantity = 'Quantity must be at least 1';
     }
@@ -147,7 +145,7 @@ export function ProductForm({
       </FormField>
 
       {/* Expiry Date */}
-      <FormField id="product-expiry" label="Expiry Date" error={validationErrors.expiryDate}>
+      <FormField id="product-expiry" label="Expiry Date (optional)" error={validationErrors.expiryDate}>
         <input
           id="product-expiry"
           ref={(el) => { fieldRefs.current.expiryDate = el; }}

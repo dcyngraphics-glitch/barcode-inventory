@@ -27,15 +27,18 @@ export async function updateProduct(product: Product): Promise<void> {
   const tx = db.transaction('catalog', 'readwrite');
   const store = tx.objectStore('catalog');
   const existing = await store.get(product.barcode);
-  if (!existing) {
-    throw new Error(`Product with barcode ${product.barcode} not found`);
-  }
-  const merged: Product = {
-    ...existing,
-    ...product,
-    createdAt: existing.createdAt,
-    updatedAt: new Date().toISOString(),
-  };
+  const merged: Product = existing
+    ? {
+        ...existing,
+        ...product,
+        createdAt: existing.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+    : {
+        ...product,
+        createdAt: product.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
   await store.put(merged);
   await tx.done;
 }
