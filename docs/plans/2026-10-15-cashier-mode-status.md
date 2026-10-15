@@ -12,9 +12,9 @@ Loop rule: keep dispatching until every task reads PASS.
 | A | DB v2 + `sales` store | ✅ `675b8e5` | ✅ PASS | ✅ APPROVE | DONE |
 | B | `toDayKey` local-day helper | ✅ `e29ed38` | ✅ PASS | ✅ APPROVE | DONE |
 | C | FIFO deduction + shortfall | ✅ `e3f1e42` | ✅ PASS | ⚠️ fixed in `db224e8` | DONE |
-| D | `recordSale` | ⬜ | ⬜ | ⬜ | PENDING |
-| E | `undoLastSale` | ⬜ | ⬜ | ⬜ | PENDING |
-| F | Reporting queries | ⬜ | ⬜ | ⬜ | PENDING |
+| D | `recordSale` | ✅ `d914317` | ⏳ | ⏳ | REVIEW |
+| E | `undoLastSale` | ✅ `d914317` | ⏳ | ⏳ | REVIEW |
+| F | Reporting queries | ✅ `d914317` | ⏳ | ⏳ | REVIEW |
 | G | Remove `sellerMode` + fix name/brand persistence | ✅ `695c708` | ✅ PASS | ⚠️ fixed in `db224e8` | DONE |
 | H | `TillScreen` | ⬜ | ⬜ | ⬜ | PENDING |
 | I | Undo toast | ⬜ | ⬜ | ⬜ | PENDING |
@@ -33,6 +33,7 @@ Loop rule: keep dispatching until every task reads PASS.
 | C | `e3f1e42` | feat: FIFO stock deduction with shortfall reporting |
 | G | `695c708` | fix: persist name/brand on edit; remove sellerMode (single cashier switch) |
 | C+G | `db224e8` | fix: atomic stock deduction; guard the real persistence path; drop dead test props (parent, after review) |
+| D-F | `d914317` | feat: recordSale, undoLastSale and daily sales reporting (parent — hybrid mode) |
 
 ## Review outcomes — wave 2 (C, G)
 
@@ -58,3 +59,4 @@ Loop rule: keep dispatching until every task reads PASS.
 |---|---|---|---|---|
 | 1 (A,B) | clean | **203/203 passed** (37 files) | 0 light / 0 dark | Subagent self-reports were wrong in BOTH directions: B reported `commit_sha: "unknown"` and claimed the export was `getDayKey`, but the commit exists and the file correctly exports `toDayKey`. Also claimed 3 tests, committed 2. Artifacts verified directly. |
 | 2 (C,G) | clean | **208/208 passed** (39 files) | 0 light / 0 dark | `grep -rn sellerMode src/` → NONE. Verified `ProductDetailScreen.tsx:205-228` persists name/brand/price/expiry unconditionally — the gate is gone. Parent mutation-tested `toDayKey` (buggy UTC impl fails 3/4 tests). |
+| 3 (D,E,F) | clean | **228/228 passed** (39 files) | 0 light / 0 dark | Written by the parent (hybrid mode), tests-first. TDD caught two real defects: `getDayKeys` returned primary keys not index keys (fixed with an index key cursor), and one of my own test expectations was wrong (asserted no shortfall without stocking the item). |
