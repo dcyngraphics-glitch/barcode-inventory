@@ -198,13 +198,7 @@ export function SettingsScreen() {
           enabled={settings.cashierMode}
           onChange={(enabled) => updateSettings({ cashierMode: enabled })}
           label="Cashier Mode"
-          description="Scan multiple items quickly — adds directly to cart instead of showing product details"
-        />
-        <SettingsToggle
-          enabled={settings.sellerMode}
-          onChange={(enabled) => updateSettings({ sellerMode: enabled })}
-          label="Seller Mode"
-          description="Edit product name, brand, category, and price before adding to inventory"
+          description="Scan a customer's items straight into the till, take payment, and track the day's sales"
         />
       </div>
 

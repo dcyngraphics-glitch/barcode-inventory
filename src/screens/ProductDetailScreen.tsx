@@ -8,7 +8,6 @@ import { useProductLookup } from '@/hooks/useProductLookup';
 import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
 import { addBatch, getBatchesByBarcode, deleteBatch } from '@/services/inventoryService';
 import { generateId } from '@/utils/helpers';
-import { useSettingsContext } from '@/context/SettingsContext';
 import type { Product } from '@/types';
 
 const BOTTOM_NAV_HEIGHT = 80;
@@ -17,8 +16,6 @@ export function ProductDetailScreen() {
   const { barcode } = useParams<{ barcode: string }>();
   const navigate = useNavigate();
   const { product: lookedUpProduct, source: lookupSource, loading: lookupLoading, error: lookupError, lookup } = useProductLookup();
-  const { settings: contextSettings } = useSettingsContext();
-  const sellerMode = contextSettings?.sellerMode ?? false;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
@@ -206,42 +203,27 @@ export function ProductDetailScreen() {
           scannedAt: now,
         });
       } else {
-        // Seller Mode: update ALL fields if changed
-        // Default Mode: update only price if changed
         if (product) {
-          const needsUpdate = sellerMode
-            ? (product.name !== data.name.trim() ||
-               product.brand !== data.brand.trim() ||
-               product.storePrice !== price ||
-               product.defaultExpiry !== data.expiryDate)
-            : (product.storePrice !== price);
+          const needsUpdate =
+            product.name !== data.name.trim() ||
+            product.brand !== data.brand.trim() ||
+            product.storePrice !== price ||
+            product.defaultExpiry !== data.expiryDate;
 
           if (needsUpdate) {
-            await updateProduct(sellerMode
-              ? {
-                  ...product,
-                  name: data.name.trim(),
-                  brand: data.brand.trim(),
-                  storePrice: price,
-                  defaultExpiry: data.expiryDate,
-                  updatedAt: now,
-                }
-              : {
-                  ...product,
-                  storePrice: price,
-                  updatedAt: now,
-                }
-            );
+            await updateProduct({
+              ...product,
+              name: data.name.trim(),
+              brand: data.brand.trim(),
+              storePrice: price,
+              defaultExpiry: data.expiryDate,
+              updatedAt: now,
+            });
           }
         }
-
-        // Create new batch
         await addBatch({
-          batchId: generateId(),
-          barcode,
-          quantity: data.quantity,
-          expiryDate: data.expiryDate,
-          scannedAt: now,
+          batchId: generateId(), barcode, quantity: data.quantity,
+          expiryDate: data.expiryDate, scannedAt: now,
         });
       }
 
@@ -261,8 +243,6 @@ export function ProductDetailScreen() {
           updatedAt: now,
         });
         setIsNewProduct(false);
-      } else if (sellerMode) {
-        showToast('Product info updated!', 'success');
       } else {
         showToast('Added!', 'success');
       }
@@ -582,7 +562,6 @@ export function ProductDetailScreen() {
             key={product?.barcode || 'new'}
             initialData={formData}
             isNewProduct={isNewProduct}
-            sellerMode={sellerMode}
             onSubmit={handleSubmit}
             loading={loading}
             error={error}

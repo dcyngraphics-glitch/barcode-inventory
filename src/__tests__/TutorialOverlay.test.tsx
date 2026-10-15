@@ -14,7 +14,6 @@ async function setupCompleted() {
     notificationsEnabled: false,
     theme: 'auto',
     cashierMode: false,
-    sellerMode: false,
     tutorialCompleted: true,
     tutorialStep: 0,
     screenHintsSeen: [],

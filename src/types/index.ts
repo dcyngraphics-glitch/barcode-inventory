@@ -31,7 +31,6 @@ export interface Settings {
   theme: 'auto' | 'light' | 'dark';
   catalogSeeded?: boolean;
   cashierMode: boolean;
-  sellerMode: boolean;
   tutorialCompleted: boolean;
   tutorialStep: number;
   screenHintsSeen: string[];
@@ -44,7 +43,6 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   catalogSeeded: false,
   cashierMode: false,
-  sellerMode: false,
   tutorialCompleted: false,
   tutorialStep: 0,
   screenHintsSeen: [],

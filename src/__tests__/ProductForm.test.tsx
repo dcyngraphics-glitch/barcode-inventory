@@ -17,7 +17,6 @@ describe('ProductForm', () => {
     loading: false,
     error: null,
     isNewProduct: true,
-    sellerMode: false,
   };
 
   it('should NOT render a category field', () => {
