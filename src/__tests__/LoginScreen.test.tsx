@@ -34,6 +34,12 @@ describe('LoginScreen', () => {
     expect(screen.getByRole('button', { name: /unlock/i })).toBeInTheDocument();
   });
 
+  it('should style the Unlock action as the primary button', () => {
+    renderLoginScreen();
+    const button = screen.getByRole('button', { name: /unlock/i });
+    expect(button).toHaveClass('login-submit');
+  });
+
   it('should not show error initially', () => {
     renderLoginScreen();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

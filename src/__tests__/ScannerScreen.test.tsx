@@ -6,7 +6,7 @@ import { vi } from 'vitest';
 vi.mock('@/components/CameraViewfinder', () => {
   let scanCalled = false;
   return {
-    CameraViewfinder: vi.fn(({ onScan, _onManualEntry, cameraActive }, _ref) => {
+    CameraViewfinder: vi.fn(({ onScan, cameraActive }, _ref) => {
       const active = cameraActive ?? true;
       return (
         <div data-testid="mock-camera-viewfinder">
@@ -194,5 +194,16 @@ describe('ScannerScreen', () => {
     // Now manual should be active (aria-checked=true means manual)
     expect(modeToggle).toHaveAttribute('aria-checked', 'true');
 
+  });
+
+  it('should not render a literal backslash-n escape as visible text', () => {
+    const { container } = render(<ScannerScreen />);
+    const BACKSLASH = String.fromCharCode(92);
+    expect(container.textContent).not.toContain(`${BACKSLASH}n`);
+  });
+
+  it('should not offer manual barcode entry', () => {
+    render(<ScannerScreen />);
+    expect(screen.queryByText(/enter barcode manually/i)).toBeNull();
   });
 });

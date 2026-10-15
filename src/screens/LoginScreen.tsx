@@ -60,7 +60,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               {error}
             </div>
           )}
-          <button type="submit">Unlock</button>
+          <button type="submit" className="login-submit">Unlock</button>
         </form>
         <p className="login-hint">Enter your master password to access inventory.</p>
       </div>

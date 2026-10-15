@@ -4,7 +4,6 @@ export { InstallPromotionBanner } from './InstallPromotionBanner';
 export { EmptyState } from './EmptyState';
 export { RecentScans } from './RecentScans';
 export { CameraViewfinder } from './CameraViewfinder';
-export { ManualEntrySheet } from './ManualEntrySheet';
 export { QuickEntryModal } from './QuickEntryModal';
 export { ScreenTooltip } from './ScreenTooltip';
 export { Toast } from './Toast';

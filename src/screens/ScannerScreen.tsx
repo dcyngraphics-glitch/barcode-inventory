@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, Keyboard, WifiOff, ShoppingCart } from 'lucide-react';
+import { ScanLine, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
-import { ManualEntrySheet } from '@/components/ManualEntrySheet';
 import { QuickEntryModal } from '@/components/QuickEntryModal';
 import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
 import { RecentScans } from '@/components/RecentScans';
@@ -51,7 +50,6 @@ export function ScannerScreen() {
   const navigate = useNavigate();
   const { addItem, totalItems, totalPrice } = useScanCart();
   const { settings } = useSettings();
-  const [manualEntryOpen, setManualEntryOpen] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
     const [scanToast, setScanToast] = useState<string | null>(null);
@@ -406,32 +404,11 @@ useEffect(() => {
         }}
       >
         {/* Camera Viewfinder */}
-        {/* Camera Viewfinder */}\n        <CameraViewfinder ref={viewfinderRef} onScan={handleBarcodeSubmit} onManualEntry={() => setManualEntryOpen(true)} cameraActive={cameraActive} />
-
-        {/* Manual Entry Button */}
-        <button
-          onClick={() => setManualEntryOpen(true)}
-          style={{
-            width: '100%',
-            background: 'transparent',
-            color: 'var(--color-on-primary)',
-            border: '2px solid #334155',
-            padding: 'var(--space-md) var(--space-lg)',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 600,
-            fontSize: 'var(--text-base)',
-            minHeight: '44px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--space-sm)',
-            transition: 'var(--transition-base)',
-          }}
-        >
-          <Keyboard size={20} />
-          Enter barcode manually
-        </button>
+        <CameraViewfinder
+          ref={viewfinderRef}
+          onScan={handleBarcodeSubmit}
+          cameraActive={cameraActive}
+        />
 
         {/* Recent Scans */}
         <RecentScans />
@@ -466,13 +443,6 @@ useEffect(() => {
             >
               Cart has {totalItems} items, total price ₱{totalPrice.toFixed(2)}
             </div>
-
-            {/* Manual Entry Bottom Sheet */}
-      <ManualEntrySheet
-        open={manualEntryOpen}
-        onClose={() => setManualEntryOpen(false)}
-        onSubmit={handleBarcodeSubmit}
-      />
 
       {/* Quick Entry Modal for unknown products */}
       {quickEntryBarcode && (

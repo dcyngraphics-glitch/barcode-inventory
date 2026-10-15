@@ -1883,6 +1883,43 @@ select {
   gap: var(--space-lg);
 }
 
+/* Login primary action — the heaviest element on a single-action screen.
+   Mirrors the .scan-fab CTA language so it reads as the same class of action. */
+.login-submit {
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%);
+  color: #ffffff;
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 4px 14px rgba(5, 150, 105, 0.4),
+    0 0 0 4px rgba(5, 150, 105, 0.15);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.login-submit:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(5, 150, 105, 0.5),
+    0 0 0 6px rgba(5, 150, 105, 0.2);
+}
+
+.login-submit:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.login-submit:focus-visible {
+  outline: 2px solid var(--color-accent-border);
+  outline-offset: 2px;
+}
+
 .login-password-wrapper {
   position: relative;
   display: flex;
