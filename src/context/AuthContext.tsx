@@ -21,8 +21,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getStoredAuth);
   const [masterPasswordOverride, setMasterPasswordOverride] = useState<string | null>(null);
 
+const DEFAULT_MASTER_PASSWORD = 'Inv3ntory_M@ster_2026!';
+
   const resolveMasterPassword = (): string => {
-    return masterPasswordOverride ?? localStorage.getItem(MASTER_PASSWORD_STORAGE_KEY) ?? import.meta.env.VITE_MASTER_PASSWORD ?? '';
+    return masterPasswordOverride ?? localStorage.getItem(MASTER_PASSWORD_STORAGE_KEY) ?? import.meta.env.VITE_MASTER_PASSWORD ?? DEFAULT_MASTER_PASSWORD;
   };
 
   const getMasterPassword = useCallback((): string => {
