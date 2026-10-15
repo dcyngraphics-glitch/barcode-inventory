@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import fs from 'fs';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV || process.env.VERCEL_URL);
@@ -46,6 +47,15 @@ export default defineConfig({
         ],
       },
     }),
+    {
+      // GitHub Pages has no SPA fallback: reloading (or deep-linking) on /sales or
+      // /inventory would 404, even though the app itself is fine. Serving index.html
+      // as 404.html lets the app boot and route itself from any path.
+      name: 'spa-404-fallback',
+      closeBundle() {
+        fs.copyFileSync('dist/index.html', 'dist/404.html');
+      },
+    },
   ],
   resolve: {
     alias: {

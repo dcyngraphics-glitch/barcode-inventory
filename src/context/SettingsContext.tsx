@@ -6,6 +6,12 @@ import { loadSettings, saveSettings } from '@/services/settingsService';
 interface SettingsContextValue {
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => void;
+  /**
+   * False until the stored settings have been read. Consumers that branch on a
+   * setting must wait for this, or they act on the defaults — which is how a
+   * cashier-mode user reloading on /sales got bounced to the scanner.
+   */
+  hasLoaded: boolean;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -24,6 +30,7 @@ function applyPatch(base: Settings, patch: Partial<Settings>): Settings {
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<Settings>({ ...DEFAULT_SETTINGS });
+  const [hasLoaded, setHasLoaded] = useState(false);
   const saveTimeoutRef = useRef<number | null>(null);
   // Patches applied by updateSettings before the async load settled, so the
   // loaded settings don't clobber them.
@@ -38,6 +45,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       .then((s) => {
         if (cancelled) return;
         hasLoadedRef.current = true;
+        setHasLoaded(true);
         const patch = pendingPatchRef.current;
         pendingPatchRef.current = null;
         setSettings(patch ? applyPatch(s, patch) : s);
@@ -46,6 +54,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to load settings:', err);
         // Keep defaults on error — settings remain usable offline.
         hasLoadedRef.current = true;
+        setHasLoaded(true);
       });
     return () => {
       cancelled = true;
@@ -86,7 +95,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SettingsContext.Provider value={{ settings, updateSettings }}>
+    <SettingsContext.Provider value={{ settings, updateSettings, hasLoaded }}>
       {children}
     </SettingsContext.Provider>
   );

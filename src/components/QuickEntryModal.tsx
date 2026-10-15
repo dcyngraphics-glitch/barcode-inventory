@@ -1,31 +1,58 @@
 import { useState } from 'react';
 import { X, DollarSign, Calendar } from 'lucide-react';
 
+export interface QuickEntryData {
+  name: string;
+  brand: string;
+  price: number;
+  expiryDate: string;
+}
+
 interface QuickEntryModalProps {
   barcode: string;
-  onSave: (price: number, expiryDate: string) => void;
+  onSave: (data: QuickEntryData) => void;
   onCancel: () => void;
 }
 
 export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalProps) {
+  const [name, setName] = useState('');
+  const [brand, setBrand] = useState('');
   const [price, setPrice] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [nameError, setNameError] = useState('');
   const [priceError, setPriceError] = useState('');
 
   const handleSave = () => {
+    let invalid = false;
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError('Product name is required');
+      invalid = true;
+    }
+
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
       setPriceError('Price must be greater than 0');
-      return;
+      invalid = true;
     }
-    if (!expiryDate) {
-      // Default to 30 days from now
+
+    if (invalid) return;
+
+    // Default to 30 days from now when no expiry is given
+    let resolvedExpiry = expiryDate;
+    if (!resolvedExpiry) {
       const d = new Date();
       d.setDate(d.getDate() + 30);
-      onSave(priceNum, d.toISOString().split('T')[0]!);
-      return;
+      resolvedExpiry = d.toISOString().split('T')[0]!;
     }
-    onSave(priceNum, expiryDate);
+
+    onSave({
+      name: trimmedName,
+      brand: brand.trim(),
+      price: priceNum,
+      expiryDate: resolvedExpiry,
+    });
   };
 
   return (
@@ -78,6 +105,66 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px', fontFamily: 'monospace' }}>
           {barcode}
         </p>
+
+        {/* Product name — without this the item saves as "Unknown (barcode)" */}
+        <div style={{ marginBottom: '12px' }}>
+          <label
+            htmlFor="quick-entry-name"
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}
+          >
+            Product name
+          </label>
+          <input
+            id="quick-entry-name"
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setNameError('');
+            }}
+            placeholder="e.g. Bear Brand Milk"
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: `1.5px solid ${nameError ? '#dc2626' : '#e2e8f0'}`,
+              borderRadius: '8px',
+              fontSize: '16px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+          {nameError && (
+            <span style={{ fontSize: '12px', color: '#dc2626', marginTop: '2px', display: 'block' }}>
+              {nameError}
+            </span>
+          )}
+        </div>
+
+        {/* Brand */}
+        <div style={{ marginBottom: '12px' }}>
+          <label
+            htmlFor="quick-entry-brand"
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}
+          >
+            Brand (optional)
+          </label>
+          <input
+            id="quick-entry-brand"
+            type="text"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            placeholder="e.g. Bear Brand"
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
 
         <div style={{ marginBottom: '12px' }}>
           <label

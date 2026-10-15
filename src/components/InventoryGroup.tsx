@@ -11,9 +11,10 @@ interface InventoryGroupProps {
   alertWindowDays: number;
   onDeleteBatch: (batch: Batch) => void;
   onEditBatch: (batch: Batch) => void;
+  onSetStock: (barcode: string) => void;
 }
 
-export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBatch }: InventoryGroupProps) {
+export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBatch, onSetStock }: InventoryGroupProps) {
   const navigate = useNavigate();
 
   // Navigate to product detail when header is clicked
@@ -173,6 +174,27 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
             onEdit={onEditBatch}
           />
         ))}
+
+        {/* Set stock to a counted total — the app works out add vs remove */}
+        <button
+          onClick={() => onSetStock(group.product.barcode)}
+          aria-label={`Set stock for ${group.product.name}`}
+          style={{
+            width: '100%',
+            marginTop: '8px',
+            padding: '10px 12px',
+            background: 'transparent',
+            border: '1px dashed #cbd5e1',
+            borderRadius: '8px',
+            color: '#334155',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            minHeight: '44px',
+          }}
+        >
+          Set stock
+        </button>
       </div>
     </div>
   );

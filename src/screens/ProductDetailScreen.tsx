@@ -128,14 +128,12 @@ export function ProductDetailScreen() {
     };
   }, [product]);
 
-  const [formData, setFormData] = useState<ProductFormData>(getInitialFormData());
-
-  // Update form data when product changes
-  useEffect(() => {
-    if (product) {
-      setFormData(getInitialFormData());
-    }
-  }, [product, getInitialFormData]);
+  // Derived, not stored. ProductForm remounts via `key` when the barcode changes,
+  // so it must get values computed from the *current* product in that same render.
+  // Keeping them in state made the remount read the stale (empty) values, because
+  // the lookup resolves after the form has already mounted — leaving an existing
+  // product's name/brand/price blank and blocking "Update Inventory".
+  const initialFormData = getInitialFormData();
 
   const showToast = (message: string, type: 'success' | 'error') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -557,7 +555,7 @@ export function ProductDetailScreen() {
         >
           <ProductForm
             key={product?.barcode || 'new'}
-            initialData={formData}
+            initialData={initialFormData}
             isNewProduct={isNewProduct}
             onSubmit={handleSubmit}
             loading={loading}

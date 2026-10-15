@@ -16,12 +16,12 @@ Loop rule: keep dispatching until every task reads PASS.
 | E | `undoLastSale` | ✅ `d914317` | ✅ PASS | ✅ APPROVE | DONE |
 | F | Reporting queries | ✅ `d914317` | ✅ PASS | ✅ APPROVE | DONE |
 | G | Remove `sellerMode` + fix name/brand persistence | ✅ `695c708` | ✅ PASS | ⚠️ fixed in `db224e8` | DONE |
-| H | `TillScreen` | ✅ `c573334` | ⏳ | ⏳ | REVIEW |
-| I | Undo toast | ✅ `c573334` | ⏳ | ⏳ | REVIEW |
-| J | `SalesScreen` + Sales nav item | ⬜ | ⬜ | ⬜ | PENDING |
-| K | Set stock | ⬜ | ⬜ | ⬜ | PENDING |
-| L | `QuickEntryModal` name/brand | ⬜ | ⬜ | ⬜ | PENDING |
-| M | Verify + ship to GitHub Pages | ⬜ | ⬜ | ⬜ | PENDING |
+| H | `TillScreen` | ✅ `c573334` | ✅ PASS | ⚠️ overcharge re-fixed (see below) | DONE |
+| I | Undo toast | ✅ `c573334` | ✅ PASS | ✅ APPROVE | DONE |
+| J | `SalesScreen` + Sales nav item | ✅ uncommitted | ✅ | ✅ | DONE |
+| K | Set stock | ✅ uncommitted | ✅ | ✅ | DONE |
+| L | `QuickEntryModal` name/brand | ✅ uncommitted | ✅ | ✅ | DONE |
+| M | Verify + ship to GitHub Pages | verify ✅ DONE · deploy ⏸ held for go signal | — | — | AWAITING GO |
 
 ## Commit log
 
@@ -62,3 +62,88 @@ Loop rule: keep dispatching until every task reads PASS.
 | 2 (C,G) | clean | **208/208 passed** (39 files) | 0 light / 0 dark | `grep -rn sellerMode src/` → NONE. Verified `ProductDetailScreen.tsx:205-228` persists name/brand/price/expiry unconditionally — the gate is gone. Parent mutation-tested `toDayKey` (buggy UTC impl fails 3/4 tests). |
 | 3 (D,E,F) | clean | **228/228 passed** (39 files) | 0 light / 0 dark | Written by the parent (hybrid mode), tests-first. TDD caught two real defects: `getDayKeys` returned primary keys not index keys (fixed with an index key cursor), and one of my own test expectations was wrong (asserted no shortfall without stocking the item). |
 | 4 (H,I) | clean | **237/237 passed** (40 files) | 0 light / 0 dark | Parent-written. TDD caught a real bug: the toast's Undo closure captured `handleUndo` from a render where `recorded` was still null, so Undo silently did nothing — fixed by passing the sale as an argument. Also removed the now-dead `recorded` state + undo timer. AppAuthGate's SettingsContext mock returned `{settings: null}`, which the real context type forbids; mock corrected and 2 route-switch tests added. |
+| 5 (J,K,L + review) | clean | **262/262 passed** (44 files) | 0 light / 0 dark | Parent-written. Review pass found 4 real defects (below). Every fix mutation-verified or browser-verified. |
+
+## Review pass before commit (tasks J-M) — defects found and fixed
+
+Four genuine defects were found by driving the **built app** in a browser (Playwright,
+390×844, fake camera + fake `BarcodeDetector`), not by reading code.
+
+### 1. Existing products opened with a blank form (blocked stock entry) — HIGH
+
+`ProductDetailScreen` held the form values in state and remounted `ProductForm` via
+`key={product?.barcode || 'new'}`. The remount fires in the same commit as the lookup
+resolving — *before* the `useEffect` that refreshed that state — so the form remounted
+with the previous, empty values and never re-seeded. Opening any product from the
+catalog showed an empty name/brand/price, and "Update Inventory" failed validation with
+*"Product name is required"* / *"Price must be greater than 0"*, making it impossible to
+stock an existing product without retyping it.
+
+**Fix:** derive the values instead of storing them (`initialData={getInitialFormData()}`),
+so the keyed remount receives current values in that same render. State + sync effect deleted.
+**Verified:** new `ProductDetailPrefill.test.tsx` reproduces the async-lookup race;
+mutation-checked (restoring the old code fails both tests with
+`expected '' to be 'Bear Brand Sterilized Milk'`), and confirmed in the browser.
+
+### 2. One barcode charged up to 9 times — HIGH (money)
+
+The `REPEAT_WINDOW_MS = 2500` guard against the viewfinder's continuous re-reads was a
+fixed window, but the real gap between reads is `SCAN_COOLDOWN (2000ms) + detect time`.
+Measured in-browser with an instant detector the gap was ~2000–2075ms (just inside the
+window), so the bug hid. With a realistic 600ms detector the gap became **~2610ms**, every
+read was accepted, and holding one barcode in frame for 20s produced a basket of **9** —
+nine times the price for one item.
+
+**Fix:** presence, not timing. `CameraViewfinder` gained an optional `onNoDetection`
+callback (fired when an attempt finds nothing); the Till re-arms a code only after the
+frame has actually been empty for `ABSENCE_MS = 700` (comfortably above the 500ms attempt
+interval, so a dropped frame is a blip, not a new item). This also fixes the inverse
+undercount: a cashier re-presenting the same item quickly is now counted.
+**Verified:** same 20s hold now yields **1**. Unit tests cover the far-apart-but-never-left
+case, the genuine re-scan, and the dropped-frame blip; mutation-checked (the old window
+logic adds the item twice).
+
+### 3. `/sales` bounced to the scanner on every reload — MEDIUM
+
+`SettingsContext` exposed no loading state, and settings load asynchronously. On a cold
+load `cashierMode` is briefly the default `false`, so `SalesScreen`'s guard fired
+`<Navigate to="/" replace />` before the stored value arrived. Reloading or deep-linking
+`/sales` always landed on the scanner; the `/` route also flashed the scanner (and its
+camera prompt) before swapping to the till.
+
+**Fix:** expose `hasLoaded`; `SalesScreen` and the `/` route wait for it.
+**Verified:** `/sales` now stays on `/sales` through a reload, in-browser.
+
+### 4. Duplicate "Skip" in the tutorial — LOW
+
+`TutorialOverlay` rendered two Skip buttons in the same step (one beside the CTA, one
+below it). Removed the lower duplicate.
+**Verified:** tutorial now renders 1.
+
+### Also added
+
+- `vite.config.ts`: a `closeBundle` step copies `dist/index.html` → `dist/404.html`.
+  GitHub Pages has no SPA fallback, so reloading on `/sales` or `/inventory` would 404
+  without it. (Root-path reload was fixed earlier; this covers every other route.)
+- `QuickEntryModal` now takes a required product name (and optional brand), so scanning an
+  unknown item no longer saves it as `Unknown (barcode)`.
+- `SetStockSheet` + `stockService.setStock()` — type the counted total; the app works out
+  whether that means adding a batch or removing oldest-expiry-first.
+
+### Browser E2E — 13/13, 0 console errors
+
+Login → stock a catalog product → correct the count to 6 → enable Cashier Mode → hold a
+barcode in frame 15s (**charged once**) → Paid → stock 6→5 → report shows `1 sale · 1 item`
+with no false shortfall → `/sales` deep link + reload survive → Undo restores stock to 5
+and leaves exactly one sale.
+
+**Not a defect, but worth knowing:** Undo deliberately restores the basket (it keeps the
+original lines so the cashier can re-take payment). An earlier E2E misread the resulting
+2-item sale as overcharging.
+
+**Design note (unresolved, not a bug):** on a fresh install the Inventory list is empty —
+it is built from batches, and the 559 seeded products populate only the catalog. Stock
+enters by scanning into Product Detail ("Update Inventory"), which the empty state prompts
+for. So `Set stock` is only reachable once a product has been received at least once.
+Worth revisiting if stock should be settable for a catalog product that has never been
+scanned.

@@ -4,6 +4,13 @@ import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface CameraViewfinderProps {
   onScan: (barcode: string) => void,
+  /**
+   * Called when an attempt finds nothing in frame. Consumers need this to tell
+   * "the same code is still in frame" (ignore) from "the same code was put back
+   * and scanned again" (count it). Timing alone can't distinguish the two,
+   * because the gap between reads varies with how long detection takes.
+   */
+  onNoDetection?: () => void,
   cameraActive?: boolean;
 }
 
@@ -12,9 +19,10 @@ export interface CameraViewfinderHandle {
 }
 
 export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfinderProps>(
-  function CameraViewfinder({ onScan, cameraActive: cameraActiveProp }, ref) {
+  function CameraViewfinder({ onScan, onNoDetection, cameraActive: cameraActiveProp }, ref) {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const onScanRef = useRef(onScan);
+    const onNoDetectionRef = useRef(onNoDetection);
     const [flashOn, setFlashOn] = useState(false);
     const [torchSupported, setTorchSupported] = useState(false);
     const [initializing, setInitializing] = useState(false);
@@ -22,10 +30,11 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
     const { error, errorType, start, stop, captureFrame } = useBarcodeScanner();
 
-    // Keep ref in sync with latest onScan prop
+    // Keep refs in sync with the latest props
     useEffect(() => {
       onScanRef.current = onScan;
-    }, [onScan]);
+      onNoDetectionRef.current = onNoDetection;
+    }, [onScan, onNoDetection]);
 
     // Respond to cameraActive prop changes from parent
     useEffect(() => {
@@ -183,6 +192,8 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
           // Cooldown after successful scan to let user move to next item
           timeoutId = setTimeout(scanLoop, SCAN_COOLDOWN);
         } else {
+          // Nothing in frame — lets consumers re-arm repeat detection.
+          onNoDetectionRef.current?.();
           timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
         }
       } catch {

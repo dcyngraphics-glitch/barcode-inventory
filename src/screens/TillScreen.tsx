@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
-import { QuickEntryModal } from '@/components/QuickEntryModal';
+import { QuickEntryModal, type QuickEntryData } from '@/components/QuickEntryModal';
 import { Toast, useToast } from '@/components/Toast';
 import { useScanCart, type ScanCartItem } from '@/context/ScanCartContext';
 import { lookupProduct } from '@/services/productLookupService';
@@ -11,13 +11,19 @@ import { recordSale, undoLastSale, type SaleLineInput } from '@/services/saleSer
 export const UNDO_WINDOW_MS = 6000;
 
 /**
- * A barcode must be OUT of frame this long before the same code can be scanned
- * again. The viewfinder's continuous loop re-reads a code that is still in frame
- * every ~2s (CameraViewfinder's SCAN_COOLDOWN), so without this one item held in
- * front of the camera is added several times and the customer is overcharged.
- * Must exceed SCAN_COOLDOWN, or the loop re-adds the item anyway.
+ * How long a barcode must be ABSENT from the frame before the same code counts
+ * as a new scan.
+ *
+ * Presence, not a countdown: the viewfinder re-reads a code that is still in
+ * frame every ~2s, and that gap varies with how long detection takes, so any
+ * fixed "ignore repeats for N ms" window eventually lets the same item through
+ * twice and overcharges the customer. The Till instead counts a code again only
+ * after the viewfinder reports an empty frame (see onNoDetection).
+ *
+ * Comfortably above the viewfinder's 500ms attempt interval, so a single dropped
+ * frame doesn't re-arm it.
  */
-export const REPEAT_WINDOW_MS = 2500;
+export const ABSENCE_MS = 700;
 
 interface RecordedSale {
   saleId: string;
@@ -50,21 +56,38 @@ export function TillScreen() {
   const [recording, setRecording] = useState(false);
 
   const scanningRef = useRef(false);
-  // Last barcode read and when. Refreshed on EVERY read, accepted or not, so a code
-  // that is continuously in frame can never re-arm itself.
-  const lastReadRef = useRef<{ barcode: string; at: number } | null>(null);
+  // The code currently in frame. `absentSince` is when the frame last came up
+  // empty; null means the code has been in frame continuously.
+  const lastReadRef = useRef<{ barcode: string; absentSince: number | null } | null>(null);
+
+  /** The frame came up empty — whatever code was in it has now left. */
+  const handleNoDetection = useCallback(() => {
+    const last = lastReadRef.current;
+    if (last && last.absentSince === null) {
+      lastReadRef.current = { barcode: last.barcode, absentSince: Date.now() };
+    }
+  }, []);
 
   const handleBarcode = useCallback(
     async (barcode: string) => {
+      // A lookup is already in flight. Leave presence tracking alone so this read
+      // isn't swallowed — the next attempt picks it up.
+      if (scanningRef.current) return;
+
       const now = Date.now();
       const last = lastReadRef.current;
-      const isRepeat = !!last && last.barcode === barcode && now - last.at < REPEAT_WINDOW_MS;
-      lastReadRef.current = { barcode, at: now };
 
-      // Still the same item in frame — ignore it, but the timestamp refresh above
-      // keeps it suppressed for as long as it stays there.
-      if (isRepeat) return;
-      if (scanningRef.current) return;
+      // The same code only counts again if it actually left the frame. A brief
+      // absence is a dropped detection, not a newly presented item.
+      const stillInFrame =
+        !!last &&
+        last.barcode === barcode &&
+        (last.absentSince === null || now - last.absentSince < ABSENCE_MS);
+
+      // Either way the code is in frame now, so clear the absence marker.
+      lastReadRef.current = { barcode, absentSince: null };
+
+      if (stillInFrame) return;
 
       scanningRef.current = true;
       try {
@@ -101,17 +124,17 @@ export function TillScreen() {
   );
 
   const handleQuickEntrySave = useCallback(
-    (price: number, expiryDate: string) => {
+    (data: QuickEntryData) => {
       if (!quickEntryBarcode) return;
       addItem({
         barcode: quickEntryBarcode,
         product: null,
-        name: '',
-        brand: '',
-        price,
-        expiryDate,
+        name: data.name,
+        brand: data.brand,
+        price: data.price,
+        expiryDate: data.expiryDate,
         quantity: 1,
-        needsInfo: true,
+        needsInfo: false,
         source: 'manual',
       });
       setQuickEntryBarcode(null);
@@ -193,7 +216,7 @@ export function TillScreen() {
       </header>
 
       <main className="till-main">
-        <CameraViewfinder onScan={handleBarcode} cameraActive />
+        <CameraViewfinder onScan={handleBarcode} onNoDetection={handleNoDetection} cameraActive />
 
         <section className="till-basket" aria-label="Customer basket">
           {isEmpty ? (

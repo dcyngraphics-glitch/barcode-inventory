@@ -2056,6 +2056,222 @@ select {
   outline-offset: 2px;
 }
 
+/* ===== Sales report (cashier mode) ===== */
+
+.sales-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+  padding-bottom: 80px;
+}
+
+.sales-header {
+  height: 56px;
+  background: #334155;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.sales-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.sales-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.sales-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  font-size: var(--text-sm);
+}
+
+.sales-days {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding-bottom: var(--space-xs);
+}
+
+.sales-day {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.sales-day--active {
+  background: var(--color-primary-bg);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary-bg);
+}
+
+.sales-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-lg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.sales-summary-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-muted-foreground);
+}
+
+.sales-summary-total {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-card-foreground);
+}
+
+.sales-summary-meta {
+  font-size: var(--text-sm);
+  color: var(--color-muted-foreground);
+}
+
+.sales-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-muted-foreground);
+}
+
+.sales-flag .sales-section-title {
+  color: var(--color-error-text);
+}
+
+.sales-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.sales-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.sales-row-name {
+  font-size: var(--text-sm);
+  color: var(--color-card-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sales-row-value {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-card-foreground);
+  flex-shrink: 0;
+}
+
+.sales-sale {
+  padding: var(--space-md);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.sales-sale-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+.sales-sale-time {
+  font-size: var(--text-sm);
+  color: var(--color-muted-foreground);
+}
+
+.sales-sale-total {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-card-foreground);
+}
+
+.sales-sale-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sales-sale-line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--color-muted-foreground);
+}
+
+.sales-empty {
+  font-size: var(--text-sm);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.sales-empty-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl) var(--space-md);
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.sales-day:focus-visible {
+  outline: 2px solid var(--color-accent-border);
+  outline-offset: 2px;
+}
+
 /* Login */
 .login-card,
 .status-card {

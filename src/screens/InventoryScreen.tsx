@@ -12,6 +12,8 @@ import { InventoryGroup } from '@/components/InventoryGroup';
 import { useInventory } from '@/hooks/useInventory';
 import { useSettingsContext } from '@/context/SettingsContext';
 import { EditBatchSheet } from '@/components/EditBatchSheet';
+import { SetStockSheet } from '@/components/SetStockSheet';
+import { setStock } from '@/services/stockService';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
 
 export function InventoryScreen() {
@@ -21,6 +23,9 @@ export function InventoryScreen() {
     const [deleting, setDeleting] = useState(false);
     const [editBatchOpen, setEditBatchOpen] = useState(false);
     const [editBatch, setEditBatch] = useState<Batch | null>(null);
+    const [stockTarget, setStockTarget] = useState<
+      { barcode: string; name: string; current: number; expiry: string } | null
+    >(null);
 
     const { toasts, showToast, dismissToast } = useToast();
   const navigate = useNavigate();
@@ -77,6 +82,38 @@ export function InventoryScreen() {
       setDeleting(false);
     }
   }, [deleteTarget, showToast, deleteBatch]);
+
+  // Set stock to a counted total
+  const handleSetStock = useCallback(
+    (barcode: string) => {
+      const group = groups.find((g) => g.product.barcode === barcode);
+      if (!group) return;
+      setStockTarget({
+        barcode,
+        name: group.product.name || barcode,
+        current: group.totalQuantity,
+        expiry: group.product.defaultExpiry || '',
+      });
+    },
+    [groups],
+  );
+
+  const handleSaveStock = useCallback(
+    async (target: number, expiryDate: string) => {
+      if (!stockTarget) return;
+      try {
+        await setStock(stockTarget.barcode, target, expiryDate);
+        showToast('success', `Stock set to ${target}`);
+        await refresh();
+      } catch (err) {
+        console.error('Failed to set stock:', err);
+        showToast('error', 'Failed to set stock');
+      } finally {
+        setStockTarget(null);
+      }
+    },
+    [stockTarget, showToast, refresh],
+  );
 
   // Pull-to-refresh handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -218,6 +255,7 @@ export function InventoryScreen() {
                             alertWindowDays={alertWindowDays}
                             onDeleteBatch={(batch) => setDeleteTarget(batch)}
                             onEditBatch={(batch) => { setEditBatch(batch); setEditBatchOpen(true); }}
+                            onSetStock={handleSetStock}
                           />
                         ))}
           </div>
@@ -264,6 +302,18 @@ export function InventoryScreen() {
         screenId="inventory"
         message="Tap a product to expand batches • Use search or filter by expiry status"
       />
+
+      {/* Set stock sheet */}
+      {stockTarget && (
+        <SetStockSheet
+          open
+          productName={stockTarget.name}
+          currentStock={stockTarget.current}
+          defaultExpiry={stockTarget.expiry}
+          onCancel={() => setStockTarget(null)}
+          onSave={handleSaveStock}
+        />
+      )}
     </div>
   );
 }

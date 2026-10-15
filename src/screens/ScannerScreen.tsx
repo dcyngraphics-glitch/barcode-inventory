@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScanLine, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
-import { QuickEntryModal } from '@/components/QuickEntryModal';
+import { QuickEntryModal, type QuickEntryData } from '@/components/QuickEntryModal';
 import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
 import { RecentScans } from '@/components/RecentScans';
 import { PermissionPromptModal } from '@/components/PermissionPromptModal';
@@ -242,23 +242,23 @@ useEffect(() => {
     }
   }, [processing]);
 
-  const handleQuickEntrySave = useCallback((price: number, expiryDate: string) => {
+  const handleQuickEntrySave = useCallback((data: QuickEntryData) => {
     if (!quickEntryBarcode) return;
 
     addItem({
       barcode: quickEntryBarcode,
       product: null,
-      name: '',
-      brand: '',
-      price,
-      expiryDate,
+      name: data.name,
+      brand: data.brand,
+      price: data.price,
+      expiryDate: data.expiryDate,
       quantity: 1,
       needsInfo: false,
       source: 'manual',
     });
 
     setQuickEntryBarcode(null);
-    showScanToast('✓ Added to cart');
+    showScanToast(`✓ ${data.name} added to cart`);
   }, [quickEntryBarcode, addItem, showScanToast]);
 
   const handleQuickEntryCancel = useCallback(() => {

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
-import { ScanLine, Package, Settings } from 'lucide-react';
+import { ScanLine, Package, Settings, Receipt } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { TillScreen } from '@/screens/TillScreen';
+import { SalesScreen } from '@/screens/SalesScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
@@ -103,15 +104,21 @@ function MainApp() {
 /** Route selection lives inside SettingsProvider so it can read cashierMode:
  *  with Cashier Mode on, the Scan tab IS the till. */
 function AppRoutes() {
-  const { settings } = useSettingsContext();
+  const { settings, hasLoaded } = useSettingsContext();
 
   return (
     <Routes>
-      <Route path="/" element={settings.cashierMode ? <TillScreen /> : <ScannerScreen />} />
+      {/* Hold the first paint until settings are read, so a cashier-mode user
+          doesn't get a flash of the scanner (and a camera prompt) on cold start. */}
+      <Route
+        path="/"
+        element={!hasLoaded ? null : settings.cashierMode ? <TillScreen /> : <ScannerScreen />}
+      />
       <Route path="/product/:barcode" element={<ProductDetailScreen />} />
       <Route path="/inventory" element={<InventoryScreen />} />
       <Route path="/settings" element={<SettingsScreen />} />
       <Route path="/cart" element={<CartReviewScreen />} />
+      <Route path="/sales" element={<SalesScreen />} />
     </Routes>
   );
 }
@@ -211,10 +218,21 @@ const navItems = [
 
 function BottomNav() {
   const location = useLocation();
+  const { settings } = useSettingsContext();
+
+  // Sales only exists in Cashier Mode — without a till there is nothing to report.
+  const items = settings.cashierMode
+    ? [
+        { path: '/', icon: ScanLine, label: 'Scan' },
+        { path: '/sales', icon: Receipt, label: 'Sales' },
+        { path: '/inventory', icon: Package, label: 'Inventory' },
+        { path: '/settings', icon: Settings, label: 'Settings' },
+      ]
+    : navItems;
 
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
-      {navItems.map((item) => {
+      {items.map((item) => {
         const isActive = item.path === '/'
           ? location.pathname === '/' || location.pathname.startsWith('/product') || location.pathname.startsWith('/cart')
           : location.pathname.startsWith(item.path);

@@ -35,6 +35,7 @@ vi.mock('@/context/SettingsContext', async () => {
     useSettingsContext: () => ({
       settings: { ...DEFAULT_SETTINGS, cashierMode: settingsMock.cashierMode },
       updateSettings: () => {},
+      hasLoaded: true,
     }),
   };
 });

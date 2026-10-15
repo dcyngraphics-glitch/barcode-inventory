@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { TillScreen } from '@/screens/TillScreen';
+import { TillScreen, ABSENCE_MS } from '@/screens/TillScreen';
 
 // vi.hoisted keeps these available inside the hoisted vi.mock factories.
 const h = vi.hoisted(() => ({
@@ -13,11 +13,19 @@ const h = vi.hoisted(() => ({
   undoLastSale: vi.fn(),
   lookupProduct: vi.fn(),
   onScan: null as null | ((barcode: string) => void | Promise<void>),
+  onNoDetection: null as null | (() => void),
 }));
 
 vi.mock('@/components/CameraViewfinder', () => ({
-  CameraViewfinder: ({ onScan }: { onScan: (barcode: string) => void }) => {
+  CameraViewfinder: ({
+    onScan,
+    onNoDetection,
+  }: {
+    onScan: (barcode: string) => void;
+    onNoDetection?: () => void;
+  }) => {
     h.onScan = onScan;
+    h.onNoDetection = onNoDetection ?? null;
     return <div data-testid="mock-viewfinder" />;
   },
 }));
@@ -153,9 +161,10 @@ describe('TillScreen', () => {
     expect(h.removeItem).toHaveBeenCalledWith('c1');
   });
 
-  // The viewfinder's continuous loop re-fires onScan every ~2s while a barcode is
-  // still in frame. Without a guard, one item held in front of the camera for a few
-  // seconds is added several times — the customer is overcharged.
+  // The viewfinder re-reads a code that is still in frame every ~2s, and that gap
+  // varies with how long detection takes — so no fixed "ignore repeats for N ms"
+  // window is safe. A countdown that is too short adds the item twice (overcharging
+  // the customer); presence is the signal that actually distinguishes the cases.
   describe('repeat reads of a barcode that is still in frame', () => {
     const found = {
       product: {
@@ -187,7 +196,9 @@ describe('TillScreen', () => {
       expect(h.addItem).toHaveBeenCalledTimes(1);
     });
 
-    it('accepts the same code again once it has been out of frame long enough', async () => {
+    it('still adds only once when the reads are far apart but the code never left the frame', async () => {
+      // The case a countdown gets wrong: same code, still in frame, but the
+      // viewfinder took a long time to detect it. 60s is beyond any sane window.
       vi.useFakeTimers();
       try {
         render(<TillScreen />);
@@ -195,11 +206,48 @@ describe('TillScreen', () => {
         await act(async () => { await h.onScan!('B1'); });
         expect(h.addItem).toHaveBeenCalledTimes(1);
 
-        // The code leaves the frame; time passes beyond the re-arm window.
-        await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+        await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+
+        await act(async () => { await h.onScan!('B1'); });
+        expect(h.addItem).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('counts the code again once it has actually left the frame', async () => {
+      vi.useFakeTimers();
+      try {
+        render(<TillScreen />);
+
+        await act(async () => { await h.onScan!('B1'); });
+        expect(h.addItem).toHaveBeenCalledTimes(1);
+
+        // The code leaves the frame and stays away past the blip threshold.
+        await act(async () => { h.onNoDetection?.(); });
+        await act(async () => { await vi.advanceTimersByTimeAsync(ABSENCE_MS + 100); });
 
         await act(async () => { await h.onScan!('B1'); });
         expect(h.addItem).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('ignores a single dropped frame while the code is still held in place', async () => {
+      vi.useFakeTimers();
+      try {
+        render(<TillScreen />);
+
+        await act(async () => { await h.onScan!('B1'); });
+
+        // One missed detection, then the code is read again almost immediately —
+        // that is a blip, not a second item.
+        await act(async () => { h.onNoDetection?.(); });
+        await act(async () => { await vi.advanceTimersByTimeAsync(200); });
+        await act(async () => { await h.onScan!('B1'); });
+
+        expect(h.addItem).toHaveBeenCalledTimes(1);
       } finally {
         vi.useRealTimers();
       }

@@ -181,17 +181,6 @@ export function TutorialOverlay() {
                     </button>
                   )}
                 </div>
-
-        {/* Skip link */}
-        {!isLastStep && (
-          <button
-            className="tutorial-btn tutorial-btn-secondary"
-            onClick={handleSkip}
-            style={{ marginTop: 'var(--space-sm)' }}
-          >
-            Skip
-          </button>
-        )}
       </div>
     </div>
   );
