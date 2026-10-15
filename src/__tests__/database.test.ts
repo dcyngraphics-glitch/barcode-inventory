@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { getDB } from '../db/database';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { getDB, resetDB } from '../db/database';
 
 describe('database', () => {
+  beforeEach(() => { resetDB(); });
+
   it('should create catalog store', async () => {
     const db = await getDB();
     expect(db.objectStoreNames.contains('catalog')).toBe(true);
@@ -33,5 +35,16 @@ describe('database', () => {
     const db = await getDB();
     const inventoryStore = db.transaction('inventory').objectStore('inventory');
     expect(inventoryStore.indexNames.contains('by-expiry')).toBe(true);
+  });
+});
+
+describe('database v2', () => {
+  beforeEach(() => { resetDB(); });
+
+  it('exposes a sales store indexed by day', async () => {
+    const db = await getDB();
+    expect(db.objectStoreNames.contains('sales')).toBe(true);
+    const tx = db.transaction('sales');
+    expect(tx.store.indexNames.contains('by-day')).toBe(true);
   });
 });

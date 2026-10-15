@@ -58,3 +58,30 @@ export interface InventoryGroup {
   totalQuantity: number;
   earliestExpiry: string;
 }
+
+export interface SaleDeduction {
+  batchId: string;
+  quantity: number;
+  expiryDate: string;   // snapshot so a deleted batch can be recreated on undo
+  scannedAt: string;    // snapshot
+}
+
+export interface SaleLine {
+  barcode: string;
+  name: string;
+  brand: string;
+  unitPrice: number;    // snapshot — later price edits must not rewrite history
+  quantity: number;
+  lineTotal: number;
+  deductions: SaleDeduction[];
+  shortfall: number;    // units sold with no stock to deduct
+}
+
+export interface Sale {
+  saleId: string;
+  soldAt: string;
+  dayKey: string;       // local 'YYYY-MM-DD'
+  lines: SaleLine[];
+  total: number;
+  itemCount: number;
+}

@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import type { Product, Batch, Settings } from '@/types';
+import type { Product, Batch, Settings, Sale } from '@/types';
 
 export interface BarcodeInventoryDB extends DBSchema {
   catalog: {
@@ -16,10 +16,15 @@ export interface BarcodeInventoryDB extends DBSchema {
     key: string;
     value: Settings;
   };
+  sales: {
+    key: string;
+    value: Sale;
+    indexes: { 'by-day': string };
+  };
 }
 
 const DB_NAME = 'barcode-inventory';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<BarcodeInventoryDB>> | null = null;
 
@@ -46,6 +51,10 @@ export function getDB(): Promise<IDBPDatabase<BarcodeInventoryDB>> {
           }
           if (!db.objectStoreNames.contains('settings')) {
             db.createObjectStore('settings', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('sales')) {
+            const salesStore = db.createObjectStore('sales', { keyPath: 'saleId' });
+            salesStore.createIndex('by-day', 'dayKey');
           }
         },
       });
