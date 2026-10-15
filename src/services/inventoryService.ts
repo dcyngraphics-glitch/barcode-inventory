@@ -1,43 +1,37 @@
 import type { Batch, InventoryGroup } from '@/types';
-import { getDB } from '@/db/database';
+import { db } from '@/db/database';
 import { getProduct } from './catalogService';
 
 export async function getBatch(batchId: string): Promise<Batch | undefined> {
-  const db = await getDB();
-  return db.get('inventory', batchId);
+  return db.inventory.get(batchId);
 }
 
 export async function getAllBatches(): Promise<Batch[]> {
-  const db = await getDB();
-  return db.getAll('inventory');
+  return db.inventory.toArray();
 }
 
 export async function getBatchesByBarcode(barcode: string): Promise<Batch[]> {
-  const db = await getDB();
-  return db.getAllFromIndex('inventory', 'by-barcode', barcode);
+  return db.inventory.where('by-barcode').equals(barcode).toArray();
 }
 
 export async function addBatch(batch: Batch): Promise<Batch> {
-  const db = await getDB();
-  await db.put('inventory', batch);
+  await db.inventory.put(batch);
   return batch;
 }
 
 export async function updateBatch(batch: Batch): Promise<Batch> {
-  const db = await getDB();
-  await db.put('inventory', batch);
+  await db.inventory.put(batch);
   return batch;
 }
 
 export async function deleteBatch(batchId: string): Promise<void> {
-  const db = await getDB();
-  await db.delete('inventory', batchId);
+  await db.inventory.delete(batchId);
 }
 
 export function sortBatchesByFIFO(batches: Batch[]): Batch[] {
   return [...batches].sort((a, b) => {
     if (a.expiryDate !== b.expiryDate) return a.expiryDate.localeCompare(b.expiryDate);
-    return a.scannedAt.localeCompare(b.scannedAt);
+    return a.scoredAt.localeCompare(b.scoredAt);
   });
 }
 

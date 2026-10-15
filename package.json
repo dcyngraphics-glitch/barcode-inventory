@@ -16,6 +16,8 @@
   "dependencies": {
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
+    "dexie": "^4.4.6",
+    "dexie-cloud-addon": "^4.4.15",
     "idb": "^8.0.0",
     "lucide-react": "^1.47.0",
     "react": "^18.3.1",
