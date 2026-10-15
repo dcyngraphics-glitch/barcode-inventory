@@ -2,7 +2,16 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import { resetDB } from '@/db/database';
 import { addBatch, getAllBatches } from '@/services/inventoryService';
-import { deductStockFIFO } from '@/services/saleService';
+import {
+  deductStockFIFO,
+  recordSale,
+  undoLastSale,
+  getSale,
+  getSalesForDay,
+  getDayKeys,
+  summarizeDay,
+  type SaleLineInput,
+} from '@/services/saleService';
 
 const batch = (batchId: string, qty: number, expiryDate: string, scannedAt: string) =>
   ({ batchId, barcode: 'B1', quantity: qty, expiryDate, scannedAt });
@@ -83,5 +92,145 @@ describe('deductStockFIFO', () => {
 
     const left = await getAllBatches();
     expect(left.find(b => b.batchId === 'b1')!.quantity).toBe(5);
+  });
+});
+
+// --- Task D: recordSale ---
+
+const line = (over: Partial<SaleLineInput> = {}): SaleLineInput => ({
+  barcode: 'B1',
+  name: 'Bear Brand',
+  brand: 'Bear Brand',
+  price: 12.5,
+  quantity: 1,
+  ...over,
+});
+
+describe('recordSale', () => {
+  beforeEach(async () => { resetDB(); });
+
+  it('records a sale, snapshots the price, and deducts stock', async () => {
+    await addBatch(batch('b1', 10, '2026-06-01', '2026-01-01T00:00:00.000Z'));
+
+    const sale = await recordSale([line({ quantity: 2 })], new Date(2026, 9, 15, 14, 0, 0));
+
+    expect(sale.total).toBe(25);            // 12.5 x 2
+    expect(sale.itemCount).toBe(2);
+    expect(sale.dayKey).toBe('2026-10-15');
+    expect(sale.lines[0]!.unitPrice).toBe(12.5);
+    expect(sale.lines[0]!.shortfall).toBe(0);
+
+    const left = await getAllBatches();
+    expect(left.find(b => b.batchId === 'b1')!.quantity).toBe(8);
+
+    const today = await getSalesForDay('2026-10-15');
+    expect(today).toHaveLength(1);
+    expect(today[0]!.saleId).toBe(sale.saleId);
+  });
+
+  it('keeps the sale even when there is no stock to deduct', async () => {
+    // A paying customer is never refused because the stock count is wrong.
+    const sale = await recordSale([line({ barcode: 'GHOST', quantity: 2 })], new Date(2026, 9, 15));
+
+    expect(sale.total).toBe(25);
+    expect(sale.lines[0]!.shortfall).toBe(2);
+    expect(sale.lines[0]!.deductions).toEqual([]);
+  });
+
+  it('records a multi-line sale and totals it', async () => {
+    await addBatch(batch('b1', 10, '2026-06-01', '2026-01-01T00:00:00.000Z'));
+
+    const sale = await recordSale(
+      [line({ quantity: 2 }), line({ barcode: 'B2', name: 'Skyflakes', price: 8, quantity: 3 })],
+      new Date(2026, 9, 15),
+    );
+
+    expect(sale.lines).toHaveLength(2);
+    expect(sale.total).toBe(25 + 24);
+    expect(sale.itemCount).toBe(5);
+  });
+});
+
+// --- Task E: undoLastSale ---
+
+describe('undoLastSale', () => {
+  beforeEach(async () => { resetDB(); });
+
+  it('restores stock to the exact batch it came from', async () => {
+    await addBatch(batch('b1', 10, '2026-06-01', '2026-01-01T00:00:00.000Z'));
+    const sale = await recordSale([line({ quantity: 4 })], new Date(2026, 9, 15));
+    expect((await getAllBatches()).find(b => b.batchId === 'b1')!.quantity).toBe(6);
+
+    await undoLastSale(sale.saleId);
+
+    expect((await getAllBatches()).find(b => b.batchId === 'b1')!.quantity).toBe(10);
+    expect(await getSale(sale.saleId)).toBeUndefined();
+  });
+
+  it('recreates a batch that had been deleted at zero', async () => {
+    await addBatch(batch('b1', 3, '2026-06-01', '2026-01-01T00:00:00.000Z'));
+    const sale = await recordSale([line({ quantity: 3 })], new Date(2026, 9, 15));
+    expect((await getAllBatches()).find(b => b.batchId === 'b1')).toBeUndefined();
+
+    await undoLastSale(sale.saleId);
+
+    const restored = (await getAllBatches()).find(b => b.batchId === 'b1');
+    expect(restored!.quantity).toBe(3);
+    expect(restored!.expiryDate).toBe('2026-06-01');   // recreated from the snapshot
+  });
+
+  it('is a no-op for an unknown sale id', async () => {
+    await expect(undoLastSale('does-not-exist')).resolves.toBeUndefined();
+  });
+
+  it('does not touch stock for a sale that deducted nothing', async () => {
+    await addBatch(batch('b1', 5, '2026-06-01', '2026-01-01T00:00:00.000Z'));
+    const sale = await recordSale([line({ barcode: 'GHOST', quantity: 2 })], new Date(2026, 9, 15));
+
+    await undoLastSale(sale.saleId);
+
+    expect((await getAllBatches()).find(b => b.batchId === 'b1')!.quantity).toBe(5);
+  });
+});
+
+// --- Task F: reporting ---
+
+describe('sales reporting', () => {
+  beforeEach(async () => { resetDB(); });
+
+  it('scopes sales to a day and lists days newest-first', async () => {
+    await recordSale([line()], new Date(2026, 9, 15, 10, 0, 0));
+    await recordSale([line()], new Date(2026, 9, 16, 10, 0, 0));
+
+    expect(await getSalesForDay('2026-10-15')).toHaveLength(1);
+    expect(await getSalesForDay('2026-10-16')).toHaveLength(1);
+    expect(await getDayKeys()).toEqual(['2026-10-16', '2026-10-15']);
+  });
+
+  it('summarises a day', async () => {
+    // Stock the item first, otherwise the sale legitimately records a shortfall.
+    await addBatch(batch('b1', 10, '2026-06-01', '2026-01-01T00:00:00.000Z'));
+    await recordSale([line({ quantity: 2, price: 10 })], new Date(2026, 9, 15));
+
+    const sum = summarizeDay(await getSalesForDay('2026-10-15'));
+
+    expect(sum.total).toBe(20);
+    expect(sum.saleCount).toBe(1);
+    expect(sum.itemCount).toBe(2);
+    expect(sum.topSellers[0]).toEqual({ name: 'Bear Brand', quantity: 2 });
+    expect(sum.shortfalls).toEqual([]);
+  });
+
+  it('flags items sold without stock', async () => {
+    await recordSale([line({ barcode: 'GHOST', quantity: 3 })], new Date(2026, 9, 15));
+
+    const sum = summarizeDay(await getSalesForDay('2026-10-15'));
+
+    expect(sum.shortfalls).toEqual([{ name: 'Bear Brand', quantity: 3 }]);
+  });
+
+  it('summarises an empty day without throwing', () => {
+    const sum = summarizeDay([]);
+    expect(sum).toEqual({ total: 0, saleCount: 0, itemCount: 0, topSellers: [], shortfalls: [] });
   });
 });
