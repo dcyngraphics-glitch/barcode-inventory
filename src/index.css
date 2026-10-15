@@ -1844,6 +1844,231 @@ select {
   background: var(--color-background);
 }
 
+/* ===== Till (cashier mode) ===== */
+
+.till-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+  padding-bottom: 80px; /* clear the bottom nav */
+}
+
+.till-header {
+  height: 56px;
+  background: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.till-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.till-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.till-mode-label {
+  font-size: var(--text-xs);
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.till-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.till-basket {
+  flex: 1;
+}
+
+.till-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xl) var(--space-md);
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.till-empty-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.till-empty-sub {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.till-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.till-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  min-height: 56px;
+}
+
+.till-line-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.till-line-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-card-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.till-line-price {
+  font-size: var(--text-xs);
+  color: var(--color-muted-foreground);
+}
+
+.till-line-qty {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.till-line-qty button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.till-line-count {
+  min-width: 24px;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.till-line-total {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-card-foreground);
+  min-width: 64px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.till-line-remove {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-destructive-bg);
+  color: var(--color-on-destructive);
+  flex-shrink: 0;
+}
+
+.till-footer {
+  position: sticky;
+  bottom: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border);
+}
+
+.till-total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.till-total-label {
+  font-size: var(--text-xs);
+  color: var(--color-muted-foreground);
+}
+
+.till-total-value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-card-foreground);
+}
+
+.till-paid {
+  flex: 1;
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%);
+  color: #ffffff;
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.till-paid:disabled {
+  background: var(--color-border);
+  color: var(--color-muted-foreground);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.till-paid:focus-visible,
+.till-line-qty button:focus-visible,
+.till-line-remove:focus-visible {
+  outline: 2px solid var(--color-accent-border);
+  outline-offset: 2px;
+}
+
 /* Login */
 .login-card,
 .status-card {

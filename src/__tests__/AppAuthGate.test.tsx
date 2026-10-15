@@ -20,10 +20,24 @@ vi.mock('@/screens/ProductDetailScreen', () => ({
 vi.mock('@/screens/CartReviewScreen', () => ({
   CartReviewScreen: () => <div>Cart Review Screen</div>,
 }));
-vi.mock('@/context/SettingsContext', () => ({
-  SettingsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useSettingsContext: () => ({ settings: null }),
+vi.mock('@/screens/TillScreen', () => ({
+  TillScreen: () => <div>Till Screen</div>,
 }));
+// Configurable so a test can flip Cashier Mode and assert the Scan tab switches.
+const settingsMock = vi.hoisted(() => ({ cashierMode: false }));
+vi.mock('@/context/SettingsContext', async () => {
+  const { DEFAULT_SETTINGS } = await import('@/types');
+  return {
+    SettingsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    // Mirrors the real provider: settings is never null, defaults are seeded
+    // synchronously. (The previous mock returned null, which the real context's
+    // type contract does not allow.)
+    useSettingsContext: () => ({
+      settings: { ...DEFAULT_SETTINGS, cashierMode: settingsMock.cashierMode },
+      updateSettings: () => {},
+    }),
+  };
+});
 vi.mock('@/context/TutorialContext', () => ({
   TutorialProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -67,6 +81,7 @@ function renderApp() {
 describe('App Auth Gate', () => {
   beforeEach(() => {
     localStorage.clear();
+    settingsMock.cashierMode = false;
     vi.stubEnv('VITE_MASTER_PASSWORD', MASTER_PASSWORD);
   });
 
@@ -115,5 +130,23 @@ describe('App Auth Gate', () => {
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
+  });
+
+  it('renders the till on the Scan tab when Cashier Mode is on', async () => {
+    settingsMock.cashierMode = true;
+    localStorage.setItem(AUTH_KEY, 'true');
+    renderApp();
+
+    expect(await screen.findByText('Till Screen')).toBeInTheDocument();
+    expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
+  });
+
+  it('renders the receiving scanner when Cashier Mode is off', async () => {
+    settingsMock.cashierMode = false;
+    localStorage.setItem(AUTH_KEY, 'true');
+    renderApp();
+
+    expect(await screen.findByText('Scanner Screen')).toBeInTheDocument();
+    expect(screen.queryByText('Till Screen')).not.toBeInTheDocument();
   });
 });

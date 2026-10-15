@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
 import { ScanLine, Package, Settings } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
+import { TillScreen } from '@/screens/TillScreen';
 import { InventoryScreen } from '@/screens/InventoryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
@@ -88,13 +89,7 @@ function MainApp() {
           <ScanCartProvider>
             <InstallBanner />
             <div className="app-container">
-              <Routes>
-                <Route path="/" element={<ScannerScreen />} />
-                <Route path="/product/:barcode" element={<ProductDetailScreen />} />
-                <Route path="/inventory" element={<InventoryScreen />} />
-                <Route path="/settings" element={<SettingsScreen />} />
-                <Route path="/cart" element={<CartReviewScreen />} />
-              </Routes>
+              <AppRoutes />
               <BottomNav />
             </div>
             <TutorialOverlay />
@@ -102,6 +97,22 @@ function MainApp() {
         </TutorialProvider>
       </SettingsProvider>
     </ErrorBoundary>
+  );
+}
+
+/** Route selection lives inside SettingsProvider so it can read cashierMode:
+ *  with Cashier Mode on, the Scan tab IS the till. */
+function AppRoutes() {
+  const { settings } = useSettingsContext();
+
+  return (
+    <Routes>
+      <Route path="/" element={settings.cashierMode ? <TillScreen /> : <ScannerScreen />} />
+      <Route path="/product/:barcode" element={<ProductDetailScreen />} />
+      <Route path="/inventory" element={<InventoryScreen />} />
+      <Route path="/settings" element={<SettingsScreen />} />
+      <Route path="/cart" element={<CartReviewScreen />} />
+    </Routes>
   );
 }
 
