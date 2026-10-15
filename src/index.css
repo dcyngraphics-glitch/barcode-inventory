@@ -133,6 +133,7 @@
   --appbar-height: 56px;           /* Standard app bar */
   --bottom-nav-height: 56px;       /* Reduced from 64 for screen real estate */
   --bottom-nav-total: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  --till-footer-height: 77px;      /* Fixed total/Paid bar — scroll clearance must match it */
 }
 
 /* Dark mode — data-theme attribute (explicit toggle) */
@@ -1880,6 +1881,8 @@ select {
   flex-direction: column;
   gap: var(--space-md);
   padding: var(--space-md);
+  /* Clear the fixed footer so the last basket line can scroll above it */
+  padding-bottom: calc(var(--till-footer-height) + var(--space-md));
 }
 
 .till-basket {
@@ -2000,9 +2003,15 @@ select {
   flex-shrink: 0;
 }
 
+/* Pinned, not sticky: the user wants the total/Paid bar to hold still while the
+   basket scrolls. Sticky only engaged once the scroll reached its offset, so the
+   bar drifted with the content. Fixed sits it directly above the bottom nav. */
 .till-footer {
-  position: sticky;
-  bottom: 56px;
+  position: fixed;
+  bottom: var(--bottom-nav-total);
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
   display: flex;
   align-items: center;
   gap: var(--space-md);
