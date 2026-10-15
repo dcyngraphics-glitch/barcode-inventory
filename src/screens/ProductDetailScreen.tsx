@@ -6,6 +6,7 @@ import { ProductForm, type ProductFormData } from '@/components/ProductForm';
 import { ProductManagementSheet } from '@/components/ProductManagementSheet';
 import { useProductLookup } from '@/hooks/useProductLookup';
 import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
+import { buildProductUpdate } from '@/utils/productUpdate';
 import { addBatch, getBatchesByBarcode, deleteBatch } from '@/services/inventoryService';
 import { generateId } from '@/utils/helpers';
 import type { Product } from '@/types';
@@ -204,21 +205,17 @@ export function ProductDetailScreen() {
         });
       } else {
         if (product) {
-          const needsUpdate =
-            product.name !== data.name.trim() ||
-            product.brand !== data.brand.trim() ||
-            product.storePrice !== price ||
-            product.defaultExpiry !== data.expiryDate;
-
-          if (needsUpdate) {
-            await updateProduct({
-              ...product,
-              name: data.name.trim(),
-              brand: data.brand.trim(),
-              storePrice: price,
-              defaultExpiry: data.expiryDate,
-              updatedAt: now,
-            });
+          // Persistence is unconditional: name and brand are always written when
+          // they differ. This used to be gated behind a "seller mode" flag, which
+          // silently discarded name/brand edits (and wrote nothing at all when only
+          // the name changed). See src/utils/productUpdate.ts.
+          const update = buildProductUpdate(
+            product,
+            { name: data.name, brand: data.brand, price, expiryDate: data.expiryDate },
+            now,
+          );
+          if (update) {
+            await updateProduct(update);
           }
         }
         await addBatch({

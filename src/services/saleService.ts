@@ -1,5 +1,6 @@
 import type { SaleDeduction } from '@/types';
-import { getBatchesByBarcode, sortBatchesByFIFO, updateBatch, deleteBatch } from './inventoryService';
+import { sortBatchesByFIFO } from './inventoryService';
+import { getDB } from '@/db/database';
 
 export interface DeductResult {
   deductions: SaleDeduction[];
@@ -8,9 +9,21 @@ export interface DeductResult {
 
 /** Take `quantity` of `barcode` from stock, earliest expiry first.
  *  Never throws for insufficient stock — reports a shortfall instead, because a
- *  paying customer is never refused over a wrong count. */
+ *  paying customer is never refused over a wrong count.
+ *
+ *  All reads and writes happen inside a single IndexedDB readwrite transaction
+ *  so that a mid-loop failure (quota error, tab close, exception) leaves stock
+ *  untouched rather than partially deducted. */
 export async function deductStockFIFO(barcode: string, quantity: number): Promise<DeductResult> {
-  const batches = sortBatchesByFIFO(await getBatchesByBarcode(barcode));
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return { deductions: [], shortfall: Number.isFinite(quantity) ? Math.max(0, quantity) : 0 };
+  }
+
+  const db = await getDB();
+  const tx = db.transaction('inventory', 'readwrite');
+  const store = tx.objectStore('inventory');
+  const batches = sortBatchesByFIFO(await store.index('by-barcode').getAll(barcode));
+
   const deductions: SaleDeduction[] = [];
   let remaining = quantity;
 
@@ -28,12 +41,13 @@ export async function deductStockFIFO(barcode: string, quantity: number): Promis
 
     const left = batch.quantity - take;
     if (left === 0) {
-      await deleteBatch(batch.batchId);
+      await store.delete(batch.batchId);
     } else {
-      await updateBatch({ ...batch, quantity: left });
+      await store.put({ ...batch, quantity: left });
     }
     remaining -= take;
   }
 
+  await tx.done;
   return { deductions, shortfall: Math.max(0, remaining) };
 }

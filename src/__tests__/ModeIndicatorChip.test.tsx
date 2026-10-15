@@ -18,7 +18,7 @@ describe('ModeIndicatorChip', () => {
       settings: mockSettings,
       updateSettings: vi.fn(),
     });
-    render(<ModeIndicatorChip mode="cashier" />);
+    render(<ModeIndicatorChip />);
     expect(screen.getByText(/cashier/i)).toHaveClass('bg-green-100 text-green-800');
   });
 
@@ -28,7 +28,7 @@ describe('ModeIndicatorChip', () => {
       settings: mockSettings,
       updateSettings: vi.fn(),
     });
-    render(<ModeIndicatorChip mode="default" />);
+    render(<ModeIndicatorChip />);
     expect(screen.getByText(/standard/i)).toHaveClass('bg-gray-100 text-gray-800');
   });
 });
