@@ -32,6 +32,11 @@ coverage
 .env.local
 .env.*.local
 
+# Dexie Cloud CLI credentials — dexie-cloud.key authorizes admin operations
+# (whitelist/import/export) on the database. Never commit these.
+dexie-cloud.json
+dexie-cloud.key
+
 # PWA
 dev-dist
 .vercel

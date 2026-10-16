@@ -95,6 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const cloudLogin = useCallback(async (email: string, otp?: string): Promise<void> => {
     const cloud = (db as any).cloud;
     if (!cloud) throw new Error('Dexie Cloud not available');
+    // cloud.options is null until configure() has run. Without this check the addon
+    // throws an opaque "Cannot read properties of null (reading 'databaseUrl')".
+    if (!cloud.options) throw new Error('Sync is not configured in this build.');
     if (otp) {
       // Step 2: Verify the OTP code
       await cloud.login({ email, otp, intent: 'login' });
