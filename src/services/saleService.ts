@@ -75,7 +75,7 @@ export function planDeduction(batches: Batch[], quantity: number): DeductPlan {
 export async function deductStockFIFO(barcode: string, quantity: number): Promise<DeductResult> {
   return await db.transaction('rw', db.inventory, async () => {
     // Get batches by barcode using the index
-    const batches = await db.inventory.where('by-barcode').equals(barcode).toArray();
+    const batches = await db.inventory.where('barcode').equals(barcode).toArray();
     const plan = planDeduction(batches, quantity);
     
     // Apply the plan
@@ -103,7 +103,7 @@ export async function recordSale(items: SaleLineInput[], now: Date = new Date())
     const lines: SaleLine[] = [];
 
     for (const item of items) {
-      const batches = await db.inventory.where('by-barcode').equals(item.barcode).toArray();
+      const batches = await db.inventory.where('barcode').equals(item.barcode).toArray();
       const plan = planDeduction(batches, item.quantity);
       
       // Apply inventory changes
@@ -179,7 +179,7 @@ export async function undoLastSale(saleId: string): Promise<void> {
 }
 
 export async function getSalesForDay(dayKey: string): Promise<Sale[]> {
-  return await db.sales.where('by-day').equals(dayKey).toArray();
+  return await db.sales.where('dayKey').equals(dayKey).toArray();
 }
 
 /** Distinct day keys that have sales, newest first.

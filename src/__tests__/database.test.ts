@@ -22,13 +22,13 @@ describe('database', () => {
 
   it('should have the expected indexes', async () => {
     await db.open();
-    // catalog: index 'by-name' on 'name'
-    expect(db.catalog.schema.indexes.by-name?.keyPath).toBe('name');
-    // inventory: index 'by-barcode' on 'barcode', index 'by-expiry' on 'expiryDate'
-    expect(db.inventory.schema.indexes.by-barcode?.keyPath).toBe('barcode');
-    expect(db.inventory.schema.indexes.by-expiry?.keyPath).toBe('expiryDate');
-    // sales: index 'by-day' on 'dayKey'
-    expect(db.sales.schema.indexes.by-day?.keyPath).toBe('dayKey');
+    // catalog: index on 'name'
+    expect(db.catalog.schema.indexes.name?.keyPath).toBe('name');
+    // inventory: index on 'barcode', index on 'expiryDate'
+    expect(db.inventory.schema.indexes.barcode?.keyPath).toBe('barcode');
+    expect(db.inventory.schema.indexes.expiryDate?.keyPath).toBe('expiryDate');
+    // sales: index on 'dayKey'
+    expect(db.sales.schema.indexes.dayKey?.keyPath).toBe('dayKey');
   });
 
   describe('getDB and resetDB', () => {

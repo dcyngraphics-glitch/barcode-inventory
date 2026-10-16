@@ -19,17 +19,17 @@ interface BarcodeInventoryDB {
 const db = new Dexie<BarcodeInventoryDB>(databaseName, { addons: [dexieCloud] });
 console.log(`[dexie] Dexie instance created for ${databaseName}`);
 
-// Define the database schema
+// Define the database schema (Dexie 4.x syntax: & = primary key, field = index)
 db.version(10).stores({
-  catalog: '&barcode, *by-name=name',
-  inventory: '&batchId, *by-barcode=barcode, *by-expiry=expiryDate',
+  catalog: '&barcode, name',
+  inventory: '&batchId, barcode, expiryDate',
   settings: '&id',
-  sales: '&saleId, *by-day=dayKey'
+  sales: '&saleId, dayKey'
 });
 console.log(`[dexie] Schema defined with version 10`);
 
-// Configure Dexie Cloud if sync URL is provided
-if (syncUrl) {
+// Configure Dexie Cloud if sync URL is provided (skip in test environment)
+if (syncUrl && !import.meta.env.VITEST) {
   db.cloud.configure({
     databaseUrl: syncUrl,
     requireAuth: true,

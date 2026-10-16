@@ -5,6 +5,7 @@ import { useScanCart } from '@/context/ScanCartContext';
 import { saveProduct, updateProduct } from '@/services/catalogService';
 import { addBatch } from '@/services/inventoryService';
 import { generateId } from '@/utils/helpers';
+import { db } from '@/db/database';
 
 export function CartReviewScreen() {
   const navigate = useNavigate();
@@ -36,41 +37,44 @@ export function CartReviewScreen() {
     try {
       const now = new Date().toISOString();
 
-      for (const item of items) {
-        // Save product to catalog if new (no existing product)
-        if (!item.product) {
-          await saveProduct({
-            barcode: item.barcode,
-            name: item.name || `Unknown (${item.barcode})`,
-            brand: item.brand,
-            category: '',
-            storePrice: item.price,
-            defaultExpiry: item.expiryDate,
-            imageUrl: item.imageUrl,
-            source: 'manual',
-            createdAt: now,
-            updatedAt: now,
-          });
-        } else {
-          // Update product price if changed
-          if (item.product.storePrice !== item.price) {
-            await updateProduct({
-              ...item.product,
+      // Atomic: all items saved in one transaction — all succeed or all fail
+      await db.transaction('rw', db.catalog, db.inventory, async () => {
+        for (const item of items) {
+          // Save product to catalog if new (no existing product)
+          if (!item.product) {
+            await db.catalog.put({
+              barcode: item.barcode,
+              name: item.name || `Unknown (${item.barcode})`,
+              brand: item.brand,
+              category: '',
               storePrice: item.price,
+              defaultExpiry: item.expiryDate,
+              imageUrl: item.imageUrl,
+              source: 'manual',
+              createdAt: now,
               updatedAt: now,
             });
+          } else {
+            // Update product price if changed
+            if (item.product.storePrice !== item.price) {
+              await db.catalog.put({
+                ...item.product,
+                storePrice: item.price,
+                updatedAt: now,
+              });
+            }
           }
-        }
 
-        // Add batch
-        await addBatch({
-          batchId: generateId(),
-          barcode: item.barcode,
-          quantity: item.quantity,
-          expiryDate: item.expiryDate,
-          scannedAt: now,
-        });
-      }
+          // Add batch
+          await db.inventory.put({
+            batchId: generateId(),
+            barcode: item.barcode,
+            quantity: item.quantity,
+            expiryDate: item.expiryDate,
+            scannedAt: now,
+          });
+        }
+      });
 
       showToast(`Added ${totalItems} item${totalItems !== 1 ? 's' : ''} to inventory`, 'success');
       clearCart();

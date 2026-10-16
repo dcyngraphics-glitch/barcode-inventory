@@ -6,7 +6,7 @@ export async function getProduct(barcode: string): Promise<Product | undefined> 
 }
 
 export async function getAllProducts(): Promise<Product[]> {
-  return db.catalog.orderBy('by-name').toArray();
+  return db.catalog.orderBy('name').toArray();
 }
 
 export async function saveProduct(product: Product): Promise<Product> {

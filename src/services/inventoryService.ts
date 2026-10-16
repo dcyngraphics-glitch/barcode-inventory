@@ -11,7 +11,7 @@ export async function getAllBatches(): Promise<Batch[]> {
 }
 
 export async function getBatchesByBarcode(barcode: string): Promise<Batch[]> {
-  return db.inventory.where('by-barcode').equals(barcode).toArray();
+  return db.inventory.where('barcode').equals(barcode).toArray();
 }
 
 export async function addBatch(batch: Batch): Promise<Batch> {

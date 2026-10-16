@@ -52,6 +52,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       })
       .catch((err) => {
         console.error('Failed to load settings:', err);
+        // Apply any buffered patches so they aren't lost on load failure
+        const pending = pendingPatchRef.current;
+        if (pending) {
+          setSettings((prev) => applyPatch(prev, pending));
+          pendingPatchRef.current = null;
+        }
         // Keep defaults on error — settings remain usable offline.
         hasLoadedRef.current = true;
         setHasLoaded(true);
