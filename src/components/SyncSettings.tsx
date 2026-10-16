@@ -2,52 +2,36 @@ import { useState } from 'react';
 import { Cloud, CloudOff, Loader2, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
+/**
+ * Dexie Cloud owns the login conversation, so this screen does not run its own
+ * email -> code -> verify state machine. It hands the email to the addon once, and the
+ * addon emails a one-time code and prompts for it itself (db.cloud.userInteraction).
+ *
+ * An earlier version tried to do it in two calls - login({email}) then
+ * login({email, otp}) - which cannot work: Dexie Cloud verifies a code against an
+ * `otp_id` returned alongside the emailed code, and the addon does not expose it. The
+ * second call therefore requested another code instead of checking the one the user typed.
+ */
 export function SyncSettings() {
-  const { cloudUser, cloudSyncing, cloudLogin, cloudLogout } = useAuth();
+  const { cloudUser, cloudSyncing, cloudLogin, cloudError, cloudLogout } = useAuth();
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const [sent, setSent] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleSendOtp = async () => {
+  const handleConnect = () => {
     if (!email.trim()) return;
-    setError('');
-    setLoading(true);
-    try {
-      await cloudLogin(email.trim());
-      setStep('otp');
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to send login code. Check your email.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp.trim()) return;
-    setError('');
-    setLoading(true);
-    try {
-      await cloudLogin(email.trim(), otp.trim());
-      setStep('email');
-      setEmail('');
-      setOtp('');
-    } catch (err: any) {
-      setError(err?.message ?? 'Invalid code. Try again.');
-    } finally {
-      setLoading(false);
-    }
+    setSent(true);
+    // Not awaited - the addon keeps the login pending while it prompts for the code.
+    cloudLogin(email.trim());
   };
 
   const handleLogout = async () => {
-    setLoading(true);
+    setLoggingOut(true);
     try {
       await cloudLogout();
-    } catch (err: any) {
-      setError(err?.message ?? 'Logout failed');
     } finally {
-      setLoading(false);
+      setLoggingOut(false);
+      setSent(false);
     }
   };
 
@@ -65,11 +49,11 @@ export function SyncSettings() {
         </div>
         <button
           onClick={handleLogout}
-          disabled={loading}
+          disabled={loggingOut}
           className="settings-row settings-row-danger"
         >
           <LogOut size={20} aria-hidden="true" />
-          {loading ? 'Disconnecting...' : 'Disconnect Sync'}
+          {loggingOut ? 'Disconnecting...' : 'Disconnect Sync'}
         </button>
       </>
     );
@@ -77,85 +61,68 @@ export function SyncSettings() {
 
   return (
     <>
-      {step === 'email' ? (
-        <>
-          <div className="settings-row">
-            <CloudOff size={20} className="text-muted" aria-hidden="true" />
-            <div className="flex-1">
-              <div className="settings-info-name">Not connected</div>
-              <div className="settings-info-version">
-                Log in with your email to sync across devices
-              </div>
+      <div className="settings-row">
+        <CloudOff size={20} className="text-muted" aria-hidden="true" />
+        <div className="flex-1">
+          <div className="settings-info-name">Not connected</div>
+          <div className="settings-info-version">
+            Log in with your email to sync across devices
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-row">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setSent(false);
+          }}
+          placeholder="your@email.com"
+          className="settings-input"
+          aria-label="Email for sync login"
+          disabled={sent}
+        />
+      </div>
+
+      <button
+        onClick={handleConnect}
+        disabled={!email.trim() || sent}
+        className="settings-row"
+      >
+        <Cloud size={20} aria-hidden="true" />
+        {sent ? 'Code sent' : 'Send Login Code'}
+      </button>
+
+      {sent && !cloudError && (
+        <div className="settings-row" role="status">
+          <Loader2 size={20} className="animate-spin" aria-hidden="true" />
+          <div className="flex-1">
+            <div className="settings-info-name">Enter the code sent to {email}</div>
+            <div className="settings-info-version">
+              A sign-in prompt will ask for the one-time code. First time here? Your
+              account is created automatically.
             </div>
           </div>
-          <div className="settings-row">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="settings-input"
-              aria-label="Email for sync login"
-            />
-          </div>
-          <button
-            onClick={handleSendOtp}
-            disabled={loading || !email.trim()}
-            className="settings-row"
-          >
-            {loading ? (
-              <Loader2 size={20} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Cloud size={20} aria-hidden="true" />
-            )}
-            {loading ? 'Sending code...' : 'Send Login Code'}
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="settings-row">
-            <Cloud size={20} className="text-blue-500" aria-hidden="true" />
-            <div className="flex-1">
-              <div className="settings-info-name">Enter the code sent to {email}</div>
-              <div className="settings-info-version">
-                Check your email for a one-time login code
-              </div>
-            </div>
-          </div>
-          <div className="settings-row">
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter 6-digit code"
-              className="settings-input"
-              aria-label="One-time login code"
-              autoFocus
-            />
-          </div>
-          <button
-            onClick={handleVerifyOtp}
-            disabled={loading || !otp.trim()}
-            className="settings-row"
-          >
-            {loading ? (
-              <Loader2 size={20} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Cloud size={20} aria-hidden="true" />
-            )}
-            {loading ? 'Verifying...' : 'Verify & Connect'}
-          </button>
-          <button
-            onClick={() => { setStep('email'); setOtp(''); setError(''); }}
-            className="settings-row"
-          >
-            ← Back
-          </button>
-        </>
+        </div>
       )}
-      {error && (
+
+      {sent && (
+        <button
+          onClick={() => {
+            setSent(false);
+            setEmail('');
+          }}
+          className="settings-row"
+        >
+          ← Use a different email
+        </button>
+      )}
+
+      {cloudError && (
         <div className="settings-warning" role="alert">
-          {error}
+          {cloudError}
         </div>
       )}
     </>

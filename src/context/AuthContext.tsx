@@ -16,7 +16,14 @@ interface AuthContextValue {
   disableSync: () => void;
   cloudUser: string | null;
   cloudSyncing: boolean;
-  cloudLogin: (email: string, otp?: string) => Promise<void>;
+  /**
+   * Starts the Dexie Cloud login for the given email. Deliberately returns void and is
+   * not awaited: the addon keeps the underlying promise pending while it prompts for the
+   * OTP (through db.cloud.userInteraction) and resolves it once the code is verified.
+   * Progress is observed via `cloudUser`, failures via `cloudError`.
+   */
+  cloudLogin: (email: string) => void;
+  cloudError: string;
   cloudLogout: () => Promise<void>;
 }
 
@@ -32,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [syncEnabled, setSyncEnabled] = useState<boolean>(localStorage.getItem(SYNC_ENABLED_KEY) === 'true');
   const [cloudUser, setCloudUser] = useState<string | null>(null);
   const [cloudSyncing, setCloudSyncing] = useState<boolean>(false);
+  const [cloudError, setCloudError] = useState<string>('');
 
   const DEFAULT_MASTER_PASSWORD = 'Inv3ntory_M@ster_2026!';
 
@@ -92,19 +100,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSyncEnabled(false);
   }, []);
 
-  const cloudLogin = useCallback(async (email: string, otp?: string): Promise<void> => {
+  const cloudLogin = useCallback((email: string): void => {
     const cloud = (db as any).cloud;
-    if (!cloud) throw new Error('Dexie Cloud not available');
+    if (!cloud) {
+      setCloudError('Dexie Cloud not available');
+      return;
+    }
     // cloud.options is null until configure() has run. Without this check the addon
     // throws an opaque "Cannot read properties of null (reading 'databaseUrl')".
-    if (!cloud.options) throw new Error('Sync is not configured in this build.');
-    if (otp) {
-      // Step 2: Verify the OTP code
-      await cloud.login({ email, otp, intent: 'login' });
-    } else {
-      // Step 1: Send OTP to email
-      await cloud.login({ email, intent: 'login' });
+    if (!cloud.options) {
+      setCloudError('Sync is not configured in this build.');
+      return;
     }
+    setCloudError('');
+    // No `intent` on purpose. intent:'login' tells Dexie Cloud that only already
+    // registered users are acceptable, so a first-time login on this database is
+    // refused with USER_NOT_REGISTERED ("user is not registered") no matter what the
+    // database's user policy says. Omitting it lets the server apply the database's own
+    // policy, which registers a new user on their first login.
+    //
+    // This also has to be ONE call. Dexie Cloud verifies an OTP against an `otp_id` that
+    // the server returns alongside the emailed code, and the addon never exposes it - so
+    // a follow-up login({ email, otp }) cannot verify anything, it just requests a brand
+    // new code. The addon drives the whole email -> code exchange itself and asks for the
+    // code via db.cloud.userInteraction.
+    cloud.login({ email }).catch((err: any) => {
+      if (err?.name === 'OAuthRedirectError') return; // page is redirecting for OAuth
+      setCloudError(err?.message || 'Login failed. Please try again.');
+    });
   }, []);
 
   const cloudLogout = useCallback(async (): Promise<void> => {
@@ -121,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, login, logout, getMasterPassword, setMasterPassword, syncEnabled, enableSync, disableSync, cloudUser, cloudSyncing, cloudLogin, cloudLogout }}
+      value={{ isAuthenticated, login, logout, getMasterPassword, setMasterPassword, syncEnabled, enableSync, disableSync, cloudUser, cloudSyncing, cloudLogin, cloudError, cloudLogout }}
     >
       {children}
     </AuthContext.Provider>
