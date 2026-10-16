@@ -281,6 +281,14 @@ export function SettingsScreen() {
         </button>
       </div>
 
+      {/* Sync Section */}
+      <h2 className="settings-section-label">
+        Sync
+      </h2>
+      <div className="settings-card settings-card-stack">
+        <SyncSettings />
+      </div>
+
       {/* Security Section */}
       <h2 className="settings-section-label">
         Security
