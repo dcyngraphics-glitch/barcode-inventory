@@ -12,6 +12,7 @@ import { getAllBatches } from '@/services/inventoryService';
 import { getDB } from '@/db/database';
 import { SettingsToggle } from '@/components/SettingsToggle';
 import { SettingsStepper } from '@/components/SettingsStepper';
+import { SyncSettings } from '@/components/SyncSettings';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Toast, useToast } from '@/components/Toast';
 
