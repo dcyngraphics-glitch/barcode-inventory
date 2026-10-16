@@ -72,4 +72,8 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000000,
   },
+  test: {
+    environment: 'jsdom',
+    isolate: true,
+  },
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import { getProduct, getAllProducts, saveProduct, deleteProduct, updateProduct, searchProducts } from '../services/catalogService';
-import { getDB } from '../db/database';
+import { db } from '../db/database';
 import type { Product } from '../types';
 
 const mockProduct: Product = {
@@ -18,10 +18,9 @@ const mockProduct: Product = {
 
 describe('catalogService', () => {
   beforeEach(async () => {
-    const db = await getDB();
-    await db.clear('catalog');
-    await db.clear('inventory');
-    await db.clear('settings');
+    await db.table('catalog').clear();
+    await db.table('inventory').clear();
+    await db.table('settings').clear();
   });
 
   it('should save and retrieve a product', async () => {

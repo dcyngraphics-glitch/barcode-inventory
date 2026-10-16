@@ -4,11 +4,10 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { TutorialProvider } from '../context/TutorialContext';
 import { TutorialOverlay } from '../components/TutorialOverlay';
-import { getDB } from '../db/database';
+import { db } from '../db/database';
 
 async function setupCompleted() {
-  const db = await getDB();
-  await db.put('settings', {
+  await db.table('settings').put({
     id: 'settings',
     alertWindowDays: 3,
     notificationsEnabled: false,
@@ -22,8 +21,7 @@ async function setupCompleted() {
 
 describe('TutorialOverlay', () => {
   beforeEach(async () => {
-    const db = await getDB();
-    await db.clear('settings');
+    await db.table('settings').clear();
   });
 
   it('should render first step when not completed', async () => {

@@ -1,50 +1,51 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getDB, resetDB } from '../db/database';
+import { db, getDB, resetDB } from '@/db/database';
 
 describe('database', () => {
-  beforeEach(() => { resetDB(); });
-
-  it('should create catalog store', async () => {
-    const db = await getDB();
-    expect(db.objectStoreNames.contains('catalog')).toBe(true);
+  beforeEach(async () => {
+    await resetDB();
   });
 
-  it('should create inventory store', async () => {
-    const db = await getDB();
-    expect(db.objectStoreNames.contains('inventory')).toBe(true);
+  it('should have the expected tables', async () => {
+    await db.open();
+    const tableNames = db.tables.map(table => table.name);
+    expect(tableNames).toEqual(expect.arrayContaining(['catalog', 'inventory', 'settings', 'sales']));
   });
 
-  it('should create settings store', async () => {
-    const db = await getDB();
-    expect(db.objectStoreNames.contains('settings')).toBe(true);
+  it('should have the expected primary keys', async () => {
+    await db.open();
+    expect(db.catalog.schema.primKey.keyPath).toBe('barcode');
+    expect(db.inventory.schema.primKey.keyPath).toBe('batchId');
+    expect(db.settings.schema.primKey.keyPath).toBe('id');
+    expect(db.sales.schema.primKey.keyPath).toBe('saleId');
   });
 
-  it('should create by-name index on catalog', async () => {
-    const db = await getDB();
-    const catalogStore = db.transaction('catalog').objectStore('catalog');
-    expect(catalogStore.indexNames.contains('by-name')).toBe(true);
+  it('should have the expected indexes', async () => {
+    await db.open();
+    // catalog: index 'by-name' on 'name'
+    expect(db.catalog.schema.indexes.by-name?.keyPath).toBe('name');
+    // inventory: index 'by-barcode' on 'barcode', index 'by-expiry' on 'expiryDate'
+    expect(db.inventory.schema.indexes.by-barcode?.keyPath).toBe('barcode');
+    expect(db.inventory.schema.indexes.by-expiry?.keyPath).toBe('expiryDate');
+    // sales: index 'by-day' on 'dayKey'
+    expect(db.sales.schema.indexes.by-day?.keyPath).toBe('dayKey');
   });
 
-  it('should create by-barcode index on inventory', async () => {
-    const db = await getDB();
-    const inventoryStore = db.transaction('inventory').objectStore('inventory');
-    expect(inventoryStore.indexNames.contains('by-barcode')).toBe(true);
-  });
+  describe('getDB and resetDB', () => {
+    it('getDB should return the Dexie instance', async () => {
+      const dbFromGetDB = await getDB();
+      expect(dbFromGetDB).toBe(db);
+    });
 
-  it('should create by-expiry index on inventory', async () => {
-    const db = await getDB();
-    const inventoryStore = db.transaction('inventory').objectStore('inventory');
-    expect(inventoryStore.indexNames.contains('by-expiry')).toBe(true);
-  });
-});
-
-describe('database v2', () => {
-  beforeEach(() => { resetDB(); });
-
-  it('exposes a sales store indexed by day', async () => {
-    const db = await getDB();
-    expect(db.objectStoreNames.contains('sales')).toBe(true);
-    const tx = db.transaction('sales');
-    expect(tx.store.indexNames.contains('by-day')).toBe(true);
+    it('resetDB should delete the database', async () => {
+      await db.open();
+      await db.table('catalog').put({ barcode: 'test', name: 'test' });
+      const countBefore = await db.catalog.count();
+      expect(countBefore).toBe(1);
+      await resetDB();
+      await db.open();
+      const countAfter = await db.catalog.count();
+      expect(countAfter).toBe(0);
+    });
   });
 });

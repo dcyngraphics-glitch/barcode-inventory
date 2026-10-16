@@ -1,32 +1,25 @@
 import type { Product } from '@/types';
-import { getDB } from '@/db/database';
+import { db } from '@/db/database';
 
 export async function getProduct(barcode: string): Promise<Product | undefined> {
-  const db = await getDB();
-  return db.get('catalog', barcode);
+  return db.catalog.get(barcode);
 }
 
 export async function getAllProducts(): Promise<Product[]> {
-  const db = await getDB();
-  return db.getAllFromIndex('catalog', 'by-name');
+  return db.catalog.orderBy('by-name').toArray();
 }
 
 export async function saveProduct(product: Product): Promise<Product> {
-  const db = await getDB();
-  await db.put('catalog', product);
+  await db.catalog.put(product);
   return product;
 }
 
 export async function deleteProduct(barcode: string): Promise<void> {
-  const db = await getDB();
-  await db.delete('catalog', barcode);
+  await db.catalog.delete(barcode);
 }
 
 export async function updateProduct(product: Product): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction('catalog', 'readwrite');
-  const store = tx.objectStore('catalog');
-  const existing = await store.get(product.barcode);
+  const existing = await db.catalog.get(product.barcode);
   const merged: Product = existing
     ? {
         ...existing,
@@ -39,13 +32,11 @@ export async function updateProduct(product: Product): Promise<void> {
         createdAt: product.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-  await store.put(merged);
-  await tx.done;
+  await db.catalog.put(merged);
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {
-  const db = await getDB();
-  const all = await db.getAll('catalog');
+  const all = await db.catalog.toArray();
   const lowerQuery = query.toLowerCase();
   return all.filter(
     (p) =>

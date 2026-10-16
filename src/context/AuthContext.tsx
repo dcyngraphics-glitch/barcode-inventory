@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 const AUTH_STORAGE_KEY = 'barcode_inventory_auth';
+const SYNC_ENABLED_KEY = 'barcode_inventory_sync_enabled';
 const MASTER_PASSWORD_STORAGE_KEY = 'barcode_inventory_master_password';
 
 interface AuthContextValue {
@@ -9,6 +10,9 @@ interface AuthContextValue {
   logout: () => void;
   getMasterPassword: () => string;
   setMasterPassword: (password: string) => void;
+  syncEnabled: boolean;
+  enableSync: () => void;
+  disableSync: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -20,6 +24,7 @@ function getStoredAuth(): boolean {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getStoredAuth);
   const [masterPasswordOverride, setMasterPasswordOverride] = useState<string | null>(null);
+  const [syncEnabled, setSyncEnabled] = useState<boolean>(localStorage.getItem(SYNC_ENABLED_KEY) === 'true');
 
 const DEFAULT_MASTER_PASSWORD = 'Inv3ntory_M@ster_2026!';
 
@@ -46,6 +51,16 @@ const DEFAULT_MASTER_PASSWORD = 'Inv3ntory_M@ster_2026!';
     setIsAuthenticated(false);
   }, []);
 
+  const enableSync = useCallback((): void => {
+    localStorage.setItem(SYNC_ENABLED_KEY, 'true');
+    setSyncEnabled(true);
+  }, []);
+
+  const disableSync = useCallback((): void => {
+    localStorage.removeItem(SYNC_ENABLED_KEY);
+    setSyncEnabled(false);
+  }, []);
+
   const setMasterPassword = useCallback((password: string): void => {
     localStorage.setItem(MASTER_PASSWORD_STORAGE_KEY, password);
     setMasterPasswordOverride(password);
@@ -53,7 +68,7 @@ const DEFAULT_MASTER_PASSWORD = 'Inv3ntory_M@ster_2026!';
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, login, logout, getMasterPassword, setMasterPassword }}
+      value={{ isAuthenticated, login, logout, getMasterPassword, setMasterPassword, syncEnabled, enableSync, disableSync }}
     >
       {children}
     </AuthContext.Provider>

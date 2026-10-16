@@ -1,6 +1,6 @@
 import type { Batch, Sale, SaleDeduction, SaleLine } from '@/types';
 import { sortBatchesByFIFO } from './inventoryService';
-import { getDB } from '@/db/database';
+import { db } from '@/db/database';
 import { generateId } from '@/utils/helpers';
 import { toDayKey } from '@/utils/dayKey';
 
@@ -65,23 +65,6 @@ export function planDeduction(batches: Batch[], quantity: number): DeductPlan {
   return { deductions, shortfall: Math.max(0, remaining), changes };
 }
 
-/** Minimal structural view of the inventory store, so the helper stays clear of
- *  idb's generics. */
-interface BatchWriteStore {
-  put(value: Batch): Promise<unknown>;
-  delete(key: string): Promise<void>;
-}
-
-async function applyPlan(store: BatchWriteStore, plan: DeductPlan): Promise<void> {
-  for (const { batch, newQuantity } of plan.changes) {
-    if (newQuantity === null) {
-      await store.delete(batch.batchId);
-    } else {
-      await store.put({ ...batch, quantity: newQuantity });
-    }
-  }
-}
-
 /**
  * Take `quantity` of `barcode` from stock, earliest expiry first.
  *
@@ -90,16 +73,22 @@ async function applyPlan(store: BatchWriteStore, plan: DeductPlan): Promise<void
  * rather than partially deducted.
  */
 export async function deductStockFIFO(barcode: string, quantity: number): Promise<DeductResult> {
-  const db = await getDB();
-  const tx = db.transaction('inventory', 'readwrite');
-  const store = tx.objectStore('inventory');
-
-  const batches = await store.index('by-barcode').getAll(barcode);
-  const plan = planDeduction(batches, quantity);
-  await applyPlan(store, plan);
-
-  await tx.done;
-  return { deductions: plan.deductions, shortfall: plan.shortfall };
+  return await db.transaction('rw', db.inventory, async () => {
+    // Get batches by barcode using the index
+    const batches = await db.inventory.where('by-barcode').equals(barcode).toArray();
+    const plan = planDeduction(batches, quantity);
+    
+    // Apply the plan
+    for (const { batch, newQuantity } of plan.changes) {
+      if (newQuantity === null) {
+        await db.inventory.delete(batch.batchId);
+      } else {
+        await db.inventory.put({ ...batch, quantity: newQuantity });
+      }
+    }
+    
+    return { deductions: plan.deductions, shortfall: plan.shortfall };
+  });
 }
 
 /**
@@ -110,47 +99,50 @@ export async function deductStockFIFO(barcode: string, quantity: number): Promis
  * record: money and stock disagreeing, with nothing to explain the gap.
  */
 export async function recordSale(items: SaleLineInput[], now: Date = new Date()): Promise<Sale> {
-  const db = await getDB();
-  const tx = db.transaction(['sales', 'inventory'], 'readwrite');
-  const inventory = tx.objectStore('inventory');
-  const sales = tx.objectStore('sales');
+  return await db.transaction('rw', db.sales, db.inventory, async () => {
+    const lines: SaleLine[] = [];
 
-  const lines: SaleLine[] = [];
+    for (const item of items) {
+      const batches = await db.inventory.where('by-barcode').equals(item.barcode).toArray();
+      const plan = planDeduction(batches, item.quantity);
+      
+      // Apply inventory changes
+      for (const { batch, newQuantity } of plan.changes) {
+        if (newQuantity === null) {
+          await db.inventory.delete(batch.batchId);
+        } else {
+          await db.inventory.put({ ...batch, quantity: newQuantity });
+        }
+      }
 
-  for (const item of items) {
-    const batches = await inventory.index('by-barcode').getAll(item.barcode);
-    const plan = planDeduction(batches, item.quantity);
-    await applyPlan(inventory, plan);
+      lines.push({
+        barcode: item.barcode,
+        name: item.name,
+        brand: item.brand,
+        unitPrice: item.price, // snapshot — a later price edit must not rewrite history
+        quantity: item.quantity,
+        lineTotal: item.price * item.quantity,
+        deductions: plan.deductions,
+        shortfall: plan.shortfall,
+      });
+    }
 
-    lines.push({
-      barcode: item.barcode,
-      name: item.name,
-      brand: item.brand,
-      unitPrice: item.price, // snapshot — a later price edit must not rewrite history
-      quantity: item.quantity,
-      lineTotal: item.price * item.quantity,
-      deductions: plan.deductions,
-      shortfall: plan.shortfall,
-    });
-  }
+    const sale: Sale = {
+      saleId: generateId(),
+      soldAt: now.toISOString(),
+      dayKey: toDayKey(now),
+      lines,
+      total: lines.reduce((sum, l) => sum + l.lineTotal, 0),
+      itemCount: lines.reduce((sum, l) => sum + l.quantity, 0),
+    };
 
-  const sale: Sale = {
-    saleId: generateId(),
-    soldAt: now.toISOString(),
-    dayKey: toDayKey(now),
-    lines,
-    total: lines.reduce((sum, l) => sum + l.lineTotal, 0),
-    itemCount: lines.reduce((sum, l) => sum + l.quantity, 0),
-  };
-
-  await sales.put(sale);
-  await tx.done;
-  return sale;
+    await db.sales.put(sale);
+    return sale;
+  });
 }
 
 export async function getSale(saleId: string): Promise<Sale | undefined> {
-  const db = await getDB();
-  return db.get('sales', saleId);
+  return db.sales.get(saleId);
 }
 
 /**
@@ -159,55 +151,49 @@ export async function getSale(saleId: string): Promise<Sale | undefined> {
  * then remove the sale. Atomic across both stores.
  */
 export async function undoLastSale(saleId: string): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction(['sales', 'inventory'], 'readwrite');
-  const inventory = tx.objectStore('inventory');
-  const sales = tx.objectStore('sales');
+  await db.transaction('rw', db.sales, db.inventory, async () => {
+    const sale = await db.sales.get(saleId);
+    if (!sale) {
+      return;
+    }
 
-  const sale = await sales.get(saleId);
-  if (!sale) {
-    await tx.done;
-    return;
-  }
-
-  for (const line of sale.lines) {
-    for (const d of line.deductions) {
-      const existing = await inventory.get(d.batchId);
-      if (existing) {
-        await inventory.put({ ...existing, quantity: existing.quantity + d.quantity });
-      } else {
-        await inventory.put({
-          batchId: d.batchId,
-          barcode: line.barcode,
-          quantity: d.quantity,
-          expiryDate: d.expiryDate,
-          scannedAt: d.scannedAt,
-        });
+    for (const line of sale.lines) {
+      for (const d of line.deductions) {
+        const existing = await db.inventory.get(d.batchId);
+        if (existing) {
+          await db.inventory.put({ ...existing, quantity: existing.quantity + d.quantity });
+        } else {
+          await db.inventory.put({
+            batchId: d.batchId,
+            barcode: line.barcode,
+            quantity: d.quantity,
+            expiryDate: d.expiryDate,
+            scannedAt: d.scannedAt,
+          });
+        }
       }
     }
-  }
 
-  await sales.delete(saleId);
-  await tx.done;
+    await db.sales.delete(saleId);
+  });
 }
 
 export async function getSalesForDay(dayKey: string): Promise<Sale[]> {
-  const db = await getDB();
-  return db.getAllFromIndex('sales', 'by-day', dayKey);
+  return await db.sales.where('by-day').equals(dayKey).toArray();
 }
 
 /** Distinct day keys that have sales, newest first.
- *  Uses an index KEY cursor: `getAllKeysFromIndex` would return the records'
- *  primary keys (saleIds), not the indexed day values. */
+ *  We load all sales and extract distinct dayKeys. This is inefficient for large datasets
+ *  but acceptable for the current scale. TODO: Optimize with a proper distinct index query.
+ */
 export async function getDayKeys(): Promise<string[]> {
-  const db = await getDB();
-  const keys = new Set<string>();
-  let cursor = await db.transaction('sales').store.index('by-day').openKeyCursor();
-  while (cursor) {
-    keys.add(cursor.key as string);
-    cursor = await cursor.continue();
+  const sales = await db.sales.toArray();
+  const dayKeysSet = new Set<string>();
+  for (const sale of sales) {
+    dayKeysSet.add(sale.dayKey);
   }
-  return [...keys].sort((a, b) => b.localeCompare(a));
+  const dayKeys = Array.from(dayKeysSet);
+  return dayKeys.sort((a, b) => b.localeCompare(a));
 }
 
 export interface DaySummary {
@@ -218,6 +204,9 @@ export interface DaySummary {
   shortfalls: { name: string; quantity: number }[];
 }
 
+/**
+ * Summarize sales for a given day.
+ */
 export function summarizeDay(sales: Sale[]): DaySummary {
   const byName = new Map<string, number>();
   const shortfalls: { name: string; quantity: number }[] = [];

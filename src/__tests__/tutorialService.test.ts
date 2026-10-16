@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
-import { getDB } from '../db/database';
+import { db } from '../db/database';
 import {
   getTutorialStatus,
   setTutorialCompleted,
@@ -11,8 +11,7 @@ import {
 
 describe('tutorialService', () => {
   beforeEach(async () => {
-    const db = await getDB();
-    await db.clear('settings');
+    await db.table('settings').clear();
   });
 
   it('should return default tutorial status (not completed, step 0)', async () => {

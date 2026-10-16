@@ -14,6 +14,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    isolate: true,
+    pool: 'forks',
     setupFiles: ['./tests/setup.ts'],
     coverage: {
       provider: 'v8',

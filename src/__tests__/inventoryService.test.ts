@@ -10,7 +10,7 @@ import {
   getInventoryGroups,
 } from '../services/inventoryService';
 import { saveProduct } from '../services/catalogService';
-import { getDB } from '../db/database';
+import { db } from '../db/database';
 import type { Batch, Product } from '../types';
 
 const mockBatch: Batch = {
@@ -23,10 +23,9 @@ const mockBatch: Batch = {
 
 describe('inventoryService', () => {
   beforeEach(async () => {
-    const db = await getDB();
-    await db.clear('catalog');
-    await db.clear('inventory');
-    await db.clear('settings');
+    await db.table('catalog').clear();
+    await db.table('inventory').clear();
+    await db.table('settings').clear();
   });
   it('should add and retrieve a batch by barcode', async () => {
     await addBatch(mockBatch);

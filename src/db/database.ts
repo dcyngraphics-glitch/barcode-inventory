@@ -8,9 +8,13 @@ export function getDB() {
   return Promise.resolve(db);
 }
 
-export function resetDB() {
-  // Delete the database and then the instance will reopen it on next use
-  return db.delete().then(() => {
-    // No further action needed
-  });
+export async function resetDB() {
+  console.log('[resetDB] Closing database...');
+  db.close();
+  console.log('[resetDB] Deleting database...');
+  await db.delete();
+  console.log('[resetDB] Database deleted.');
+  console.log('[resetDB] Reopening database...');
+  await db.open();
+  console.log('[resetDB] Database reopened and ready.');
 }

@@ -2,6 +2,7 @@ import type { Product } from '@/types';
 import { PH_GROCERY_SEED } from '@/data/phGrocerySeed';
 import { getAllProducts } from '@/services/catalogService';
 import { loadSettings, saveSettings } from '@/services/settingsService';
+import { db } from '@/db/database';
 
 const SEED_FLAG_KEY = 'catalogSeeded';
 
@@ -24,26 +25,24 @@ export async function seedCatalogIfEmpty(): Promise<void> {
   // Seed all products — use batch upsert to skip duplicates
   // and avoid sequential await overhead
   const now = new Date().toISOString();
-  const db = await import('@/db/database').then(m => m.getDB());
-  const tx = db.transaction('catalog', 'readwrite');
-  const store = tx.objectStore('catalog');
-
-  for (const seed of PH_GROCERY_SEED) {
-    const product: Product = {
-      barcode: seed.barcode,
-      name: seed.name,
-      brand: seed.brand,
-      category: seed.category,
-      storePrice: seed.storePrice,
-      defaultExpiry: seed.defaultExpiry,
-      source: 'local',
-      createdAt: now,
-      updatedAt: now,
-    };
-    // put() on an object store with keyPath 'barcode' automatically upserts
-    // — skips if barcode already exists (idempotent)
-    await store.put(product);
-  }
+  await db.transaction('rw', db.catalog, async () => {
+    for (const seed of PH_GROCERY_SEED) {
+      const product: Product = {
+        barcode: seed.barcode,
+        name: seed.name,
+        brand: seed.brand,
+        category: seed.category,
+        storePrice: seed.storePrice,
+        defaultExpiry: seed.defaultExpiry,
+        source: 'local',
+        createdAt: now,
+        updatedAt: now,
+      };
+      // put() on an object store with keyPath 'barcode' automatically upserts
+      // — skips if barcode already exists (idempotent)
+      await db.catalog.put(product);
+    }
+  });
 
   // Mark as seeded — wrap in try/catch so a settings failure doesn't
   // leave the catalog unmarked (catalog is already seeded at this point)

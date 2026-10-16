@@ -3,11 +3,10 @@ import 'fake-indexeddb/auto';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
-import { getDB } from '@/db/database';
+import { db } from '@/db/database';
 
 async function setupTutorialCompleted() {
-  const db = await getDB();
-  await db.put('settings', {
+  await db.table('settings').put({
     id: 'settings',
     alertWindowDays: 3,
     notificationsEnabled: false,
@@ -21,8 +20,7 @@ async function setupTutorialCompleted() {
 
 describe('ScreenTooltip', () => {
   beforeEach(async () => {
-    const db = await getDB();
-    await db.clear('settings');
+    await db.table('settings').clear();
   });
 
   it('should render tooltip on first visit to screen', async () => {
@@ -57,8 +55,7 @@ describe('ScreenTooltip', () => {
 
   it('should not show tooltip if already seen', async () => {
     // Mark scanner hint as seen
-    const db = await getDB();
-    await db.put('settings', {
+    await db.table('settings').put({
       id: 'settings',
       alertWindowDays: 3,
       notificationsEnabled: false,
