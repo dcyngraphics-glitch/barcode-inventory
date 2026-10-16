@@ -30,11 +30,15 @@ console.log(`[dexie] Schema defined with version 10`);
 
 // Configure Dexie Cloud if sync URL is provided (skip in test environment)
 if (syncUrl && !import.meta.env.VITEST) {
-  db.cloud.configure({
-    databaseUrl: syncUrl,
-    requireAuth: true,
-  });
-  console.log(`[dexie] Dexie Cloud configured with syncUrl: ${syncUrl}`);
+  try {
+    db.cloud.configure({
+      databaseUrl: syncUrl,
+      requireAuth: true,
+    });
+    console.log(`[dexie] Dexie Cloud configured with syncUrl: ${syncUrl}`);
+  } catch (err) {
+    console.error('[dexie] Failed to configure Dexie Cloud:', err);
+  }
 }
 
 export default db;

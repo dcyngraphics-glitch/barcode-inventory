@@ -5,11 +5,11 @@ import { ProductImage } from '@/components/ProductImage';
 import { ProductForm, type ProductFormData } from '@/components/ProductForm';
 import { ProductManagementSheet } from '@/components/ProductManagementSheet';
 import { useProductLookup } from '@/hooks/useProductLookup';
-import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
+import { updateProduct } from '@/services/catalogService';
 import { buildProductUpdate } from '@/utils/productUpdate';
-import { addBatch, getBatchesByBarcode, deleteBatch } from '@/services/inventoryService';
+import { db } from '@/db/database';
 import { generateId } from '@/utils/helpers';
-import type { Product } from '@/types';
+import type { Product, Batch } from '@/types';
 
 const BOTTOM_NAV_HEIGHT = 80;
 
@@ -178,7 +178,7 @@ export function ProductDetailScreen() {
       const price = parseFloat(data.price);
 
       if (isNewProduct) {
-        // Create new product
+        // Create new product and batch atomically in a single transaction
         const newProduct: Product = {
           barcode,
           name: data.name.trim(),
@@ -191,15 +191,16 @@ export function ProductDetailScreen() {
           createdAt: now,
           updatedAt: now,
         };
-        await saveProduct(newProduct);
-
-        // Create new batch
-        await addBatch({
+        const newBatch: Batch = {
           batchId: generateId(),
           barcode,
           quantity: data.quantity,
           expiryDate: data.expiryDate,
           scannedAt: now,
+        };
+        await db.transaction('rw', [db.catalog, db.inventory], async () => {
+          await db.catalog.put(newProduct);
+          await db.inventory.put(newBatch);
         });
       } else {
         if (product) {
@@ -212,14 +213,17 @@ export function ProductDetailScreen() {
             { name: data.name, brand: data.brand, price, expiryDate: data.expiryDate },
             now,
           );
-          if (update) {
-            await updateProduct(update);
-          }
+          const newBatch: Batch = {
+            batchId: generateId(), barcode, quantity: data.quantity,
+            expiryDate: data.expiryDate, scannedAt: now,
+          };
+          await db.transaction('rw', [db.catalog, db.inventory], async () => {
+            if (update) {
+              await db.catalog.put(update);
+            }
+            await db.inventory.put(newBatch);
+          });
         }
-        await addBatch({
-          batchId: generateId(), barcode, quantity: data.quantity,
-          expiryDate: data.expiryDate, scannedAt: now,
-        });
       }
 
       if (isNewProduct) {
@@ -268,12 +272,11 @@ export function ProductDetailScreen() {
 
   const handleEditDelete = async (barcodeToDelete: string) => {
     try {
-      // Delete product and all its batches
-      const batches = await getBatchesByBarcode(barcodeToDelete);
-      for (const batch of batches) {
-        await deleteBatch(batch.batchId);
-      }
-      await deleteProduct(barcodeToDelete);
+      // Atomically delete product and all its batches in a single transaction
+      await db.transaction('rw', [db.catalog, db.inventory], async () => {
+        await db.inventory.where('barcode').equals(barcodeToDelete).delete();
+        await db.catalog.delete(barcodeToDelete);
+      });
       showToast('Product deleted', 'success');
       navigate('/inventory');
     } catch (err) {

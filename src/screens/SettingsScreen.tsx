@@ -120,6 +120,7 @@ export function SettingsScreen() {
       const db = await getDB();
       await db.clear('catalog');
       await db.clear('inventory');
+      await db.clear('sales');
       // Reset settings to defaults
       updateSettings({ ...DEFAULT_SETTINGS });
       setShowClearDialog(false);
@@ -140,8 +141,7 @@ export function SettingsScreen() {
   // Handle logout
   const handleLogout = useCallback(() => {
     logout();
-    navigate('/login');
-  }, [logout, navigate]);
+  }, [logout]);
 
   // Handle master password save
   const handleSaveMasterPassword = useCallback(() => {

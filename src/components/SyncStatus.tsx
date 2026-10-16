@@ -19,19 +19,33 @@ export function SyncStatus() {
   }, []);
 
   useEffect(() => {
-    // Check Dexie Cloud sync status if available
     const syncUrl = (import.meta.env.VITE_DEXIE_CLOUD_SYNC_URL as string) || '';
     if (!syncUrl) return;
+
+    // Subscribe to Dexie Cloud sync status events
+    const cloud = (db as any).cloud;
+    if (!cloud) return;
+
+    // Initial state
+    setSyncing(cloud.syncState?.isSyncing ?? false);
+
+    // Subscribe to sync state changes
+    const unsubscribe = cloud.$on('syncState', (state: any) => {
+      setSyncing(state?.isSyncing ?? false);
+    });
+
+    // Also poll for changes that may not fire events (fallback)
     const interval = setInterval(() => {
-      const cloud = (db as any).cloud;
-      if (cloud && cloud.currentUser) {
-        setSyncing(true);
-        setTimeout(() => setSyncing(false), 500);
-      } else {
-        setSyncing(false);
+      const state = cloud.syncState;
+      if (state) {
+        setSyncing(state.isSyncing);
       }
-    }, 5000);
-    return () => clearInterval(interval);
+    }, 1000);
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   return (

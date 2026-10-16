@@ -31,7 +31,6 @@ function applyPatch(base: Settings, patch: Partial<Settings>): Settings {
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<Settings>({ ...DEFAULT_SETTINGS });
   const [hasLoaded, setHasLoaded] = useState(false);
-  const saveTimeoutRef = useRef<number | null>(null);
   // Patches applied by updateSettings before the async load settled, so the
   // loaded settings don't clobber them.
   const pendingPatchRef = useRef<Partial<Settings> | null>(null);
@@ -74,21 +73,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     // pendingPatchRef and applied on top of the loaded settings.
     if (!hasLoadedRef.current) return;
 
-    // Debounce save to reduce write frequency
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = window.setTimeout(() => {
-      saveSettings(settings).catch((err) => {
-        console.error('Failed to save settings:', err);
-      });
-    }, 500);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
+    // Save immediately to ensure settings persist even if user navigates away
+    saveSettings(settings).catch((err) => {
+      console.error('Failed to save settings:', err);
+    });
   }, [settings]);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {

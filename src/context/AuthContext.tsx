@@ -16,7 +16,7 @@ interface AuthContextValue {
   disableSync: () => void;
   cloudUser: string | null;
   cloudSyncing: boolean;
-  cloudLogin: (email: string) => Promise<void>;
+  cloudLogin: (email: string, otp?: string) => Promise<void>;
   cloudLogout: () => Promise<void>;
 }
 
@@ -92,10 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSyncEnabled(false);
   }, []);
 
-  const cloudLogin = useCallback(async (email: string): Promise<void> => {
+  const cloudLogin = useCallback(async (email: string, otp?: string): Promise<void> => {
     const cloud = (db as any).cloud;
     if (!cloud) throw new Error('Dexie Cloud not available');
-    await cloud.login({ email, intent: 'login' });
+    if (otp) {
+      // Step 2: Verify the OTP code
+      await cloud.login({ email, otp, intent: 'login' });
+    } else {
+      // Step 1: Send OTP to email
+      await cloud.login({ email, intent: 'login' });
+    }
   }, []);
 
   const cloudLogout = useCallback(async (): Promise<void> => {

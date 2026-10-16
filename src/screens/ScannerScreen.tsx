@@ -144,7 +144,7 @@ useEffect(() => {
 
   const handleModeChange = (newMode: 'auto' | 'manual') => {
     setScanMode(newMode);
-    if (scanMode === 'auto') {
+    if (newMode === 'auto') {
       setManualScanAllowed(true);
       showScanToast('Mode switched to Automatic');
     } else {

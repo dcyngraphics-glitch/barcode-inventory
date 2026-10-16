@@ -22,27 +22,22 @@ export async function seedCatalogIfEmpty(): Promise<void> {
     return;
   }
 
-  // Seed all products — use batch upsert to skip duplicates
-  // and avoid sequential await overhead
+  // Seed all products using bulkPut for atomic, idempotent insertion
   const now = new Date().toISOString();
-  await db.transaction('rw', db.catalog, async () => {
-    for (const seed of PH_GROCERY_SEED) {
-      const product: Product = {
-        barcode: seed.barcode,
-        name: seed.name,
-        brand: seed.brand,
-        category: seed.category,
-        storePrice: seed.storePrice,
-        defaultExpiry: seed.defaultExpiry,
-        source: 'local',
-        createdAt: now,
-        updatedAt: now,
-      };
-      // put() on an object store with keyPath 'barcode' automatically upserts
-      // — skips if barcode already exists (idempotent)
-      await db.catalog.put(product);
-    }
-  });
+  const products: Product[] = PH_GROCERY_SEED.map((seed) => ({
+    barcode: seed.barcode,
+    name: seed.name,
+    brand: seed.brand,
+    category: seed.category,
+    storePrice: seed.storePrice,
+    defaultExpiry: seed.defaultExpiry,
+    source: 'local',
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  // bulkPut on an object store with keyPath 'barcode' automatically upserts
+  await db.catalog.bulkPut(products);
 
   // Mark as seeded — wrap in try/catch so a settings failure doesn't
   // leave the catalog unmarked (catalog is already seeded at this point)

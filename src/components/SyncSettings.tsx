@@ -29,8 +29,7 @@ export function SyncSettings() {
     setError('');
     setLoading(true);
     try {
-      // The OTP is handled internally by Dexie Cloud's login flow
-      // If we get here, the user is authenticated
+      await cloudLogin(email.trim(), otp.trim());
       setStep('email');
       setEmail('');
       setOtp('');
