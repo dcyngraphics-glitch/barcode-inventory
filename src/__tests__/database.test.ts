@@ -22,13 +22,14 @@ describe('database', () => {
 
   it('should have the expected indexes', async () => {
     await db.open();
+    // schema.indexes is an array of IndexSpec ({ name, keyPath }), not a name→spec map.
     // catalog: index on 'name'
-    expect(db.catalog.schema.indexes.name?.keyPath).toBe('name');
+    expect(db.catalog.schema.indexes.find((i) => i.name === 'name')?.keyPath).toBe('name');
     // inventory: index on 'barcode', index on 'expiryDate'
-    expect(db.inventory.schema.indexes.barcode?.keyPath).toBe('barcode');
-    expect(db.inventory.schema.indexes.expiryDate?.keyPath).toBe('expiryDate');
+    expect(db.inventory.schema.indexes.find((i) => i.name === 'barcode')?.keyPath).toBe('barcode');
+    expect(db.inventory.schema.indexes.find((i) => i.name === 'expiryDate')?.keyPath).toBe('expiryDate');
     // sales: index on 'dayKey'
-    expect(db.sales.schema.indexes.dayKey?.keyPath).toBe('dayKey');
+    expect(db.sales.schema.indexes.find((i) => i.name === 'dayKey')?.keyPath).toBe('dayKey');
   });
 
   describe('getDB and resetDB', () => {

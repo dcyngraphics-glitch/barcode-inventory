@@ -120,13 +120,16 @@ describe('SettingsScreen – Security section', () => {
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 
-  it('should navigate to /login after logout', () => {
+  // d2042c8 removed the navigate('/login') call: there is no /login route, so it
+  // bounced users to a dead path. Logout only clears auth; the route guard redirects.
+  it('should not navigate to a non-existent /login route after logout', () => {
     renderSettings();
     const btn = screen.getByRole('button', { name: /log out/i });
     act(() => {
       btn.click();
     });
-    expect(mockNavigate).toHaveBeenCalledWith('/login');
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).not.toHaveBeenCalledWith('/login');
   });
 
   it('should render a Master Password field', () => {

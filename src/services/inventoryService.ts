@@ -31,7 +31,7 @@ export async function deleteBatch(batchId: string): Promise<void> {
 export function sortBatchesByFIFO(batches: Batch[]): Batch[] {
   return [...batches].sort((a, b) => {
     if (a.expiryDate !== b.expiryDate) return a.expiryDate.localeCompare(b.expiryDate);
-    return a.scoredAt.localeCompare(b.scoredAt);
+    return (a.scannedAt ?? '').localeCompare(b.scannedAt ?? '');
   });
 }
 

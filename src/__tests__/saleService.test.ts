@@ -17,7 +17,7 @@ const batch = (batchId: string, qty: number, expiryDate: string, scannedAt: stri
   ({ batchId, barcode: 'B1', quantity: qty, expiryDate, scannedAt });
 
 describe('deductStockFIFO', () => {
-  beforeEach(async () => { resetDB(); });
+  beforeEach(async () => { await resetDB(); });
   afterEach(() => { vi.restoreAllMocks(); });
 
   it('takes from the earliest expiry first', async () => {
@@ -107,7 +107,7 @@ const line = (over: Partial<SaleLineInput> = {}): SaleLineInput => ({
 });
 
 describe('recordSale', () => {
-  beforeEach(async () => { resetDB(); });
+  beforeEach(async () => { await resetDB(); });
 
   it('records a sale, snapshots the price, and deducts stock', async () => {
     await addBatch(batch('b1', 10, '2026-06-01', '2026-01-01T00:00:00.000Z'));
@@ -154,7 +154,7 @@ describe('recordSale', () => {
 // --- Task E: undoLastSale ---
 
 describe('undoLastSale', () => {
-  beforeEach(async () => { resetDB(); });
+  beforeEach(async () => { await resetDB(); });
 
   it('restores stock to the exact batch it came from', async () => {
     await addBatch(batch('b1', 10, '2026-06-01', '2026-01-01T00:00:00.000Z'));
@@ -196,7 +196,7 @@ describe('undoLastSale', () => {
 // --- Task F: reporting ---
 
 describe('sales reporting', () => {
-  beforeEach(async () => { resetDB(); });
+  beforeEach(async () => { await resetDB(); });
 
   it('scopes sales to a day and lists days newest-first', async () => {
     await recordSale([line()], new Date(2026, 9, 15, 10, 0, 0));

@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { loadSettings, saveSettings } from '../services/settingsService';
 import { DEFAULT_SETTINGS } from '../types';
-import * as dbModule from '../db/database';
+import { db } from '../db/database';
 
 describe('settingsService', () => {
   it('should return default settings when none saved', async () => {
@@ -29,32 +29,26 @@ describe('settingsService error handling', () => {
     vi.restoreAllMocks();
   });
 
+  // settingsService talks to the Dexie tables directly (db.settings.get/put); it does
+  // not go through getDB(). Spy on the real dependency so these actually exercise the
+  // error paths instead of silently hitting the live database.
   it('should handle database errors on save', async () => {
-    const mockDB = {
-      put: vi.fn().mockRejectedValue(new Error('DB error')),
-    };
-    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+    vi.spyOn(db.settings, 'put').mockRejectedValue(new Error('DB error'));
 
     const settings = { ...DEFAULT_SETTINGS, alertWindowDays: 5 };
     await expect(saveSettings(settings)).rejects.toThrow('DB error');
   });
 
   it('should handle database errors on load', async () => {
-    const mockDB = {
-      get: vi.fn().mockRejectedValue(new Error('DB read error')),
-    };
-    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+    vi.spyOn(db.settings, 'get').mockRejectedValue(new Error('DB read error'));
 
     await expect(loadSettings()).rejects.toThrow('DB read error');
   });
 
   it('should log and surface errors when persisting default settings fails', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const mockDB = {
-      get: vi.fn().mockResolvedValue(undefined),
-      put: vi.fn().mockRejectedValue(new Error('DB write error')),
-    };
-    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+    vi.spyOn(db.settings, 'get').mockResolvedValue(undefined);
+    vi.spyOn(db.settings, 'put').mockRejectedValue(new Error('DB write error'));
 
     await expect(loadSettings()).rejects.toThrow('DB write error');
     expect(consoleError).toHaveBeenCalledWith(
@@ -64,15 +58,12 @@ describe('settingsService error handling', () => {
   });
 
   it('should return defaults merged with stored settings when no error occurs', async () => {
-    const mockDB = {
-      get: vi.fn().mockResolvedValue({ ...DEFAULT_SETTINGS, theme: 'dark' }),
-      put: vi.fn().mockResolvedValue(undefined),
-    };
-    vi.spyOn(dbModule, 'getDB').mockResolvedValue(mockDB as never);
+    vi.spyOn(db.settings, 'get').mockResolvedValue({ ...DEFAULT_SETTINGS, theme: 'dark' });
+    const putSpy = vi.spyOn(db.settings, 'put').mockResolvedValue(undefined as never);
 
     const loaded = await loadSettings();
     expect(loaded.theme).toBe('dark');
-    expect(mockDB.put).not.toHaveBeenCalled();
+    expect(putSpy).not.toHaveBeenCalled();
   });
 });
 

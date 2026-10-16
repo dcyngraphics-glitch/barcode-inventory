@@ -19,7 +19,7 @@ const totalFor = async (barcode = 'B1') =>
 
 describe('setStock', () => {
   beforeEach(async () => {
-    resetDB();
+    await resetDB();
   });
 
   it('reports the current stock level', async () => {

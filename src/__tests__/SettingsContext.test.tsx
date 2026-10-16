@@ -109,8 +109,10 @@ describe('SettingsContext', () => {
     expect(getByTestId('alert-window')).toHaveTextContent('7');
   });
 
-  it('should debounce saves with a 500ms delay', async () => {
-    vi.useFakeTimers();
+  // Saves are deliberately immediate, not debounced: d2042c8 removed the 500ms
+  // debounce because it prevented Cashier Mode from persisting when the user
+  // navigated away before the timer fired.
+  it('should save immediately after an update, without waiting for a timer', async () => {
     const { getByText } = render(
       <SettingsProvider>
         <TestConsumer />
@@ -123,21 +125,12 @@ describe('SettingsContext', () => {
       getByText('Set Dark').click();
     });
 
-    // Not saved yet before the debounce window elapses
-    expect(saveSettings).not.toHaveBeenCalled();
-
-    await act(async () => {
-      vi.advanceTimersByTime(500);
-    });
-
-    expect(saveSettings).toHaveBeenCalledTimes(1);
     expect(saveSettings).toHaveBeenCalledWith(
       expect.objectContaining({ theme: 'dark' })
     );
   });
 
-  it('should coalesce rapid updates into a single save', async () => {
-    vi.useFakeTimers();
+  it('should persist the latest merged settings after rapid updates', async () => {
     const { getByText } = render(
       <SettingsProvider>
         <TestConsumer />
@@ -153,18 +146,12 @@ describe('SettingsContext', () => {
       getByText('Set Alert').click();
     });
 
-    await act(async () => {
-      vi.advanceTimersByTime(500);
-    });
-
-    expect(saveSettings).toHaveBeenCalledTimes(1);
-    expect(saveSettings).toHaveBeenCalledWith(
+    expect(saveSettings).toHaveBeenLastCalledWith(
       expect.objectContaining({ theme: 'dark', alertWindowDays: 7 })
     );
   });
 
   it('should save the loaded settings once load settles', async () => {
-    vi.useFakeTimers();
     render(
       <SettingsProvider>
         <TestConsumer />
@@ -172,11 +159,6 @@ describe('SettingsContext', () => {
     );
 
     await act(async () => {});
-    expect(saveSettings).not.toHaveBeenCalled();
-
-    await act(async () => {
-      vi.advanceTimersByTime(500);
-    });
 
     expect(saveSettings).toHaveBeenCalledTimes(1);
     expect(saveSettings).toHaveBeenCalledWith(

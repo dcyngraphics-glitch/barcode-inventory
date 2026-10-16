@@ -37,8 +37,13 @@ interface BarcodeInventoryDB {
   sales: Dexie.Table<'sale', Sale>;
 }
 
-// Create a Dexie instance with Dexie Cloud addon (Dexie 4.x API)
-const db = new Dexie<BarcodeInventoryDB>(databaseName, { addons: [dexieCloud] });
+// Create a Dexie instance with the Dexie Cloud addon (Dexie 4.x API).
+// The addon is not registered under Vitest: it stamps every written row with
+// `owner`/`realmId` cloud metadata and injects a `_hasBlobRefs` index into every
+// table. That is infrastructure noise which leaks into unit tests asserting on stored
+// shapes, so tests get a plain Dexie database instead.
+const addons = env.VITEST ? [] : [dexieCloud];
+const db = new Dexie<BarcodeInventoryDB>(databaseName, { addons });
 console.log(`[dexie] Dexie instance created for ${databaseName}`);
 
 // Define the database schema (Dexie 4.x syntax: & = primary key, field = index)
