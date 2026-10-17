@@ -1,16 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { useState } from 'react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import db from '../db/dexie';
 
+/**
+ * AuthContext carries the sign-in ACTIONS only. The signed-in user lives in
+ * useCloudSession — keeping the db.cloud.currentUser subscription in one place instead
+ * of two avoids two sources of truth for the same fact.
+ */
 function TestConsumer() {
-  const { cloudUser, cloudError, cloudLogin, cloudLogout } = useAuth();
+  const { cloudError, cloudLogin, cloudLogout } = useAuth();
+  const [logoutError, setLogoutError] = useState('');
   return (
     <div>
-      <div data-testid="user">{cloudUser ?? 'none'}</div>
       <div data-testid="error">{cloudError}</div>
+      <div data-testid="logout-error">{logoutError}</div>
       <button onClick={cloudLogin}>Sign in</button>
-      <button onClick={() => { void cloudLogout(); }}>Sign out</button>
+      <button
+        onClick={() => {
+          cloudLogout().catch((err: Error) => setLogoutError(err.message));
+        }}
+      >
+        Sign out
+      </button>
     </div>
   );
 }
@@ -98,46 +111,6 @@ describe('AuthContext', () => {
     expect(getByTestId('error')).toHaveTextContent('');
   });
 
-  it('reflects the signed-in user from currentUser', () => {
-    let emit: (user: any) => void = () => {};
-    (db as any).cloud = {
-      options: {},
-      currentUser: {
-        subscribe: (listener: (user: any) => void) => {
-          emit = listener;
-          return { unsubscribe: () => {} };
-        },
-      },
-    };
-
-    const { getByTestId } = renderAuth();
-    act(() => {
-      emit({ isLoggedIn: true, email: 'me@example.com' });
-    });
-
-    expect(getByTestId('user')).toHaveTextContent('me@example.com');
-  });
-
-  it('does not report a user when the session is not logged in', () => {
-    let emit: (user: any) => void = () => {};
-    (db as any).cloud = {
-      options: {},
-      currentUser: {
-        subscribe: (listener: (user: any) => void) => {
-          emit = listener;
-          return { unsubscribe: () => {} };
-        },
-      },
-    };
-
-    const { getByTestId } = renderAuth();
-    act(() => {
-      emit({ isLoggedIn: false, isLoading: true });
-    });
-
-    expect(getByTestId('user')).toHaveTextContent('none');
-  });
-
   it('signs out through Dexie Cloud', async () => {
     const logout = vi.fn().mockResolvedValue(undefined);
     (db as any).cloud = { options: {}, logout };
@@ -148,5 +121,19 @@ describe('AuthContext', () => {
     });
 
     expect(logout).toHaveBeenCalledTimes(1);
+  });
+
+  it('propagates a rejected logout so the caller can tell a cancel from a failure', async () => {
+    // The addon rejects logout when the user backs out of the "unsynced changes"
+    // confirmation. Swallowing it would make a deliberate cancel look like success.
+    const logout = vi.fn().mockRejectedValue(new Error('User cancelled logout due to unsynced changes'));
+    (db as any).cloud = { options: {}, logout };
+
+    const { getByText, getByTestId } = renderAuth();
+    await act(async () => {
+      getByText('Sign out').click();
+    });
+
+    expect(getByTestId('logout-error')).toHaveTextContent(/cancelled logout/i);
   });
 });

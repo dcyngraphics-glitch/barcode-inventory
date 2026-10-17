@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
-import { ScanLine, Package, Settings, Receipt } from 'lucide-react';
+import { ScanLine, Package, Settings, Receipt, AlertTriangle } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { TillScreen } from '@/screens/TillScreen';
 import { SalesScreen } from '@/screens/SalesScreen';
@@ -45,7 +45,7 @@ export default function App() {
  * every cold start for users who are perfectly well signed in.
  */
 function AuthGate() {
-  const { isLoading, isLoggedIn } = useCloudSession();
+  const { isLoading, isLoggedIn, error } = useCloudSession();
 
   return (
     <>
@@ -54,6 +54,18 @@ function AuthGate() {
           <div className="loading-spinner" role="status" aria-label="Loading">
             <div className="spinner" />
             <p>Loading your inventory...</p>
+          </div>
+        </div>
+      ) : error ? (
+        // The local database is the app. If it cannot be opened there is nothing useful
+        // to show, so say so plainly instead of spinning forever.
+        <div className="screen-center">
+          <div className="login-card">
+            <div className="login-logo">
+              <AlertTriangle size={40} />
+            </div>
+            <h1>Storage unavailable</h1>
+            <p className="login-subtitle">{error}</p>
           </div>
         </div>
       ) : isLoggedIn ? (

@@ -102,12 +102,4 @@ if (!env.VITEST) {
   }
 }
 
-/**
- * True when the cloud addon is present AND configure() has run. Callers use this to
- * report "sync unavailable" instead of surfacing an addon-internal TypeError.
- */
-export function isSyncConfigured(): boolean {
-  return Boolean((db as any).cloud?.options);
-}
-
 export default db;

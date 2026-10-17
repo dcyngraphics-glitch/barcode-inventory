@@ -157,4 +157,62 @@ describe('UserInteractionPrompt', () => {
 
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
   });
+
+  it('moves focus into the dialog when a prompt opens', () => {
+    // aria-modal="true" promises focus lives inside the dialog; leaving it on the page
+    // behind makes the prompt unreachable by keyboard.
+    render(<UserInteractionPrompt />);
+
+    emit({ ...base, type: 'email', title: 'Enter email address', fields: { email: { type: 'text' } } });
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Email'));
+  });
+
+  it('dismisses with Escape when the prompt can be cancelled', () => {
+    const onCancel = vi.fn();
+    render(<UserInteractionPrompt />);
+
+    emit({
+      ...base,
+      type: 'email',
+      title: 'Enter email address',
+      fields: { email: { type: 'text' } },
+      onCancel,
+    });
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores Escape when the prompt cannot be cancelled', () => {
+    const onCancel = vi.fn();
+    render(<UserInteractionPrompt />);
+
+    emit({
+      ...base,
+      type: 'message-alert',
+      title: 'Notice',
+      fields: {},
+      cancelLabel: null,
+      onCancel,
+    });
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('does not answer the same prompt twice on a double submit', () => {
+    // onSubmit also clears the subject, so a second call would land on an interaction
+    // that no longer exists.
+    const onSubmit = vi.fn();
+    render(<UserInteractionPrompt />);
+
+    emit({ ...base, type: 'email', title: 'Enter email address', fields: { email: { type: 'text' } }, onSubmit });
+
+    const submit = screen.getByRole('button', { name: /submit/i });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
 });

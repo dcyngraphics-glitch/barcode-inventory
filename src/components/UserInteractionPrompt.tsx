@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { Mail, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { Mail, ShieldCheck } from 'lucide-react';
 import db from '@/db/dexie';
 import { formatAlertMessage } from '@/utils/formatAlert';
 
@@ -19,6 +19,8 @@ export function UserInteractionPrompt() {
   const cloud = (db as any).cloud;
   const [interaction, setInteraction] = useState<any>(undefined);
   const [values, setValues] = useState<Record<string, string>>({});
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const submittedRef = useRef(false);
 
   useEffect(() => {
     if (!cloud?.userInteraction?.subscribe) return;
@@ -27,10 +29,22 @@ export function UserInteractionPrompt() {
       setInteraction(next);
       // Never carry a typed code over into the next prompt.
       setValues({});
+      submittedRef.current = false;
     });
 
     return () => subscription?.unsubscribe?.();
   }, [cloud]);
+
+  // aria-modal="true" promises that focus stays inside the dialog, so move it in when a
+  // prompt opens and hand it back to whatever had it when the prompt closes.
+  useEffect(() => {
+    if (!interaction) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    cardRef.current?.querySelector<HTMLElement>('input, button')?.focus();
+
+    return () => previouslyFocused?.focus?.();
+  }, [interaction]);
 
   if (!interaction) return null;
 
@@ -41,13 +55,47 @@ export function UserInteractionPrompt() {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    // onSubmit also clears the subject, which unmounts this prompt.
+    // A double-tap must not answer the same prompt twice: onSubmit also clears the
+    // subject, so the second call would land on an interaction that no longer exists.
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     interaction.onSubmit?.(values);
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape' && canCancel) {
+      event.preventDefault();
+      interaction.onCancel?.();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    // Keep Tab inside the dialog — there is no native focus trap for a div-based modal.
+    const focusable = cardRef.current?.querySelectorAll<HTMLElement>('input, button');
+    if (!focusable || focusable.length === 0) return;
+
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
-    <div className="interaction-overlay" role="dialog" aria-modal="true" aria-label={interaction.title}>
-      <div className="login-card">
+    <div
+      className="interaction-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={interaction.title}
+      onKeyDown={handleKeyDown}
+    >
+      <div className="login-card" ref={cardRef}>
         <div className="login-logo">
           {interaction.type === 'otp' ? <ShieldCheck size={40} /> : <Mail size={40} />}
         </div>
@@ -83,7 +131,6 @@ export function UserInteractionPrompt() {
                   onChange={(event) =>
                     setValues((previous) => ({ ...previous, [name]: event.target.value }))
                   }
-                  autoFocus={fieldNames.length === 1}
                 />
               </div>
             );

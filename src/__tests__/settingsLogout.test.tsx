@@ -23,7 +23,6 @@ vi.mock('@/context/AuthContext', async (importOriginal) => {
   return {
     ...actual,
     useAuth: () => ({
-      cloudUser: 'me@example.com',
       cloudError: '',
       cloudLogin: vi.fn(),
       cloudLogout: mockCloudLogout,

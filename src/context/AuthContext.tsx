@@ -1,9 +1,14 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import db from '@/db/dexie';
 
+/**
+ * Sign-in actions only.
+ *
+ * The signed-in USER is deliberately not here: `useCloudSession()` owns that, and
+ * duplicating the db.cloud.currentUser subscription in two places created two sources
+ * of truth for the same fact.
+ */
 interface AuthContextValue {
-  /** Email of the signed-in Dexie Cloud user, or null. */
-  cloudUser: string | null;
   /** Last sign-in failure, in plain language. Cleared when a new attempt starts. */
   cloudError: string;
   /**
@@ -21,19 +26,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [cloudUser, setCloudUser] = useState<string | null>(null);
   const [cloudError, setCloudError] = useState('');
-
-  useEffect(() => {
-    const cloud = (db as any).cloud;
-    if (!cloud?.currentUser?.subscribe) return;
-
-    const subscription = cloud.currentUser.subscribe((user: any) => {
-      setCloudUser(user?.isLoggedIn ? (user?.email ?? null) : null);
-    });
-
-    return () => subscription?.unsubscribe?.();
-  }, []);
 
   const cloudLogin = useCallback((): void => {
     const cloud = (db as any).cloud;
@@ -51,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCloudError('');
 
     // One call, with no `intent`, and never a follow-up carrying an `otp`:
-    //  - intent:'login' tells Dexie Cloud to accept only already-registered users, so
-    //    a first-ever sign-in is refused with USER_NOT_REGISTERED ("user is not
+    //  - intent:'login' tells Dexie Cloud to accept only already-registered users, so a
+    //    first-ever sign-in is refused with USER_NOT_REGISTERED ("user is not
     //    registered") no matter what the database's user policy says. Omitting it lets
     //    the server register a new user on first sign-in.
     //  - Dexie Cloud verifies a code against an `otp_id` the server returns alongside
@@ -66,15 +59,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /**
+   * Signs out. Rejects rather than swallowing, so the caller can tell a deliberate
+   * cancel (the addon asks for confirmation when changes have not synced yet) from a
+   * real failure. Never clears local state on failure — a rejected logout means the
+   * user is still signed in.
+   */
   const cloudLogout = useCallback(async (): Promise<void> => {
     const cloud = (db as any).cloud;
     if (!cloud) return;
     await cloud.logout();
-    setCloudUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ cloudUser, cloudError, cloudLogin, cloudLogout }}>
+    <AuthContext.Provider value={{ cloudError, cloudLogin, cloudLogout }}>
       {children}
     </AuthContext.Provider>
   );

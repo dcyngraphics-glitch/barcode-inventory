@@ -29,6 +29,7 @@ const sessionMock = vi.hoisted(() => ({
   isLoading: false,
   isLoggedIn: false,
   email: null as string | null,
+  error: null as string | null,
 }));
 vi.mock('@/hooks/useCloudSession', () => ({
   useCloudSession: () => sessionMock,
@@ -90,6 +91,16 @@ describe('App Auth Gate', () => {
     sessionMock.isLoading = false;
     sessionMock.isLoggedIn = false;
     sessionMock.email = null;
+    sessionMock.error = null;
+  });
+
+  it('explains a storage failure instead of spinning forever', () => {
+    sessionMock.error = 'Could not open local storage.';
+    renderApp();
+
+    expect(screen.getByText(/storage unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/could not open local storage/i)).toBeInTheDocument();
+    expect(screen.queryByText(/loading your inventory/i)).not.toBeInTheDocument();
   });
 
   it('shows a splash, not the login screen, while the session is being restored', () => {
