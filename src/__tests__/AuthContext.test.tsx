@@ -1,24 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
-import { useState } from 'react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
-
-const AUTH_KEY = 'barcode_inventory_auth';
-const MASTER_PASSWORD = 'test-master-123';
+import db from '../db/dexie';
 
 function TestConsumer() {
-  const { isAuthenticated, login, logout, getMasterPassword, setMasterPassword } = useAuth();
-  const [loginResult, setLoginResult] = useState<string>('none');
+  const { cloudUser, cloudError, cloudLogin, cloudLogout } = useAuth();
   return (
     <div>
-      <div data-testid="auth">{String(isAuthenticated)}</div>
-      <div data-testid="master-pw">{getMasterPassword()}</div>
-      <div data-testid="login-result">{loginResult}</div>
-      <button onClick={() => setLoginResult(String(login(MASTER_PASSWORD)))}>Login Correct</button>
-      <button onClick={() => setLoginResult(String(login('wrong')))}>Login Wrong</button>
-      <button onClick={logout}>Logout</button>
-      <button onClick={() => setMasterPassword('override-pw')}>Set Override</button>
-      <button onClick={() => setLoginResult(String(login('override-pw')))}>Login Persisted</button>
+      <div data-testid="user">{cloudUser ?? 'none'}</div>
+      <div data-testid="error">{cloudError}</div>
+      <button onClick={cloudLogin}>Sign in</button>
+      <button onClick={() => { void cloudLogout(); }}>Sign out</button>
     </div>
   );
 }
@@ -27,120 +19,20 @@ function renderAuth() {
   return render(
     <AuthProvider>
       <TestConsumer />
-    </AuthProvider>
+    </AuthProvider>,
   );
 }
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    localStorage.clear();
-    vi.stubEnv('VITE_MASTER_PASSWORD', MASTER_PASSWORD);
+    delete (db as any).cloud;
   });
 
   afterEach(() => {
-    vi.unstubAllEnvs();
-    localStorage.clear();
+    delete (db as any).cloud;
   });
 
-  it('should start unauthenticated when localStorage is empty', () => {
-    const { getByTestId } = renderAuth();
-    expect(getByTestId('auth')).toHaveTextContent('false');
-  });
-
-  it('should start authenticated when localStorage has auth key', () => {
-    localStorage.setItem(AUTH_KEY, 'true');
-    const { getByTestId } = renderAuth();
-    expect(getByTestId('auth')).toHaveTextContent('true');
-  });
-
-  it('should return true and set authenticated on correct password', () => {
-    const { getByTestId, getByText } = renderAuth();
-    act(() => {
-      getByText('Login Correct').click();
-    });
-    expect(getByTestId('auth')).toHaveTextContent('true');
-    expect(localStorage.getItem(AUTH_KEY)).toBe('true');
-  });
-
-  it('should return false and stay unauthenticated on wrong password', () => {
-    const { getByTestId, getByText } = renderAuth();
-    act(() => {
-      getByText('Login Wrong').click();
-    });
-    expect(getByTestId('auth')).toHaveTextContent('false');
-    expect(localStorage.getItem(AUTH_KEY)).toBeNull();
-  });
-
-  it('should clear auth state on logout', () => {
-    localStorage.setItem(AUTH_KEY, 'true');
-    const { getByTestId, getByText } = renderAuth();
-    expect(getByTestId('auth')).toHaveTextContent('true');
-    act(() => {
-      getByText('Logout').click();
-    });
-    expect(getByTestId('auth')).toHaveTextContent('false');
-    expect(localStorage.getItem(AUTH_KEY)).toBeNull();
-  });
-
-  it('should return the master password from env', () => {
-    const { getByTestId } = renderAuth();
-    expect(getByTestId('master-pw')).toHaveTextContent(MASTER_PASSWORD);
-  });
-
-  it('should allow overriding the master password', () => {
-    const { getByTestId, getByText } = renderAuth();
-    act(() => {
-      getByText('Set Override').click();
-    });
-    expect(getByTestId('master-pw')).toHaveTextContent('override-pw');
-  });
-
-  it('should return false for login with original password after override', () => {
-    const { getByTestId, getByText } = renderAuth();
-    act(() => {
-      getByText('Set Override').click();
-    });
-    act(() => {
-      getByText('Logout').click();
-    });
-    act(() => {
-      getByText('Login Correct').click();
-    });
-    expect(getByTestId('auth')).toHaveTextContent('false');
-    expect(getByTestId('login-result')).toHaveTextContent('false');
-  });
-
-  it('should persist master password override to localStorage', () => {
-    const { getByTestId, getByText } = renderAuth();
-    act(() => {
-      getByText('Set Override').click();
-    });
-    expect(localStorage.getItem('barcode_inventory_master_password')).toBe('override-pw');
-    expect(getByTestId('master-pw')).toHaveTextContent('override-pw');
-  });
-
-  it('should read master password from localStorage on mount', () => {
-    localStorage.setItem('barcode_inventory_master_password', 'persisted-pw');
-    const { getByTestId } = renderAuth();
-    expect(getByTestId('master-pw')).toHaveTextContent('persisted-pw');
-  });
-
-  it('should login with persisted password after remount', () => {
-    const first = renderAuth();
-    act(() => {
-      first.getByText('Set Override').click();
-    });
-    first.unmount();
-
-    const second = renderAuth();
-    act(() => {
-      second.getByText('Login Persisted').click();
-    });
-    expect(second.getByTestId('auth')).toHaveTextContent('true');
-    expect(second.getByTestId('login-result')).toHaveTextContent('true');
-  });
-
-  it('should throw when useAuth is used outside AuthProvider', () => {
+  it('throws when useAuth is used outside AuthProvider', () => {
     function Orphan() {
       useAuth();
       return null;
@@ -148,9 +40,113 @@ describe('AuthContext', () => {
     expect(() => render(<Orphan />)).toThrow('useAuth must be used within AuthProvider');
   });
 
-  it('should return empty string for getMasterPassword when nothing is set', () => {
-    vi.stubEnv('VITE_MASTER_PASSWORD', '');
+  it('reports a clear error when the cloud addon is unavailable', () => {
+    const { getByText, getByTestId } = renderAuth();
+    act(() => {
+      getByText('Sign in').click();
+    });
+    expect(getByTestId('error')).toHaveTextContent(/unavailable/i);
+  });
+
+  it('reports a clear error when sync was never configured', () => {
+    (db as any).cloud = { options: null };
+    const { getByText, getByTestId } = renderAuth();
+    act(() => {
+      getByText('Sign in').click();
+    });
+    expect(getByTestId('error')).toHaveTextContent(/not configured/i);
+  });
+
+  it('starts the OTP flow with exactly one login call, and no intent', () => {
+    const login = vi.fn().mockResolvedValue(undefined);
+    (db as any).cloud = { options: {}, login };
+
+    const { getByText } = renderAuth();
+    act(() => {
+      getByText('Sign in').click();
+    });
+
+    // `intent: 'login'` would make Dexie Cloud refuse an email that has never
+    // registered with USER_NOT_REGISTERED, so a first-ever sign-in could never work.
+    // And it must be ONE call: an OTP cannot be verified by a follow-up login().
+    expect(login).toHaveBeenCalledTimes(1);
+    expect(login).toHaveBeenCalledWith({ grant_type: 'otp' });
+  });
+
+  it('surfaces a failed sign-in in plain language', async () => {
+    const login = vi.fn().mockRejectedValue(new Error('Something went wrong'));
+    (db as any).cloud = { options: {}, login };
+
+    const { getByText, getByTestId } = renderAuth();
+    await act(async () => {
+      getByText('Sign in').click();
+    });
+
+    expect(getByTestId('error')).toHaveTextContent('Something went wrong');
+  });
+
+  it('treats a dismissed prompt as a cancel, not an error', async () => {
+    const abort = Object.assign(new Error('User cancelled'), { name: 'AbortError' });
+    const login = vi.fn().mockRejectedValue(abort);
+    (db as any).cloud = { options: {}, login };
+
+    const { getByText, getByTestId } = renderAuth();
+    await act(async () => {
+      getByText('Sign in').click();
+    });
+
+    expect(getByTestId('error')).toHaveTextContent('');
+  });
+
+  it('reflects the signed-in user from currentUser', () => {
+    let emit: (user: any) => void = () => {};
+    (db as any).cloud = {
+      options: {},
+      currentUser: {
+        subscribe: (listener: (user: any) => void) => {
+          emit = listener;
+          return { unsubscribe: () => {} };
+        },
+      },
+    };
+
     const { getByTestId } = renderAuth();
-    expect(getByTestId('master-pw')).toHaveTextContent('');
+    act(() => {
+      emit({ isLoggedIn: true, email: 'me@example.com' });
+    });
+
+    expect(getByTestId('user')).toHaveTextContent('me@example.com');
+  });
+
+  it('does not report a user when the session is not logged in', () => {
+    let emit: (user: any) => void = () => {};
+    (db as any).cloud = {
+      options: {},
+      currentUser: {
+        subscribe: (listener: (user: any) => void) => {
+          emit = listener;
+          return { unsubscribe: () => {} };
+        },
+      },
+    };
+
+    const { getByTestId } = renderAuth();
+    act(() => {
+      emit({ isLoggedIn: false, isLoading: true });
+    });
+
+    expect(getByTestId('user')).toHaveTextContent('none');
+  });
+
+  it('signs out through Dexie Cloud', async () => {
+    const logout = vi.fn().mockResolvedValue(undefined);
+    (db as any).cloud = { options: {}, logout };
+
+    const { getByText } = renderAuth();
+    await act(async () => {
+      getByText('Sign out').click();
+    });
+
+    expect(logout).toHaveBeenCalledTimes(1);
   });
 });

@@ -84,11 +84,14 @@ if (!env.VITEST) {
       db.cloud.configure({
         databaseUrl: syncUrl,
         // Deliberately false. requireAuth:true blocks every db call until the user
-        // authenticates on first launch, which would lock the whole app behind a login
-        // prompt. Login stays opt-in via Settings → Sync and the app keeps working
-        // offline for users who never sign in — db.cloud.login() is the documented
-        // opt-in path for requireAuth:false.
+        // authenticates on first launch; the gate lives in React instead (AuthGate in
+        // App.tsx), so a signed-out user gets a sign-in screen rather than a database
+        // that silently hangs.
         requireAuth: false,
+        // The app renders the login prompts itself from db.cloud.userInteraction
+        // (see components/UserInteractionPrompt.tsx), so they carry this app's styling.
+        // Without this the addon injects its own generic dialog on top of the UI.
+        customLoginGui: true,
       });
       console.log(`[dexie] Dexie Cloud configured with syncUrl: ${syncUrl}`);
     } else {

@@ -1,132 +1,68 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import db from '@/db/dexie';
 
-const AUTH_STORAGE_KEY = 'barcode_inventory_auth';
-const SYNC_ENABLED_KEY = 'barcode_inventory_sync_enabled';
-const MASTER_PASSWORD_STORAGE_KEY = 'barcode_inventory_master_password';
-
 interface AuthContextValue {
-  isAuthenticated: boolean;
-  login: (password: string) => boolean;
-  logout: () => void;
-  getMasterPassword: () => string;
-  setMasterPassword: (password: string) => void;
-  syncEnabled: boolean;
-  enableSync: () => void;
-  disableSync: () => void;
+  /** Email of the signed-in Dexie Cloud user, or null. */
   cloudUser: string | null;
-  cloudSyncing: boolean;
-  /**
-   * Starts the Dexie Cloud login for the given email. Deliberately returns void and is
-   * not awaited: the addon keeps the underlying promise pending while it prompts for the
-   * OTP (through db.cloud.userInteraction) and resolves it once the code is verified.
-   * Progress is observed via `cloudUser`, failures via `cloudError`.
-   */
-  cloudLogin: (email: string) => void;
+  /** Last sign-in failure, in plain language. Cleared when a new attempt starts. */
   cloudError: string;
+  /**
+   * Starts the Dexie Cloud email-OTP sign-in.
+   *
+   * Deliberately returns void and is NOT awaited: the addon keeps the underlying
+   * promise pending while it asks for the email and then the one-time code through
+   * db.cloud.userInteraction, and resolves only once the code is verified. Signed-in
+   * state is read from useCloudSession(); failures surface in `cloudError`.
+   */
+  cloudLogin: () => void;
   cloudLogout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getStoredAuth(): boolean {
-  return localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getStoredAuth);
-  const [masterPasswordOverride, setMasterPasswordOverride] = useState<string | null>(null);
-  const [syncEnabled, setSyncEnabled] = useState<boolean>(localStorage.getItem(SYNC_ENABLED_KEY) === 'true');
   const [cloudUser, setCloudUser] = useState<string | null>(null);
-  const [cloudSyncing, setCloudSyncing] = useState<boolean>(false);
-  const [cloudError, setCloudError] = useState<string>('');
+  const [cloudError, setCloudError] = useState('');
 
-  const DEFAULT_MASTER_PASSWORD = 'Inv3ntory_M@ster_2026!';
-
-  // Subscribe to Dexie Cloud auth + sync state
   useEffect(() => {
     const cloud = (db as any).cloud;
-    if (!cloud) return;
+    if (!cloud?.currentUser?.subscribe) return;
 
-    const userSub = cloud.currentUser?.subscribe((user: any) => {
-      setCloudUser(user?.email ?? null);
+    const subscription = cloud.currentUser.subscribe((user: any) => {
+      setCloudUser(user?.isLoggedIn ? (user?.email ?? null) : null);
     });
 
-    const syncSub = cloud.syncState?.subscribe((state: any) => {
-      setCloudSyncing(state?.phase === 'syncing');
-    });
-
-    // Check if already logged in
-    cloud.currentUser?.then?.((user: any) => {
-      if (user) setCloudUser(user.email ?? null);
-    });
-
-    return () => {
-      userSub?.unsubscribe?.();
-      syncSub?.unsubscribe?.();
-    };
+    return () => subscription?.unsubscribe?.();
   }, []);
 
-  const resolveMasterPassword = (): string => {
-    return masterPasswordOverride ?? localStorage.getItem(MASTER_PASSWORD_STORAGE_KEY) ?? import.meta.env.VITE_MASTER_PASSWORD ?? DEFAULT_MASTER_PASSWORD;
-  };
-
-  const getMasterPassword = useCallback((): string => {
-    return resolveMasterPassword();
-  }, [masterPasswordOverride]);
-
-  const login = useCallback((password: string): boolean => {
-    const correctPassword = resolveMasterPassword();
-    if (password === correctPassword) {
-      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      setIsAuthenticated(true);
-      return true;
-    }
-    return false;
-  }, [masterPasswordOverride]);
-
-  const logout = useCallback((): void => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    setIsAuthenticated(false);
-  }, []);
-
-  const enableSync = useCallback((): void => {
-    localStorage.setItem(SYNC_ENABLED_KEY, 'true');
-    setSyncEnabled(true);
-  }, []);
-
-  const disableSync = useCallback((): void => {
-    localStorage.removeItem(SYNC_ENABLED_KEY);
-    setSyncEnabled(false);
-  }, []);
-
-  const cloudLogin = useCallback((email: string): void => {
+  const cloudLogin = useCallback((): void => {
     const cloud = (db as any).cloud;
     if (!cloud) {
-      setCloudError('Dexie Cloud not available');
+      setCloudError('Sign-in is unavailable in this build.');
       return;
     }
     // cloud.options is null until configure() has run. Without this check the addon
     // throws an opaque "Cannot read properties of null (reading 'databaseUrl')".
     if (!cloud.options) {
-      setCloudError('Sync is not configured in this build.');
+      setCloudError('Sign-in is not configured in this build.');
       return;
     }
+
     setCloudError('');
-    // No `intent` on purpose. intent:'login' tells Dexie Cloud that only already
-    // registered users are acceptable, so a first-time login on this database is
-    // refused with USER_NOT_REGISTERED ("user is not registered") no matter what the
-    // database's user policy says. Omitting it lets the server apply the database's own
-    // policy, which registers a new user on their first login.
-    //
-    // This also has to be ONE call. Dexie Cloud verifies an OTP against an `otp_id` that
-    // the server returns alongside the emailed code, and the addon never exposes it - so
-    // a follow-up login({ email, otp }) cannot verify anything, it just requests a brand
-    // new code. The addon drives the whole email -> code exchange itself and asks for the
-    // code via db.cloud.userInteraction.
-    cloud.login({ email }).catch((err: any) => {
+
+    // One call, with no `intent`, and never a follow-up carrying an `otp`:
+    //  - intent:'login' tells Dexie Cloud to accept only already-registered users, so
+    //    a first-ever sign-in is refused with USER_NOT_REGISTERED ("user is not
+    //    registered") no matter what the database's user policy says. Omitting it lets
+    //    the server register a new user on first sign-in.
+    //  - Dexie Cloud verifies a code against an `otp_id` the server returns alongside
+    //    the emailed code, and the addon does not expose it — so a second
+    //    login({ email, otp }) cannot verify anything and only requests a fresh code.
+    // grant_type:'otp' asks for the email prompt rather than the provider chooser.
+    cloud.login({ grant_type: 'otp' }).catch((err: any) => {
       if (err?.name === 'OAuthRedirectError') return; // page is redirecting for OAuth
-      setCloudError(err?.message || 'Login failed. Please try again.');
+      if (err?.name === 'AbortError') return; // the user dismissed the prompt
+      setCloudError(err?.message || 'Sign in failed. Please try again.');
     });
   }, []);
 
@@ -137,15 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCloudUser(null);
   }, []);
 
-  const setMasterPassword = useCallback((password: string): void => {
-    localStorage.setItem(MASTER_PASSWORD_STORAGE_KEY, password);
-    setMasterPasswordOverride(password);
-  }, []);
-
   return (
-    <AuthContext.Provider
-      value={{ isAuthenticated, login, logout, getMasterPassword, setMasterPassword, syncEnabled, enableSync, disableSync, cloudUser, cloudSyncing, cloudLogin, cloudError, cloudLogout }}
-    >
+    <AuthContext.Provider value={{ cloudUser, cloudError, cloudLogin, cloudLogout }}>
       {children}
     </AuthContext.Provider>
   );

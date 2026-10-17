@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '@/App';
-import { AuthProvider } from '@/context/AuthContext';
 
-// Mock all child components to keep the test focused on auth gate behavior
+// Mock all child components to keep the test focused on gate behaviour.
 vi.mock('@/screens/ScannerScreen', () => ({
   ScannerScreen: () => <div>Scanner Screen</div>,
 }));
@@ -23,15 +22,24 @@ vi.mock('@/screens/CartReviewScreen', () => ({
 vi.mock('@/screens/TillScreen', () => ({
   TillScreen: () => <div>Till Screen</div>,
 }));
+
+// The gate reads the Dexie Cloud session through this hook; drive it directly so each
+// of the three states can be asserted.
+const sessionMock = vi.hoisted(() => ({
+  isLoading: false,
+  isLoggedIn: false,
+  email: null as string | null,
+}));
+vi.mock('@/hooks/useCloudSession', () => ({
+  useCloudSession: () => sessionMock,
+}));
+
 // Configurable so a test can flip Cashier Mode and assert the Scan tab switches.
 const settingsMock = vi.hoisted(() => ({ cashierMode: false }));
 vi.mock('@/context/SettingsContext', async () => {
   const { DEFAULT_SETTINGS } = await import('@/types');
   return {
     SettingsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    // Mirrors the real provider: settings is never null, defaults are seeded
-    // synchronously. (The previous mock returned null, which the real context's
-    // type contract does not allow.)
     useSettingsContext: () => ({
       settings: { ...DEFAULT_SETTINGS, cashierMode: settingsMock.cashierMode },
       updateSettings: () => {},
@@ -66,76 +74,61 @@ vi.mock('@/services/inventoryService', () => ({
   getAllBatches: vi.fn().mockResolvedValue([]),
 }));
 
-const AUTH_KEY = 'barcode_inventory_auth';
-const MASTER_PASSWORD = 'test-master-123';
-
 function renderApp() {
   return render(
     <MemoryRouter initialEntries={['/']}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </MemoryRouter>
+      <App />
+    </MemoryRouter>,
   );
 }
 
+const signInButton = () => screen.queryByRole('button', { name: /sign in with email/i });
+
 describe('App Auth Gate', () => {
   beforeEach(() => {
-    localStorage.clear();
     settingsMock.cashierMode = false;
-    vi.stubEnv('VITE_MASTER_PASSWORD', MASTER_PASSWORD);
+    sessionMock.isLoading = false;
+    sessionMock.isLoggedIn = false;
+    sessionMock.email = null;
   });
 
-  it('should show LoginScreen when not authenticated', () => {
+  it('shows a splash, not the login screen, while the session is being restored', () => {
+    sessionMock.isLoading = true;
     renderApp();
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /unlock/i })).toBeInTheDocument();
+
+    expect(screen.getByText(/loading your inventory/i)).toBeInTheDocument();
+    // The important part: a signed-in user must not see a login flash on cold start.
+    expect(signInButton()).not.toBeInTheDocument();
+    expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
   });
 
-  it('should not show app routes when not authenticated', () => {
+  it('shows the login gate when signed out', () => {
     renderApp();
+
+    expect(signInButton()).toBeInTheDocument();
     expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
     expect(screen.queryByText('Inventory Screen')).not.toBeInTheDocument();
   });
 
-  it('should show app routes when authenticated via localStorage', async () => {
-    localStorage.setItem(AUTH_KEY, 'true');
+  it('no longer shows a password field anywhere in the gate', () => {
     renderApp();
+
     expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
-    expect(await screen.findByText('Scanner Screen')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /unlock/i })).not.toBeInTheDocument();
   });
 
-  it('should show app routes after successful login', async () => {
+  it('shows the app routes when signed in', async () => {
+    sessionMock.isLoggedIn = true;
+    sessionMock.email = 'me@example.com';
     renderApp();
-    const input = screen.getByLabelText('Password');
-    const button = screen.getByRole('button', { name: /unlock/i });
 
-    fireEvent.change(input, { target: { value: MASTER_PASSWORD } });
-    fireEvent.click(button);
-
-    // After login, the app should be visible (wait for seeding to finish)
-    await waitFor(() => {
-      expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
-    });
     expect(await screen.findByText('Scanner Screen')).toBeInTheDocument();
-  });
-
-  it('should stay on login screen after failed login', () => {
-    renderApp();
-    const input = screen.getByLabelText('Password');
-    const button = screen.getByRole('button', { name: /unlock/i });
-
-    fireEvent.change(input, { target: { value: 'wrong-password' } });
-    fireEvent.click(button);
-
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
+    expect(signInButton()).not.toBeInTheDocument();
   });
 
   it('renders the till on the Scan tab when Cashier Mode is on', async () => {
     settingsMock.cashierMode = true;
-    localStorage.setItem(AUTH_KEY, 'true');
+    sessionMock.isLoggedIn = true;
     renderApp();
 
     expect(await screen.findByText('Till Screen')).toBeInTheDocument();
@@ -144,7 +137,7 @@ describe('App Auth Gate', () => {
 
   it('renders the receiving scanner when Cashier Mode is off', async () => {
     settingsMock.cashierMode = false;
-    localStorage.setItem(AUTH_KEY, 'true');
+    sessionMock.isLoggedIn = true;
     renderApp();
 
     expect(await screen.findByText('Scanner Screen')).toBeInTheDocument();

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle, LogOut, KeyRound } from 'lucide-react';
+import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle, LogOut, UserRound } from 'lucide-react';
 import type { Product, Batch } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { useSettings } from '@/hooks/useSettings';
@@ -12,7 +12,6 @@ import { getAllBatches } from '@/services/inventoryService';
 import { getDB } from '@/db/database';
 import { SettingsToggle } from '@/components/SettingsToggle';
 import { SettingsStepper } from '@/components/SettingsStepper';
-import { SyncSettings } from '@/components/SyncSettings';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Toast, useToast } from '@/components/Toast';
 
@@ -41,10 +40,9 @@ export function SettingsScreen() {
   const { reopen } = useTutorial();
   const { settings, updateSettings } = useSettings();
   const { toasts, showToast, dismissToast } = useToast();
-  const { logout, setMasterPassword } = useAuth();
+  const { cloudLogout } = useAuth();
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [masterPasswordInput, setMasterPasswordInput] = useState('');
 
   // Handle notification toggle
   const handleNotificationToggle = useCallback(
@@ -138,17 +136,18 @@ export function SettingsScreen() {
     navigate('/');
   }, [reopen, navigate]);
 
-  // Handle logout
-  const handleLogout = useCallback(() => {
-    logout();
-  }, [logout]);
-
-  // Handle master password save
-  const handleSaveMasterPassword = useCallback(() => {
-    setMasterPassword(masterPasswordInput);
-    showToast('success', 'Master password updated');
-    setMasterPasswordInput('');
-  }, [setMasterPassword, masterPasswordInput, showToast]);
+  // Signing out is a real sign-out: Dexie Cloud clears the local database and re-syncs
+  // as nobody, which is what makes handing the phone to someone else safe. If changes
+  // have not synced yet the addon raises a confirmation through
+  // db.cloud.userInteraction (rendered by UserInteractionPrompt) and rejects here when
+  // the user backs out — a cancel, not a failure, so it is only logged.
+  const handleLogout = useCallback(async () => {
+    try {
+      await cloudLogout();
+    } catch (err) {
+      console.error('Log out cancelled or failed:', err);
+    }
+  }, [cloudLogout]);
 
   // Read permission status once via a lazy state initializer — no effect, no
   // re-read on every render, and no one-frame flash of null on mount.
@@ -282,14 +281,6 @@ export function SettingsScreen() {
         </button>
       </div>
 
-      {/* Sync Section */}
-      <h2 className="settings-section-label">
-        Sync
-      </h2>
-      <div className="settings-card settings-card-stack">
-        <SyncSettings />
-      </div>
-
       {/* Security Section */}
       <h2 className="settings-section-label">
         Security
@@ -303,26 +294,14 @@ export function SettingsScreen() {
           Log Out
         </button>
         <div className="settings-row">
-          <KeyRound size={20} aria-hidden="true" />
-          <label htmlFor="master-password-input" className="settings-field-label">
-            Master Password
-          </label>
-          <input
-            id="master-password-input"
-            type="password"
-            value={masterPasswordInput}
-            onChange={(e) => setMasterPasswordInput(e.target.value)}
-            placeholder="Enter new master password"
-            className="settings-input"
-          />
+          <UserRound size={20} aria-hidden="true" />
+          <div className="flex-1">
+            <div className="settings-info-name">Signed in</div>
+            <div className="settings-info-version">
+              Your inventory syncs to this account on every device you sign in to.
+            </div>
+          </div>
         </div>
-        <button
-          onClick={handleSaveMasterPassword}
-          disabled={!masterPasswordInput}
-          className="settings-row"
-        >
-          Save Master Password
-        </button>
       </div>
 
       {/* Clear data confirmation dialog */}

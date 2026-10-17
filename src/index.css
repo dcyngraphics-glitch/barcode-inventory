@@ -2535,6 +2535,45 @@ select {
   font-size: 0.875rem;
 }
 
+/* ===== Dexie Cloud user-interaction overlay =====
+   Rendered once at the app root so db.cloud.userInteraction is always observed. It
+   carries the login prompts (email, then one-time code) and the "unsynced changes"
+   logout confirmation, which can fire from any screen — so it overlays rather than
+   replacing the page. */
+.interaction-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.interaction-cancel {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.interaction-cancel:hover {
+  color: var(--color-foreground);
+}
+
+.interaction-cancel:focus-visible {
+  outline: 2px solid var(--color-accent-border);
+  outline-offset: 2px;
+}
+
 
 
 

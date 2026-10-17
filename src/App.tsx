@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import { ScanLine, Package, Settings, Receipt } from 'lucide-react';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { TillScreen } from '@/screens/TillScreen';
@@ -14,7 +14,9 @@ import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { ScanCartProvider, useScanCart } from '@/context/ScanCartContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { useCloudSession } from '@/hooks/useCloudSession';
+import { UserInteractionPrompt } from '@/components/UserInteractionPrompt';
 import { useTheme } from '@/hooks/useTheme';
 import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
@@ -34,15 +36,38 @@ export default function App() {
   );
 }
 
+/**
+ * The app's gate: nobody reaches the scanner without a Dexie Cloud account.
+ *
+ * Three states, because "not signed in yet" and "still reading the session from
+ * storage" are different: db.cloud.currentUser starts as UNAUTHORIZED_USER with
+ * isLoading:true, and rendering the login screen during that window would flash it on
+ * every cold start for users who are perfectly well signed in.
+ */
 function AuthGate() {
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { isLoading, isLoggedIn } = useCloudSession();
 
-  if (!isAuthenticated) {
-    return <LoginScreen onLogin={() => navigate('/')} />;
-  }
+  return (
+    <>
+      {isLoading ? (
+        <div className="screen-center">
+          <div className="loading-spinner" role="status" aria-label="Loading">
+            <div className="spinner" />
+            <p>Loading your inventory...</p>
+          </div>
+        </div>
+      ) : isLoggedIn ? (
+        <MainApp />
+      ) : (
+        <LoginScreen />
+      )}
 
-  return <MainApp />;
+      {/* Mounted at the root, not inside a branch, so db.cloud.userInteraction is
+          always observed — the "unsynced changes" logout confirmation can fire from
+          any screen, and the login prompts need it while signed out. */}
+      <UserInteractionPrompt />
+    </>
+  );
 }
 
 function MainApp() {

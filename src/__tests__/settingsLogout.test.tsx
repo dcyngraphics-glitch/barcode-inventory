@@ -16,21 +16,17 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-const mockLogout = vi.fn();
-const mockSetMasterPassword = vi.fn();
-const mockGetMasterPassword = vi.fn().mockReturnValue('current-password');
-const mockLogin = vi.fn().mockReturnValue(true);
+const mockCloudLogout = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/context/AuthContext', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/context/AuthContext')>();
   return {
     ...actual,
     useAuth: () => ({
-      isAuthenticated: true,
-      login: mockLogin,
-      logout: mockLogout,
-      getMasterPassword: mockGetMasterPassword,
-      setMasterPassword: mockSetMasterPassword,
+      cloudUser: 'me@example.com',
+      cloudError: '',
+      cloudLogin: vi.fn(),
+      cloudLogout: mockCloudLogout,
     }),
   };
 });
@@ -89,7 +85,7 @@ function renderSettings() {
   return render(
     <MemoryRouter>
       <SettingsScreen />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -98,7 +94,6 @@ function renderSettings() {
 describe('SettingsScreen – Security section', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetMasterPassword.mockReturnValue('current-password');
   });
 
   it('should render a Security section heading', () => {
@@ -111,13 +106,13 @@ describe('SettingsScreen – Security section', () => {
     expect(screen.getByRole('button', { name: /log out/i })).toBeInTheDocument();
   });
 
-  it('should call logout() when Log Out is clicked', () => {
+  it('should sign out through Dexie Cloud when Log Out is clicked', () => {
     renderSettings();
     const btn = screen.getByRole('button', { name: /log out/i });
     act(() => {
       btn.click();
     });
-    expect(mockLogout).toHaveBeenCalledTimes(1);
+    expect(mockCloudLogout).toHaveBeenCalledTimes(1);
   });
 
   // d2042c8 removed the navigate('/login') call: there is no /login route, so it
@@ -128,28 +123,31 @@ describe('SettingsScreen – Security section', () => {
     act(() => {
       btn.click();
     });
-    expect(mockLogout).toHaveBeenCalledTimes(1);
+    expect(mockCloudLogout).toHaveBeenCalledTimes(1);
     expect(mockNavigate).not.toHaveBeenCalledWith('/login');
   });
+});
 
-  it('should render a Master Password field', () => {
-    renderSettings();
-    expect(screen.getByLabelText(/master password/i)).toBeInTheDocument();
+describe('SettingsScreen – removed sections', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should render a Save Master Password button', () => {
+  // Signing in now happens at the gate before the app is usable, so a Sync section
+  // buried in Settings is both redundant and misleading.
+  it('no longer renders a Sync section', () => {
     renderSettings();
-    expect(screen.getByRole('button', { name: /save master password/i })).toBeInTheDocument();
+    expect(screen.queryByText(/^sync$/i)).not.toBeInTheDocument();
   });
 
-  it('should call setMasterPassword with the new password when save is clicked', () => {
+  // The account login replaced the master password entirely.
+  it('no longer renders a Master Password field', () => {
     renderSettings();
-    const input = screen.getByLabelText(/master password/i);
-    fireEvent.change(input, { target: { value: 'new-secret' } });
-    const btn = screen.getByRole('button', { name: /save master password/i });
-    act(() => {
-      btn.click();
-    });
-    expect(mockSetMasterPassword).toHaveBeenCalledWith('new-secret');
+    expect(screen.queryByLabelText(/master password/i)).not.toBeInTheDocument();
+  });
+
+  it('no longer renders a Save Master Password button', () => {
+    renderSettings();
+    expect(screen.queryByRole('button', { name: /save master password/i })).not.toBeInTheDocument();
   });
 });
