@@ -1,4 +1,4 @@
-import type { Product } from '@/types';
+import type { Product, ProductDraft } from '@/types';
 import { db } from '@/db/database';
 import { productIdFor } from '@/utils/privateId';
 
@@ -12,7 +12,7 @@ export async function getAllProducts(): Promise<Product[]> {
   return db.catalog.orderBy('name').toArray();
 }
 
-export async function saveProduct(product: Product): Promise<Product> {
+export async function saveProduct(product: ProductDraft): Promise<Product> {
   // Derive the key here so no caller has to know about the private-ID convention.
   const withId: Product = { ...product, productId: productIdFor(product.barcode) };
   await db.catalog.put(withId);
@@ -23,9 +23,9 @@ export async function deleteProduct(barcode: string): Promise<void> {
   await db.catalog.delete(productIdFor(barcode));
 }
 
-export async function updateProduct(product: Product): Promise<void> {
+export async function updateProduct(product: ProductDraft): Promise<void> {
   const existing = await getProduct(product.barcode);
-  const merged: Product = existing
+  const merged: ProductDraft = existing
     ? {
         ...existing,
         ...product,

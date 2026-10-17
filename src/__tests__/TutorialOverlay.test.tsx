@@ -5,10 +5,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { TutorialProvider } from '../context/TutorialContext';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { db } from '../db/database';
+import { SETTINGS_ID } from '@/types';
 
 async function setupCompleted() {
   await db.table('settings').put({
-    id: 'settings',
+    id: SETTINGS_ID,
     alertWindowDays: 3,
     notificationsEnabled: false,
     theme: 'auto',

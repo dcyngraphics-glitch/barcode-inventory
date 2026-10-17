@@ -3,6 +3,7 @@ import 'fake-indexeddb/auto';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { TutorialProvider, useTutorial } from '../context/TutorialContext';
 import { db } from '../db/database';
+import { SETTINGS_ID } from '@/types';
 
 function TestConsumer() {
   const { isVisible, currentStep, totalSteps, currentStepData, next, prev, skip, finish } = useTutorial();
@@ -45,7 +46,7 @@ describe('TutorialContext', () => {
 
   it('should hide tutorial if already completed', async () => {
     await db.table('settings').put({
-      id: 'settings',
+      id: SETTINGS_ID,
       alertWindowDays: 3,
       notificationsEnabled: false,
       theme: 'auto',

@@ -7,13 +7,25 @@ export const SETTINGS_ID = '#settings';
 
 export type ProductSource = 'local' | 'openfoodfacts' | 'manual';
 
+/**
+ * A product as callers supply it on write: everything except the derived primary key.
+ * catalogService computes `productId` from the barcode, so no caller has to know the
+ * private-ID convention — while `Product` requiring it means writing a row straight
+ * to the table is a compile error rather than a runtime throw.
+ */
+export type ProductDraft = Omit<Product, 'productId'>;
+
 export interface Product {
   /**
    * Primary key: '#' + barcode. A Dexie Cloud private ID, so two accounts can hold
-   * the same barcode without colliding. Derived automatically on write by
-   * catalogService — do not set it by hand outside seedService.
+   * the same barcode without colliding.
+   *
+   * Required on purpose. While it was optional, `db.catalog.put({...})` calls that
+   * omitted it type-checked fine and failed only at runtime — which is how five
+   * screens shipped broken. Writes go through catalogService, which derives it from
+   * the barcode (see ProductDraft below).
    */
-  productId?: string;
+  productId: string;
   barcode: string;
   name: string;
   brand: string;

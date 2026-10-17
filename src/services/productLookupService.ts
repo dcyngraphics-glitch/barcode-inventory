@@ -1,5 +1,6 @@
 import type { Product, ProductSource } from '@/types';
 import { getProduct } from '@/services/catalogService';
+import { productIdFor } from '@/utils/privateId';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v0/product';
 
@@ -65,6 +66,9 @@ export async function lookupOpenFoodFacts(
   const p = data.product;
   const now = new Date().toISOString();
   return {
+    // productId is a pure function of the barcode, so a looked-up product can carry
+    // its key before it is ever persisted.
+    productId: productIdFor(barcode),
     barcode,
     name: p.product_name ?? '',
     brand: p.brands ?? '',
@@ -120,6 +124,7 @@ export async function lookupProduct(
   // Step 3: Manual entry placeholder
   const now = new Date().toISOString();
   const placeholder: Product = {
+    productId: productIdFor(barcode),
     barcode,
     name: '',
     brand: '',

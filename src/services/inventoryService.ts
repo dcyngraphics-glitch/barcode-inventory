@@ -1,5 +1,6 @@
 import type { Batch, InventoryGroup } from '@/types';
 import { db } from '@/db/database';
+import { productIdFor } from '@/utils/privateId';
 import { getProduct } from './catalogService';
 
 export async function getBatch(batchId: string): Promise<Batch | undefined> {
@@ -74,6 +75,7 @@ export async function getInventoryGroups(): Promise<InventoryGroup[]> {
       // Orphan batch with no catalog product — show with placeholder instead of dropping
       groups.push({
         product: {
+          productId: productIdFor(barcode),
           barcode,
           name: 'Unknown Product',
           brand: '',

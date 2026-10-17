@@ -5,11 +5,11 @@ import { ProductImage } from '@/components/ProductImage';
 import { ProductForm, type ProductFormData } from '@/components/ProductForm';
 import { ProductManagementSheet } from '@/components/ProductManagementSheet';
 import { useProductLookup } from '@/hooks/useProductLookup';
-import { updateProduct } from '@/services/catalogService';
+import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
 import { buildProductUpdate } from '@/utils/productUpdate';
 import { db } from '@/db/database';
 import { generateId } from '@/utils/helpers';
-import type { Product, Batch } from '@/types';
+import type { Product, ProductDraft, Batch } from '@/types';
 
 const BOTTOM_NAV_HEIGHT = 80;
 
@@ -176,10 +176,12 @@ export function ProductDetailScreen() {
     try {
       const now = new Date().toISOString();
       const price = parseFloat(data.price);
+      // saveProduct returns the row it actually wrote, including the derived key.
+      let savedProduct: Product | null = null;
 
       if (isNewProduct) {
         // Create new product and batch atomically in a single transaction
-        const newProduct: Product = {
+        const newProduct: ProductDraft = {
           barcode,
           name: data.name.trim(),
           brand: data.brand.trim(),
@@ -198,9 +200,12 @@ export function ProductDetailScreen() {
           expiryDate: data.expiryDate,
           scannedAt: now,
         };
-        await db.transaction('rw', [db.catalog, db.inventory], async () => {
-          await db.catalog.put(newProduct);
+        savedProduct = await db.transaction('rw', [db.catalog, db.inventory], async () => {
+          // saveProduct derives the '#'-private primary key. Writing to db.catalog
+          // directly would omit it and throw a ConstraintError at runtime.
+          const written = await saveProduct(newProduct);
           await db.inventory.put(newBatch);
+          return written;
         });
       } else {
         if (product) {
@@ -219,7 +224,7 @@ export function ProductDetailScreen() {
           };
           await db.transaction('rw', [db.catalog, db.inventory], async () => {
             if (update) {
-              await db.catalog.put(update);
+              await saveProduct(update);
             }
             await db.inventory.put(newBatch);
           });
@@ -228,19 +233,9 @@ export function ProductDetailScreen() {
 
       if (isNewProduct) {
         showToast(`Product saved! Next time you scan ${barcode}, it'll show automatically.`, 'success');
-        // Update local state to reflect the newly saved product so the form doesn't reset
-        setProduct({
-          barcode,
-          name: data.name.trim(),
-          brand: data.brand.trim(),
-          category: 'uncategorized',
-          storePrice: price,
-          defaultExpiry: data.expiryDate,
-          imageUrl: product?.imageUrl,
-          source: 'manual',
-          createdAt: now,
-          updatedAt: now,
-        });
+        // Reflect the row that was actually written, including its derived key, so the
+        // form doesn't reset and local state stays consistent with the database.
+        setProduct(savedProduct);
         setIsNewProduct(false);
       } else {
         showToast('Added!', 'success');
@@ -275,7 +270,9 @@ export function ProductDetailScreen() {
       // Atomically delete product and all its batches in a single transaction
       await db.transaction('rw', [db.catalog, db.inventory], async () => {
         await db.inventory.where('barcode').equals(barcodeToDelete).delete();
-        await db.catalog.delete(barcodeToDelete);
+        // Delete by barcode, not by primary key: the key is '#' + barcode, so passing
+        // the bare barcode here would match nothing and silently leave the row.
+        await deleteProduct(barcodeToDelete);
       });
       showToast('Product deleted', 'success');
       navigate('/inventory');

@@ -42,7 +42,9 @@ export function CartReviewScreen() {
         for (const item of items) {
           // Save product to catalog if new (no existing product)
           if (!item.product) {
-            await db.catalog.put({
+            // saveProduct derives the '#'-private primary key; a raw db.catalog.put
+            // here would omit it and throw a ConstraintError at runtime.
+            await saveProduct({
               barcode: item.barcode,
               name: item.name || `Unknown (${item.barcode})`,
               brand: item.brand,
@@ -57,7 +59,7 @@ export function CartReviewScreen() {
           } else {
             // Update product price if changed
             if (item.product.storePrice !== item.price) {
-              await db.catalog.put({
+              await saveProduct({
                 ...item.product,
                 storePrice: item.price,
                 updatedAt: now,

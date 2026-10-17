@@ -4,10 +4,11 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
 import { db } from '@/db/database';
+import { SETTINGS_ID } from '@/types';
 
 async function setupTutorialCompleted() {
   await db.table('settings').put({
-    id: 'settings',
+    id: SETTINGS_ID,
     alertWindowDays: 3,
     notificationsEnabled: false,
     theme: 'auto',
@@ -56,7 +57,7 @@ describe('ScreenTooltip', () => {
   it('should not show tooltip if already seen', async () => {
     // Mark scanner hint as seen
     await db.table('settings').put({
-      id: 'settings',
+      id: SETTINGS_ID,
       alertWindowDays: 3,
       notificationsEnabled: false,
       theme: 'auto',
