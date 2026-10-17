@@ -1,5 +1,6 @@
 import type { Product } from '@/types';
 import { PH_GROCERY_SEED } from '@/data/phGrocerySeed';
+import { productIdFor } from '@/utils/privateId';
 import { getAllProducts } from '@/services/catalogService';
 import { loadSettings, saveSettings } from '@/services/settingsService';
 import { db } from '@/db/database';
@@ -25,6 +26,9 @@ export async function seedCatalogIfEmpty(): Promise<void> {
   // Seed all products using bulkPut for atomic, idempotent insertion
   const now = new Date().toISOString();
   const products: Product[] = PH_GROCERY_SEED.map((seed) => ({
+    // Deterministic per-account key: seeding on a second device produces identical
+    // keys, so bulkPut converges instead of duplicating rows.
+    productId: productIdFor(seed.barcode),
     barcode: seed.barcode,
     name: seed.name,
     brand: seed.brand,

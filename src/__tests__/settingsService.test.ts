@@ -20,7 +20,8 @@ describe('settingsService', () => {
 
   it('should preserve settings id', async () => {
     const settings = await loadSettings();
-    expect(settings.id).toBe('settings');
+    // A '#'-prefixed private ID, so each account on the database gets its own row.
+    expect(settings.id).toBe('#settings');
   });
 });
 

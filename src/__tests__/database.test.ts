@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db, getDB, resetDB } from '@/db/database';
+import { SETTINGS_ID } from '@/types';
 
 describe('database', () => {
   beforeEach(async () => {
@@ -14,7 +15,8 @@ describe('database', () => {
 
   it('should have the expected primary keys', async () => {
     await db.open();
-    expect(db.catalog.schema.primKey.keyPath).toBe('barcode');
+    // Keyed by the per-account private ID ('#' + barcode), not the shared barcode itself.
+    expect(db.catalog.schema.primKey.keyPath).toBe('productId');
     expect(db.inventory.schema.primKey.keyPath).toBe('batchId');
     expect(db.settings.schema.primKey.keyPath).toBe('id');
     expect(db.sales.schema.primKey.keyPath).toBe('saleId');
@@ -32,6 +34,12 @@ describe('database', () => {
     expect(db.sales.schema.indexes.find((i) => i.name === 'dayKey')?.keyPath).toBe('dayKey');
   });
 
+  it('should key settings by a per-account private ID', () => {
+    // '#' makes Dexie Cloud namespace this key per user. Without it, every account on
+    // the database would share the single row keyed 'settings'.
+    expect(SETTINGS_ID).toBe('#settings');
+  });
+
   describe('getDB and resetDB', () => {
     it('getDB should return the Dexie instance', async () => {
       const dbFromGetDB = await getDB();
@@ -40,7 +48,7 @@ describe('database', () => {
 
     it('resetDB should delete the database', async () => {
       await db.open();
-      await db.table('catalog').put({ barcode: 'test', name: 'test' });
+      await db.table('catalog').put({ productId: '#test', barcode: 'test', name: 'test' });
       const countBefore = await db.catalog.count();
       expect(countBefore).toBe(1);
       await resetDB();

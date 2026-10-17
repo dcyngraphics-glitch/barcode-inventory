@@ -14,7 +14,8 @@ describe('dexie database', () => {
 
   it('should have the expected primary keys', async () => {
     await db.open();
-    expect(db.catalog.schema.primKey.keyPath).toBe('barcode');
+    // catalog is keyed by the per-account private ID ('#' + barcode), not the barcode.
+    expect(db.catalog.schema.primKey.keyPath).toBe('productId');
     expect(db.inventory.schema.primKey.keyPath).toBe('batchId');
     expect(db.settings.schema.primKey.keyPath).toBe('id');
     expect(db.sales.schema.primKey.keyPath).toBe('saleId');

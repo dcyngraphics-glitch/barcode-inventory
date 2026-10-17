@@ -1,8 +1,11 @@
 import type { Product } from '@/types';
 import { db } from '@/db/database';
+import { productIdFor } from '@/utils/privateId';
 
 export async function getProduct(barcode: string): Promise<Product | undefined> {
-  return db.catalog.get(barcode);
+  // The primary key is the per-account private ID ('#' + barcode), so the barcode is
+  // reached through its index rather than as a key.
+  return db.catalog.where('barcode').equals(barcode).first();
 }
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -10,16 +13,18 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function saveProduct(product: Product): Promise<Product> {
-  await db.catalog.put(product);
-  return product;
+  // Derive the key here so no caller has to know about the private-ID convention.
+  const withId: Product = { ...product, productId: productIdFor(product.barcode) };
+  await db.catalog.put(withId);
+  return withId;
 }
 
 export async function deleteProduct(barcode: string): Promise<void> {
-  await db.catalog.delete(barcode);
+  await db.catalog.delete(productIdFor(barcode));
 }
 
 export async function updateProduct(product: Product): Promise<void> {
-  const existing = await db.catalog.get(product.barcode);
+  const existing = await getProduct(product.barcode);
   const merged: Product = existing
     ? {
         ...existing,
@@ -32,7 +37,7 @@ export async function updateProduct(product: Product): Promise<void> {
         createdAt: product.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-  await db.catalog.put(merged);
+  await db.catalog.put({ ...merged, productId: productIdFor(merged.barcode) });
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {

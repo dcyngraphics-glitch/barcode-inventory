@@ -1,8 +1,19 @@
-export const SETTINGS_ID = 'settings';
+/**
+ * Private singleton key. Dexie Cloud keeps '#'-prefixed primary keys in a per-user
+ * namespace, so every account gets its own settings row instead of every account on
+ * the database fighting over the literal key 'settings'.
+ */
+export const SETTINGS_ID = '#settings';
 
 export type ProductSource = 'local' | 'openfoodfacts' | 'manual';
 
 export interface Product {
+  /**
+   * Primary key: '#' + barcode. A Dexie Cloud private ID, so two accounts can hold
+   * the same barcode without colliding. Derived automatically on write by
+   * catalogService — do not set it by hand outside seedService.
+   */
+  productId?: string;
   barcode: string;
   name: string;
   brand: string;

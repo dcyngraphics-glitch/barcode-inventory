@@ -26,7 +26,9 @@ describe('catalogService', () => {
   it('should save and retrieve a product', async () => {
     await saveProduct(mockProduct);
     const retrieved = await getProduct(mockProduct.barcode);
-    expect(retrieved).toEqual(mockProduct);
+    expect(retrieved).toMatchObject(mockProduct);
+    // The row is keyed by the per-account private ID, not the bare barcode.
+    expect(retrieved!.productId).toBe('#1234567890123');
   });
 
   it('should return undefined for non-existent product', async () => {
@@ -86,5 +88,23 @@ describe('catalogService', () => {
     await saveProduct(mockProduct);
     const results = await searchProducts('zzz-no-match');
     expect(results.length).toBe(0);
+  });
+
+  it('stores products under the private productId, not the bare barcode', async () => {
+    await saveProduct({ ...mockProduct, barcode: '4801' });
+    const rows = await db.catalog.toArray();
+    expect(rows[0]!.productId).toBe('#4801');
+    expect(rows[0]!.barcode).toBe('4801');
+  });
+
+  it('still finds a product by its plain barcode', async () => {
+    await saveProduct({ ...mockProduct, barcode: '4802' });
+    expect((await getProduct('4802'))?.barcode).toBe('4802');
+  });
+
+  it('deletes by plain barcode even though the key is private', async () => {
+    await saveProduct({ ...mockProduct, barcode: '4803' });
+    await deleteProduct('4803');
+    expect(await getProduct('4803')).toBeUndefined();
   });
 });

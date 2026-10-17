@@ -15,7 +15,23 @@ import type { Batch, Settings, Sale } from '@/types';
 // site either way — so keeping it as a fallback is safe, and a missing env var can no
 // longer silently disable sync. The env var still wins when present.
 const DEFAULT_SYNC_URL = 'https://zo7vbabeq.dexie.cloud';
-const DEFAULT_DATABASE_NAME = 'barcode-inventory';
+
+/**
+ * Local IndexedDB name, carrying a schema-generation suffix.
+ *
+ * v11 changed the SHAPE of two primary keys (catalog: barcode -> productId, settings:
+ * 'settings' -> '#settings'). IndexedDB cannot change a primary key in place, and
+ * Dexie refuses rather than silently dropping data: opening an existing v10 database
+ * at v11 throws UpgradeError("Not yet support for changing primary key"), which would
+ * have hard-failed the app on every device that already had data.
+ *
+ * A new name sidesteps the upgrade completely — the v10 database is left behind on
+ * disk and never opened again, which IS the approved wipe. The CLOUD database is
+ * identified by its URL, not by this name, so sync is unaffected.
+ *
+ * Never revert this to 'barcode-inventory': that name holds a v10 database.
+ */
+export const DEFAULT_DATABASE_NAME = 'barcode-inventory-v2';
 
 const env = import.meta.env;
 const syncUrl = (env.VITE_DEXIE_CLOUD_SYNC_URL as string | undefined)?.trim() || DEFAULT_SYNC_URL;
@@ -47,13 +63,18 @@ const db = new Dexie<BarcodeInventoryDB>(databaseName, { addons });
 console.log(`[dexie] Dexie instance created for ${databaseName}`);
 
 // Define the database schema (Dexie 4.x syntax: & = primary key, field = index)
-db.version(10).stores({
-  catalog: '&barcode, name',
+db.version(11).stores({
+  // catalog is keyed by productId ('#' + barcode), NOT by the barcode itself:
+  // barcodes are shared real-world identifiers, so two accounts scanning the same
+  // product would otherwise produce the same primary key. See utils/privateId.ts.
+  catalog: '&productId, barcode, name',
   inventory: '&batchId, barcode, expiryDate',
-  settings: '&id',
+  settings: '&id', // id is '#settings' — a private singleton, one per account
   sales: '&saleId, dayKey'
 });
-console.log(`[dexie] Schema defined with version 10`);
+// No .upgrade() here, and there never can be one for a primary-key change: IndexedDB
+// cannot alter a key path in place. The fresh database name above is the wipe.
+console.log(`[dexie] Schema defined with version 11`);
 
 // Configure Dexie Cloud. Skipped under Vitest so the addon never touches
 // fake-indexeddb (the fallback URL above would otherwise make this always truthy).
