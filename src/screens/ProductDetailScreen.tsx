@@ -430,16 +430,8 @@ export function ProductDetailScreen() {
         }}
       >
         {/* Product Hero */}
-        <div
-          style={{
-            background: '#FFFFFF',
-            borderRadius: '12px',
-            padding: '24px 16px',
-            border: '1px solid #E6E8EA',
-            textAlign: 'center',
-          }}
-        >
-          <ProductImage imageUrl={product?.imageUrl} name={product?.name || 'Product'} />
+                <div className="card">
+                  <ProductImage imageUrl={product?.imageUrl} name={product?.name || 'Product'} />
 
           {product?.name && (
             <>
@@ -468,92 +460,40 @@ export function ProductDetailScreen() {
           )}
 
           {/* Status Badge */}
-          <div style={{ marginTop: '16px' }}>
-            {isNewProduct ? (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '4px 12px',
-                  borderRadius: '999px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  background: '#DCFCE7',
-                  color: '#166534',
-                }}
-              >
-                New Product
-              </span>
-            ) : (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '4px 12px',
-                  borderRadius: '999px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  background: '#F2F3F4',
-                  color: '#475569',
-                }}
-              >
-                In Catalog
-              </span>
-            )}
-          </div>
+                    <div style={{ marginTop: '16px' }}>
+                      {isNewProduct ? (
+                        <span className="badge-good">
+                          New Product
+                        </span>
+                      ) : (
+                        <span className="badge-neutral">
+                          In Catalog
+                        </span>
+                      )}
+                    </div>
 
           {/* Barcode display */}
-          <p
-            style={{
-              fontSize: '12px',
-              color: '#94a3b8',
-              marginTop: '12px',
-              fontFamily: 'monospace',
-            }}
-          >
-            {barcode}
-          </p>
+                    <p className="text-muted font-mono text-xs" style={{ marginTop: '12px' }}>
+                      {barcode}
+                    </p>
         </div>
 
         {/* Bug fix #3: Retry lookup button shown when API failure */}
-        {showRetryOption && (
-          <button
-            onClick={handleRetry}
-            disabled={lookupLoading}
-            style={{
-              background: '#FFFFFF',
-              border: '1px solid #E6E8EA',
-              borderRadius: '12px',
-              padding: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: lookupLoading ? 'not-allowed' : 'pointer',
-              color: '#334155',
-              fontSize: '14px',
-              fontWeight: 500,
-              opacity: lookupLoading ? 0.6 : 1,
-              transition: 'opacity 200ms ease',
-            }}
-          >
-            <RefreshCw size={16} className={lookupLoading ? 'spin' : ''} />
-            {lookupLoading ? 'Retrying...' : 'Retry lookup'}
-          </button>
-        )}
+                {showRetryOption && (
+                  <button
+                    onClick={handleRetry}
+                    disabled={lookupLoading}
+                    className="btn-secondary"
+                    style={{ opacity: lookupLoading ? 0.6 : 1, transition: 'opacity 200ms ease' }}
+                  >
+                    <RefreshCw size={16} className={lookupLoading ? 'spin' : ''} />
+                    {lookupLoading ? 'Retrying...' : 'Retry lookup'}
+                  </button>
+                )}
 
         {/* Editable Form */}
-        <div
-          style={{
-            background: '#FFFFFF',
-            borderRadius: '12px',
-            padding: '16px',
-            border: '1px solid #E6E8EA',
-          }}
-        >
-          <ProductForm
+                <div className="card" style={{ padding: '16px' }}>
+                  <ProductForm
             key={product?.barcode || 'new'}
             initialData={initialFormData}
             isNewProduct={isNewProduct}
@@ -564,30 +504,15 @@ export function ProductDetailScreen() {
         </div>
 
         {/* Edit product details link */}
-        {!isNewProduct && product && (
-          <button
-            onClick={() => setEditSheetOpen(true)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#334155',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '8px',
-              minHeight: '44px',
-              margin: '0 auto',
-              transition: 'opacity 200ms ease',
-            }}
-          >
-            <Pencil size={16} />
-            Edit product details
-          </button>
-        )}
+                {!isNewProduct && product && (
+                  <button
+                    onClick={() => setEditSheetOpen(true)}
+                    className="btn-ghost"
+                  >
+                    <Pencil size={16} />
+                    Edit product details
+                  </button>
+                )}
       </main>
 
       {/* Toast */}
