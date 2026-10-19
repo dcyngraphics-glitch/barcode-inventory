@@ -10,6 +10,19 @@ const base = isVercel ? '/' : (isProduction ? '/barcode-inventory/' : '/');
 
 export default defineConfig({
   base,
+  /**
+   * The deployment target, exposed to the BUNDLE.
+   *
+   * vite.config runs in Node, where Vercel's VERCEL vars are real — but the browser
+   * bundle only sees `import.meta.env`, and Vite exposes just `VITE_`-prefixed names
+   * there. So `import.meta.env.VERCEL` is ALWAYS undefined in the browser, and every
+   * production build silently took the GitHub Pages branch: the router's basename
+   * became '/barcode-inventory/' on Vercel, which matches no URL, and the app rendered
+   * a blank page. Pass it through define() so there is one source of truth.
+   */
+  define: {
+    __IS_VERCEL__: JSON.stringify(isVercel),
+  },
   plugins: [
     react(),
     VitePWA({

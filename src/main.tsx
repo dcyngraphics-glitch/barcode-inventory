@@ -5,8 +5,13 @@ import App from './App';
 import { resolveBasename } from '@/utils/basename';
 import './index.css';
 
-// Vercel injects VERCEL=1 and VERCEL_ENV at build time; VERCEL_URL at runtime
-const isVercel = !!(import.meta.env.VERCEL || import.meta.env.VERCEL_ENV || import.meta.env.VERCEL_URL);
+// The deployment target, inlined by vite.config's define(). It MUST come from there:
+// `import.meta.env` only carries VITE_-prefixed names, so the previous
+// `import.meta.env.VERCEL` check was always undefined in the browser and every
+// production build took the GitHub Pages branch. On Vercel that made the router's
+// basename '/barcode-inventory/', which matches no URL — the router then rendered
+// nothing at all and the app showed a blank page.
+const isVercel = __IS_VERCEL__;
 const basename = resolveBasename({ isProd: import.meta.env.PROD, isVercel });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

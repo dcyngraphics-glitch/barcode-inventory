@@ -40,3 +40,4 @@ dexie-cloud.key
 # PWA
 dev-dist
 .vercel
+.env*

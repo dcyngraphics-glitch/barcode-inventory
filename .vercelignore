@@ -1,0 +1,8 @@
+# Keep local environment files out of Vercel deploys.
+#
+# .env is gitignored, so a git-integration build never sees it — but the Vercel CLI
+# uploads the working directory, and it picked .env up. That silently injected a stale
+# local database name into the Vercel build. Never let a local env file reach a deploy.
+.env
+.env.*
+!.env.example
