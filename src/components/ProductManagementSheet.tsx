@@ -13,12 +13,12 @@ interface ProductManagementSheetProps {
 
 const inputStyle: React.CSSProperties = {
   padding: '12px 16px',
-  border: '1px solid #E6E8EA',
+  border: '1px solid var(--color-border)',
   borderRadius: '8px',
   fontSize: '16px',
   fontFamily: 'Inter, sans-serif',
-  background: '#FFFFFF',
-  color: '#0F172A',
+  background: 'var(--color-card)',
+  color: 'var(--color-foreground)',
   width: '100%',
   boxSizing: 'border-box',
 };
@@ -159,7 +159,7 @@ export function ProductManagementSheet({
 
   const getInputStyle = (field: string): React.CSSProperties => ({
     ...inputStyle,
-    border: `1px solid ${validationErrors[field] ? '#DC2626' : '#E6E8EA'}`,
+    border: `1px solid ${validationErrors[field] ? 'var(--color-destructive)' : 'var(--color-border)'}`,
   });
 
   const getErrorId = (field: string) => `edit-${field}-error`;
@@ -190,7 +190,7 @@ export function ProductManagementSheet({
           bottom: 0,
           left: 0,
           right: 0,
-          background: '#FFFFFF',
+          background: 'var(--color-card)',
           borderRadius: '16px 16px 0 0',
           padding: '24px',
           paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
@@ -208,7 +208,7 @@ export function ProductManagementSheet({
           style={{
             width: '40px',
             height: '4px',
-            background: '#E6E8EA',
+            background: 'var(--color-border)',
             borderRadius: '2px',
             margin: '0 auto 16px',
           }}
@@ -227,7 +227,7 @@ export function ProductManagementSheet({
             style={{
               fontSize: '18px',
               fontWeight: 600,
-              color: '#0F172A',
+              color: 'var(--color-foreground)',
               margin: 0,
             }}
           >
@@ -238,7 +238,7 @@ export function ProductManagementSheet({
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#475569',
+              color: 'var(--color-secondary)',
               cursor: 'pointer',
               padding: '8px',
               minWidth: '44px',
@@ -290,7 +290,7 @@ export function ProductManagementSheet({
                   top: '50%',
                   transform: 'translateY(-50%)',
                   fontSize: '16px',
-                  color: '#475569',
+                  color: 'var(--color-secondary)',
                   pointerEvents: 'none',
                 }}
               >
@@ -332,11 +332,11 @@ export function ProductManagementSheet({
               aria-live="polite"
               style={{
                 padding: '12px 16px',
-                background: '#FEE2E2',
-                border: '1px solid #FECACA',
+                background: 'var(--color-error-bg)',
+                border: '1px solid var(--color-error-border)',
                 borderRadius: '8px',
                 fontSize: '14px',
-                color: '#991B1B',
+                color: 'var(--color-error-text)',
               }}
             >
               {error}
@@ -349,8 +349,8 @@ export function ProductManagementSheet({
             disabled={loading}
             style={{
               width: '100%',
-              background: '#059669',
-              color: '#FFFFFF',
+              background: 'var(--color-accent-border)',
+              color: 'var(--color-on-accent)',
               padding: '12px 24px',
               borderRadius: '8px',
               fontWeight: 600,
@@ -372,7 +372,7 @@ export function ProductManagementSheet({
               style={{
                 width: '100%',
                 background: 'transparent',
-                color: '#DC2626',
+                color: 'var(--color-destructive)',
                 padding: '12px 24px',
                 borderRadius: '8px',
                 fontWeight: 500,
@@ -394,15 +394,15 @@ export function ProductManagementSheet({
             <div
               style={{
                 padding: '16px',
-                background: '#FEE2E2',
+                background: 'var(--color-error-bg)',
                 borderRadius: '8px',
-                border: '1px solid #FECACA',
+                border: '1px solid var(--color-error-border)',
               }}
             >
               <p
                 style={{
                   fontSize: '14px',
-                  color: '#991B1B',
+                  color: 'var(--color-error-text)',
                   margin: '0 0 12px',
                 }}
               >
@@ -413,14 +413,14 @@ export function ProductManagementSheet({
                   onClick={() => setShowDeleteConfirm(false)}
                   style={{
                     flex: 1,
-                    background: '#FFFFFF',
-                    color: '#334155',
+                    background: 'var(--color-card)',
+                    color: 'var(--color-secondary)',
                     padding: '8px 16px',
                     borderRadius: '8px',
                     fontWeight: 500,
                     fontSize: '14px',
                     minHeight: '44px',
-                    border: '1px solid #E6E8EA',
+                    border: '1px solid var(--color-border)',
                     cursor: 'pointer',
                   }}
                 >
@@ -431,8 +431,8 @@ export function ProductManagementSheet({
                   disabled={loading}
                   style={{
                     flex: 1,
-                    background: '#DC2626',
-                    color: '#FFFFFF',
+                    background: 'var(--color-destructive)',
+                    color: 'var(--color-on-destructive)',
                     padding: '8px 16px',
                     borderRadius: '8px',
                     fontWeight: 500,

@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             justifyContent: 'center',
             minHeight: '100vh',
             padding: '24px',
-            background: '#f8fafc',
+            background: 'var(--color-background)',
             fontFamily: 'system-ui, -apple-system, sans-serif',
           }}
           role="alert"
@@ -52,10 +52,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             style={{
               maxWidth: '400px',
               textAlign: 'center',
-              background: '#fff',
+              background: 'var(--color-card)',
               padding: '32px',
               borderRadius: '12px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--color-border)',
             }}
           >
             <div
@@ -70,7 +70,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               style={{
                 fontSize: '20px',
                 fontWeight: 600,
-                color: '#0f172a',
+                color: 'var(--color-foreground)',
                 margin: '0 0 8px 0',
               }}
             >
@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <p
               style={{
                 fontSize: '14px',
-                color: '#64748b',
+                color: 'var(--color-muted-foreground)',
                 margin: '0 0 24px 0',
                 lineHeight: 1.5,
               }}
@@ -90,8 +90,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               onClick={this.handleReset}
               style={{
                 padding: '10px 24px',
-                background: '#0f172a',
-                color: '#fff',
+                background: 'var(--color-primary)',
+                color: 'var(--color-on-primary)',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '14px',
@@ -111,7 +111,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <summary
                   style={{
                     fontSize: '12px',
-                    color: '#94a3b8',
+                    color: 'var(--color-muted-foreground)',
                     cursor: 'pointer',
                   }}
                 >
@@ -121,10 +121,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   style={{
                     marginTop: '8px',
                     padding: '12px',
-                    background: '#f1f5f9',
+                    background: 'var(--color-muted)',
                     borderRadius: '6px',
                     fontSize: '11px',
-                    color: '#475569',
+                    color: 'var(--color-secondary)',
                     overflow: 'auto',
                     maxHeight: '150px',
                     whiteSpace: 'pre-wrap',

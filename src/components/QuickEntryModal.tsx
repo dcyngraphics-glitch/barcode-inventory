@@ -73,7 +73,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
     >
       <div
         style={{
-          background: '#fff',
+          background: 'var(--color-card)',
           borderRadius: '16px',
           padding: '24px',
           width: '100%',
@@ -82,7 +82,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--color-foreground)' }}>
             Quick Entry
           </h3>
           <button
@@ -91,7 +91,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--color-muted-foreground)',
               cursor: 'pointer',
               padding: '4px',
               display: 'flex',
@@ -102,7 +102,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
           </button>
         </div>
 
-        <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px', fontFamily: 'monospace' }}>
+        <p style={{ fontSize: '12px',  color: 'var(--color-muted-foreground)', marginBottom: '16px', fontFamily: 'monospace' }}>
           {barcode}
         </p>
 
@@ -110,7 +110,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         <div style={{ marginBottom: '12px' }}>
           <label
             htmlFor="quick-entry-name"
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             Product name
           </label>
@@ -126,7 +126,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               width: '100%',
               padding: '10px 12px',
-              border: `1.5px solid ${nameError ? '#dc2626' : '#e2e8f0'}`,
+              border: `1.5px solid ${nameError ? 'var(--color-destructive)' : 'var(--color-border)'}`,
               borderRadius: '8px',
               fontSize: '16px',
               outline: 'none',
@@ -134,7 +134,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             }}
           />
           {nameError && (
-            <span style={{ fontSize: '12px', color: '#dc2626', marginTop: '2px', display: 'block' }}>
+            <span style={{ fontSize: '12px',  color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
               {nameError}
             </span>
           )}
@@ -144,7 +144,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         <div style={{ marginBottom: '12px' }}>
           <label
             htmlFor="quick-entry-brand"
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             Brand (optional)
           </label>
@@ -157,7 +157,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               width: '100%',
               padding: '10px 12px',
-              border: '1.5px solid #e2e8f0',
+              border: '1.5px solid var(--color-border)',
               borderRadius: '8px',
               fontSize: '16px',
               outline: 'none',
@@ -168,7 +168,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
 
         <div style={{ marginBottom: '12px' }}>
           <label
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <DollarSign size={14} /> Price (₱)
@@ -190,7 +190,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               width: '100%',
               padding: '10px 12px',
-              border: `1.5px solid ${priceError ? '#dc2626' : '#e2e8f0'}`,
+              border: `1.5px solid ${priceError ? 'var(--color-destructive)' : 'var(--color-border)'}`,
               borderRadius: '8px',
               fontSize: '16px',
               outline: 'none',
@@ -198,7 +198,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             }}
           />
           {priceError && (
-            <span style={{ fontSize: '12px', color: '#dc2626', marginTop: '2px', display: 'block' }}>
+            <span style={{ fontSize: '12px',  color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
               {priceError}
             </span>
           )}
@@ -206,7 +206,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
 
         <div style={{ marginBottom: '20px' }}>
           <label
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <Calendar size={14} /> Expiry Date
@@ -219,14 +219,14 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               width: '100%',
               padding: '10px 12px',
-              border: '1.5px solid #e2e8f0',
+              border: '1.5px solid var(--color-border)',
               borderRadius: '8px',
               fontSize: '16px',
               outline: 'none',
               boxSizing: 'border-box',
             }}
           />
-          <span style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px', display: 'block' }}>
+          <span style={{ fontSize: '11px', color: 'var(--color-muted-foreground)', marginTop: '2px', display: 'block' }}>
             Leave empty for 30 days from today
           </span>
         </div>
@@ -237,12 +237,12 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               flex: 1,
               padding: '12px',
-              background: '#f1f5f9',
+              background: 'var(--color-muted)',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 500,
-              color: '#475569',
+              color: 'var(--color-secondary)',
               cursor: 'pointer',
             }}
           >
@@ -253,12 +253,12 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             style={{
               flex: 1,
               padding: '12px',
-              background: '#0f172a',
+              background: 'var(--color-primary)',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 600,
-              color: '#fff',
+              color: 'var(--color-on-primary)',
               cursor: 'pointer',
             }}
           >

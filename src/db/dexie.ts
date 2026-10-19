@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import dexieCloud from 'dexie-cloud-addon';
-import type { Batch, Settings, Sale } from '@/types';
+import type { Batch, Product, Settings, Sale } from '@/types';
 
 // --- Build-time sync config -------------------------------------------------
 // Vite inlines import.meta.env at BUILD time, so these values must exist when the
@@ -45,12 +45,15 @@ const databaseName =
 
 console.log(`[dexie] Using database name: ${databaseName}`);
 
-// Define the database interface
+// Define the database interface.
+// Row type comes first, key type second: Dexie.Table<Entity, Key>. Passing the table
+// NAME as the row type (as this did) type-checks the constructor but makes every
+// query resolve to a string, so `db.products.toArray()` yielded 'products'[].
 interface BarcodeInventoryDB {
-  products: Dexie.Table<'products', string>;
-  inventory: Dexie.Table<'inventory', Batch>;
-  settings: Dexie.Table<'settings', Settings>;
-  sales: Dexie.Table<'sale', Sale>;
+  products: Dexie.Table<Product, string>;
+  inventory: Dexie.Table<Batch, string>;
+  settings: Dexie.Table<Settings, string>;
+  sales: Dexie.Table<Sale, string>;
 }
 
 // Create a Dexie instance with the Dexie Cloud addon (Dexie 4.x API).
@@ -59,7 +62,11 @@ interface BarcodeInventoryDB {
 // table. That is infrastructure noise which leaks into unit tests asserting on stored
 // shapes, so tests get a plain Dexie database instead.
 const addons = env.VITEST ? [] : [dexieCloud];
-const db = new Dexie<BarcodeInventoryDB>(databaseName, { addons });
+// Dexie 4's constructor takes no type argument (TS2558), so the table interface is
+// asserted onto the instance instead. Without this every `db.products` / `db.inventory`
+// access was a TS2339 "Property does not exist on type 'Dexie'" — 51 of the project's
+// 56 type errors. The `& Dexie` half keeps the addon's `db.cloud` augmentation.
+const db = new Dexie(databaseName, { addons }) as Dexie & BarcodeInventoryDB;
 console.log(`[dexie] Dexie instance created for ${databaseName}`);
 
 // Define the database schema (Dexie 4.x syntax: & = primary key, field = index)

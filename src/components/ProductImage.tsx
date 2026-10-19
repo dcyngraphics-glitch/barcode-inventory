@@ -15,8 +15,8 @@ export function ProductImage({ imageUrl, name }: ProductImageProps) {
           borderRadius: '12px',
           overflow: 'hidden',
           margin: '0 auto',
-          border: '1px solid #E6E8EA',
-          background: '#F8FAFC',
+          border: '1px solid var(--color-border)',
+          background: 'var(--color-background)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -46,12 +46,12 @@ export function ProductImage({ imageUrl, name }: ProductImageProps) {
         height: '120px',
         borderRadius: '12px',
         margin: '0 auto',
-        border: '1px solid #E6E8EA',
-        background: '#F8FAFC',
+        border: '1px solid var(--color-border)',
+        background: 'var(--color-background)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#94a3b8',
+        color: 'var(--color-muted-foreground)',
       }}
     >
       <Package size={48} />

@@ -53,7 +53,7 @@ export function SearchBar({
     >
       <Search
         size={18}
-        color="#94a3b8"
+        color="var(--color-muted-foreground)"
         style={{
           position: 'absolute',
           left: '12px',
@@ -68,22 +68,22 @@ export function SearchBar({
         aria-label="Search products"
         style={{
           padding: '12px 16px 12px 40px',
-          border: '1px solid #e6e8ea',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
           fontSize: '16px',
           fontFamily: 'Inter, sans-serif',
-          background: '#ffffff',
-          color: '#0f172a',
+          background: 'var(--color-card)',
+          color: 'var(--color-foreground)',
           width: '100%',
           transition: 'border-color 200ms ease, box-shadow 200ms ease',
           outline: 'none',
         }}
         onFocus={(e) => {
-          e.target.style.borderColor = '#334155';
+          e.target.style.borderColor = 'var(--color-border)';
           e.target.style.boxShadow = '0 0 0 3px rgba(51, 65, 85, 0.15)';
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = '#e6e8ea';
+          e.target.style.borderColor = 'var(--color-border)';
           e.target.style.boxShadow = 'none';
         }}
       />

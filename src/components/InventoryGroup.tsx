@@ -33,9 +33,9 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
   return (
     <div
       style={{
-        background: '#ffffff',
+        background: 'var(--color-card)',
         borderRadius: '12px',
-        border: '1px solid #e6e8ea',
+        border: '1px solid var(--color-border)',
         overflow: 'hidden',
         transition: 'box-shadow 200ms ease',
       }}
@@ -63,7 +63,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
             width: '40px',
             height: '40px',
             borderRadius: '8px',
-            background: '#f2f3f4',
+            background: 'var(--color-muted)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -78,7 +78,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : (
-            <Package size={20} color="#94a3b8" />
+            <Package size={20} color="var(--color-muted-foreground)" />
           )}
         </div>
 
@@ -93,7 +93,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
             style={{
               fontSize: '16px',
               fontWeight: 600,
-              color: '#0f172a',
+              color: 'var(--color-foreground)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -104,7 +104,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
           <div
             style={{
               fontSize: '12px',
-              color: '#475569',
+              color: 'var(--color-secondary)',
               marginTop: '2px',
             }}
           >
@@ -149,7 +149,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
         <div
           style={{
             flexShrink: 0,
-            color: '#94a3b8',
+            color: 'var(--color-muted-foreground)',
             display: 'flex',
             alignItems: 'center',
           }}
@@ -161,7 +161,7 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
       {/* Expandable batch list */}
       <div
         style={{
-          borderTop: '1px solid #e6e8ea',
+          borderTop: '1px solid var(--color-border)',
           padding: '0 16px 12px',
         }}
       >
@@ -184,9 +184,9 @@ export function InventoryGroup({ group, alertWindowDays, onDeleteBatch, onEditBa
             marginTop: '8px',
             padding: '10px 12px',
             background: 'transparent',
-            border: '1px dashed #cbd5e1',
+            border: '1px dashed var(--color-border)',
             borderRadius: '8px',
-            color: '#334155',
+            color: 'var(--color-secondary)',
             fontSize: '13px',
             fontWeight: 600,
             cursor: 'pointer',

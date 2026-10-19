@@ -16,7 +16,7 @@ export function FormField({ id, label, error, children }: FormFieldProps) {
           display: 'block',
           fontSize: '14px',
           fontWeight: 500,
-          color: '#0F172A',
+          color: 'var(--color-foreground)',
           marginBottom: '4px',
         }}
       >
@@ -25,7 +25,7 @@ export function FormField({ id, label, error, children }: FormFieldProps) {
       {children}
       {error && (
         <span
-          style={{ fontSize: '12px', color: '#DC2626', marginTop: '4px', display: 'block' }}
+          style={{ fontSize: '12px', color: 'var(--color-destructive)', marginTop: '4px', display: 'block' }}
           role="alert"
           aria-live="polite"
         >

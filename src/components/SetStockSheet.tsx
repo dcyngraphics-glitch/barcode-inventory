@@ -61,7 +61,7 @@ export function SetStockSheet({
           bottom: 0,
           left: 0,
           right: 0,
-          background: '#ffffff',
+          background: 'var(--color-card)',
           borderRadius: '16px 16px 0 0',
           padding: '24px',
           paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
@@ -79,7 +79,7 @@ export function SetStockSheet({
             marginBottom: '16px',
           }}
         >
-          <h2 id="set-stock-title" style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+          <h2 id="set-stock-title" style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-foreground)', margin: 0 }}>
             Set Stock
           </h2>
           <button
@@ -90,7 +90,7 @@ export function SetStockSheet({
               border: 'none',
               padding: '8px',
               cursor: 'pointer',
-              color: '#475569',
+              color: 'var(--color-secondary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -103,15 +103,15 @@ export function SetStockSheet({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Package size={18} color="#475569" aria-hidden="true" />
-          <span style={{ fontSize: '14px', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <Package size={18} color="var(--color-secondary)" aria-hidden="true" />
+          <span style={{ fontSize: '14px', color: 'var(--color-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {productName}
           </span>
         </div>
 
         <label
           htmlFor="set-stock-input"
-          style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#0f172a', marginBottom: '4px' }}
+          style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--color-foreground)', marginBottom: '4px' }}
         >
           Quantity in stock
         </label>
@@ -125,16 +125,16 @@ export function SetStockSheet({
           style={{
             width: '100%',
             padding: '12px 16px',
-            border: isValid ? '1px solid #e6e8ea' : '2px solid #DC2626',
+            border: isValid ? '1px solid var(--color-border)' : '2px solid var(--color-destructive)',
             borderRadius: '8px',
             fontSize: '16px',
-            color: '#0f172a',
+            color: 'var(--color-foreground)',
             boxSizing: 'border-box',
           }}
           aria-invalid={!isValid}
         />
 
-        <p style={{ fontSize: '12px', color: '#64748b', margin: '8px 0 16px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', margin: '8px 0 16px' }}>
           Currently {currentStock}.
           {isValid && delta !== 0 && (
             <>
@@ -153,7 +153,7 @@ export function SetStockSheet({
           <>
             <label
               htmlFor="set-stock-expiry"
-              style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#0f172a', marginBottom: '4px' }}
+              style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--color-foreground)', marginBottom: '4px' }}
             >
               Expiry date for the added stock
             </label>
@@ -165,10 +165,10 @@ export function SetStockSheet({
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                border: '1px solid #e6e8ea',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 fontSize: '16px',
-                color: '#0f172a',
+                color: 'var(--color-foreground)',
                 boxSizing: 'border-box',
                 marginBottom: '16px',
               }}
@@ -182,12 +182,12 @@ export function SetStockSheet({
             style={{
               flex: 1,
               padding: '12px',
-              background: '#f1f5f9',
+              background: 'var(--color-muted)',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 500,
-              color: '#475569',
+              color: 'var(--color-secondary)',
               cursor: 'pointer',
               minHeight: '44px',
             }}
@@ -200,12 +200,12 @@ export function SetStockSheet({
             style={{
               flex: 1,
               padding: '12px',
-              background: isValid ? '#059669' : '#e6e8ea',
+              background: isValid ? 'var(--color-accent-border)' : 'var(--color-muted)',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 600,
-              color: isValid ? '#ffffff' : '#94a3b8',
+              color: isValid ? 'var(--color-on-accent)' : 'var(--color-muted-foreground)',
               cursor: isValid ? 'pointer' : 'not-allowed',
               minHeight: '44px',
             }}

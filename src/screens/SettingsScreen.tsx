@@ -116,9 +116,12 @@ export function SettingsScreen() {
   const handleClearAll = useCallback(async () => {
     try {
       const db = await getDB();
-      await db.clear('products');
-      await db.clear('inventory');
-      await db.clear('sales');
+      // Dexie has no `db.clear(tableName)` — only `Table.prototype.clear`. The old
+      // calls threw "db.clear is not a function", so Delete Everything silently
+      // failed and only surfaced as the error toast below.
+      await db.products.clear();
+      await db.inventory.clear();
+      await db.sales.clear();
       // Reset settings to defaults
       updateSettings({ ...DEFAULT_SETTINGS });
       setShowClearDialog(false);

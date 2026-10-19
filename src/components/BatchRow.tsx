@@ -79,7 +79,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
         style={{
           position: 'absolute',
           inset: 0,
-          background: '#dc2626',
+          background: 'var(--color-destructive)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
@@ -88,7 +88,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
           transition: 'opacity 200ms ease',
         }}
       >
-        <Trash2 size={24} color="#ffffff" />
+        <Trash2 size={24} color="var(--color-on-destructive)" />
       </div>
 
       {/* Main content */}
@@ -107,7 +107,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '12px 16px',
-          background: '#ffffff',
+          background: 'var(--color-card)',
           transform: `translateX(${swipeX}px)`,
           transition: isSwiping ? 'none' : 'transform 200ms ease',
           cursor: 'pointer',
@@ -125,7 +125,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
           <div
             style={{
               fontSize: '14px',
-              color: '#0f172a',
+              color: 'var(--color-foreground)',
               fontWeight: 500,
             }}
           >
@@ -136,7 +136,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#475569',
+              color: 'var(--color-secondary)',
               fontSize: '14px',
             }}
           >
@@ -187,7 +187,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
                 aria-label="Edit batch"
                 style={{
                   background: 'transparent',
-                  color: '#334155',
+                  color: 'var(--color-secondary)',
                   padding: '8px',
                   cursor: 'pointer',
                   border: 'none',
@@ -209,7 +209,7 @@ export function BatchRow({ batch, alertWindowDays, onDelete, onEdit }: BatchRowP
                 aria-label="Delete batch"
                 style={{
                   background: 'transparent',
-                  color: '#dc2626',
+                  color: 'var(--color-destructive)',
                   padding: '8px',
                   cursor: 'pointer',
                   border: 'none',

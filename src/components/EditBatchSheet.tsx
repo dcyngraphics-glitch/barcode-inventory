@@ -164,7 +164,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
           bottom: 0,
           left: 0,
           right: 0,
-          background: '#ffffff',
+          background: 'var(--color-card)',
           borderRadius: '16px 16px 0 0',
           padding: '24px',
           paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
@@ -180,7 +180,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
           style={{
             width: '40px',
             height: '4px',
-            background: '#e6e8ea',
+            background: 'var(--color-border)',
             borderRadius: '999px',
             margin: '0 auto 16px',
           }}
@@ -199,7 +199,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
             style={{
               fontSize: '18px',
               fontWeight: 600,
-              color: '#0f172a',
+              color: 'var(--color-foreground)',
               margin: 0,
             }}
           >
@@ -213,7 +213,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
               border: 'none',
               padding: '8px',
               cursor: 'pointer',
-              color: '#475569',
+              color: 'var(--color-secondary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -235,7 +235,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
                 display: 'block',
                 fontSize: '14px',
                 fontWeight: 500,
-                color: '#0f172a',
+                color: 'var(--color-foreground)',
                 marginBottom: '4px',
               }}
             >
@@ -256,26 +256,26 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
               style={{
                 padding: '12px 16px',
                 border: validationError && validationError.includes('Quantity')
-                  ? '2px solid #DC2626'
-                  : '1px solid #e6e8ea',
+                  ? '2px solid var(--color-destructive)'
+                  : '1px solid var(--color-border)',
                 borderRadius: '8px',
                 fontSize: '16px',
                 fontFamily: 'Inter, sans-serif',
-                background: '#ffffff',
-                color: '#0f172a',
+                background: 'var(--color-card)',
+                color: 'var(--color-foreground)',
                 width: '100%',
                 transition: 'border-color 200ms ease, box-shadow 200ms ease',
                 outline: 'none',
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#334155';
+                e.target.style.borderColor = 'var(--color-border)';
                 e.target.style.boxShadow = '0 0 0 3px rgba(51, 65, 85, 0.15)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor =
                   validationError && validationError.includes('Quantity')
-                    ? '#DC2626'
-                    : '#e6e8ea';
+                    ? 'var(--color-destructive)'
+                    : 'var(--color-border)';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -288,7 +288,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
                   alignItems: 'center',
                   gap: '6px',
                   marginTop: '6px',
-                  color: '#DC2626',
+                  color: 'var(--color-destructive)',
                   fontSize: '12px',
                   fontWeight: 500,
                 }}
@@ -307,7 +307,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
                 display: 'block',
                 fontSize: '14px',
                 fontWeight: 500,
-                color: '#0f172a',
+                color: 'var(--color-foreground)',
                 marginBottom: '4px',
               }}
             >
@@ -324,26 +324,26 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
               style={{
                 padding: '12px 16px',
                 border: validationError && validationError.includes('Expiry')
-                  ? '2px solid #DC2626'
-                  : '1px solid #e6e8ea',
+                  ? '2px solid var(--color-destructive)'
+                  : '1px solid var(--color-border)',
                 borderRadius: '8px',
                 fontSize: '16px',
                 fontFamily: 'Inter, sans-serif',
-                background: '#ffffff',
-                color: '#0f172a',
+                background: 'var(--color-card)',
+                color: 'var(--color-foreground)',
                 width: '100%',
                 transition: 'border-color 200ms ease, box-shadow 200ms ease',
                 outline: 'none',
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#334155';
+                e.target.style.borderColor = 'var(--color-border)';
                 e.target.style.boxShadow = '0 0 0 3px rgba(51, 65, 85, 0.15)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor =
                   validationError && validationError.includes('Expiry')
-                    ? '#DC2626'
-                    : '#e6e8ea';
+                    ? 'var(--color-destructive)'
+                    : 'var(--color-border)';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -356,7 +356,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
                   alignItems: 'center',
                   gap: '6px',
                   marginTop: '6px',
-                  color: '#DC2626',
+                  color: 'var(--color-destructive)',
                   fontSize: '12px',
                   fontWeight: 500,
                 }}
@@ -375,7 +375,7 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
                 display: 'block',
                 fontSize: '14px',
                 fontWeight: 500,
-                color: '#0f172a',
+                color: 'var(--color-foreground)',
                 marginBottom: '4px',
               }}
             >
@@ -392,22 +392,22 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                border: '1px solid #e6e8ea',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 fontSize: '16px',
                 fontFamily: 'Inter, sans-serif',
-                background: '#ffffff',
-                color: '#0f172a',
+                background: 'var(--color-card)',
+                color: 'var(--color-foreground)',
                 resize: 'vertical',
                 outline: 'none',
                 transition: 'border-color 200ms ease, box-shadow 200ms ease',
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#334155';
+                e.target.style.borderColor = 'var(--color-border)';
                 e.target.style.boxShadow = '0 0 0 3px rgba(51, 65, 85, 0.15)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e6e8ea';
+                e.target.style.borderColor = 'var(--color-border)';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -419,15 +419,15 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
               onClick={onCancel}
               style={{
                 flex: 1,
-                background: '#f8fafc',
-                color: '#0f172a',
+                background: 'var(--color-background)',
+                color: 'var(--color-foreground)',
                 padding: '12px 24px',
                 borderRadius: '8px',
                 fontWeight: 600,
                 fontSize: '16px',
                 minHeight: '44px',
                 cursor: 'pointer',
-                border: '1px solid #e6e8ea',
+                border: '1px solid var(--color-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -441,8 +441,8 @@ export function EditBatchSheet({ open, batch, onSave, onCancel }: EditBatchSheet
               disabled={isSubmitDisabled}
               style={{
                 flex: 1,
-                background: isSubmitDisabled ? '#e6e8ea' : '#059669',
-                color: isSubmitDisabled ? '#94a3b8' : '#ffffff',
+                background: isSubmitDisabled ? 'var(--color-muted)' : 'var(--color-accent-border)',
+                color: isSubmitDisabled ? 'var(--color-muted-foreground)' : 'var(--color-on-accent)',
                 padding: '12px 24px',
                 borderRadius: '8px',
                 fontWeight: 600,

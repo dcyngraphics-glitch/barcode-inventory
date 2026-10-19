@@ -2,8 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Package, Loader2 } from 'lucide-react';
 import { useScanCart } from '@/context/ScanCartContext';
-import { saveProduct, updateProduct } from '@/services/catalogService';
-import { addBatch } from '@/services/inventoryService';
+import { saveProduct } from '@/services/catalogService';
 import { generateId } from '@/utils/helpers';
 import { db } from '@/db/database';
 
@@ -108,7 +107,7 @@ export function CartReviewScreen() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#f8fafc',
+        background: 'var(--color-background)',
         display: 'flex',
         flexDirection: 'column',
         paddingBottom: '80px',
@@ -118,7 +117,7 @@ export function CartReviewScreen() {
       <header
         style={{
           height: '56px',
-          background: '#334155',
+          background: 'var(--color-primary-bg)',
           display: 'flex',
           alignItems: 'center',
           padding: '0 16px',
@@ -132,7 +131,7 @@ export function CartReviewScreen() {
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#f8fafc',
+            color: 'var(--color-on-primary)',
             cursor: 'pointer',
             padding: '8px',
             minWidth: '44px',
@@ -148,7 +147,7 @@ export function CartReviewScreen() {
           style={{
             fontSize: '18px',
             fontWeight: 600,
-            color: '#f8fafc',
+            color: 'var(--color-on-primary)',
             margin: 0,
             flex: 1,
           }}
@@ -160,7 +159,7 @@ export function CartReviewScreen() {
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            color: '#f8fafc',
+            color: 'var(--color-on-primary)',
             fontSize: '14px',
             fontWeight: 500,
           }}
@@ -177,7 +176,7 @@ export function CartReviewScreen() {
             style={{
               textAlign: 'center',
               padding: '48px 16px',
-              color: '#94a3b8',
+              color: 'var(--color-muted-foreground)',
             }}
           >
             <Package size={48} style={{ marginBottom: '16px', opacity: 0.4 }} />
@@ -190,10 +189,10 @@ export function CartReviewScreen() {
               <div
                 key={item.id}
                 style={{
-                  background: '#fff',
+                  background: 'var(--color-card)',
                   borderRadius: '12px',
                   padding: '16px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--color-border)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
@@ -204,7 +203,7 @@ export function CartReviewScreen() {
                     style={{
                       fontSize: '14px',
                       fontWeight: 600,
-                      color: '#0f172a',
+                      color: 'var(--color-foreground)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -213,21 +212,21 @@ export function CartReviewScreen() {
                     {item.name || `Unknown (${item.barcode})`}
                   </div>
                   {item.brand && (
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginTop: '2px' }}>
                       {item.brand}
                     </div>
                   )}
                   <div
                     style={{
                       fontSize: '13px',
-                      color: '#0f172a',
+                      color: 'var(--color-foreground)',
                       fontWeight: 600,
                       marginTop: '4px',
                     }}
                   >
                     ₱{item.price.toFixed(2)}
                     {item.expiryDate && (
-                      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 400, marginLeft: '8px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--color-muted-foreground)', fontWeight: 400, marginLeft: '8px' }}>
                         Exp: {new Date(item.expiryDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     )}
@@ -249,14 +248,14 @@ export function CartReviewScreen() {
                     style={{
                       width: '32px',
                       height: '32px',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid var(--color-border)',
                       borderRadius: '6px',
-                      background: '#f8fafc',
+                      background: 'var(--color-muted)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#475569',
+                      color: 'var(--color-secondary)',
                     }}
                   >
                     <Minus size={14} />
@@ -267,7 +266,7 @@ export function CartReviewScreen() {
                       textAlign: 'center',
                       fontSize: '14px',
                       fontWeight: 600,
-                      color: '#0f172a',
+                      color: 'var(--color-foreground)',
                     }}
                   >
                     {item.quantity}
@@ -278,14 +277,14 @@ export function CartReviewScreen() {
                     style={{
                       width: '32px',
                       height: '32px',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid var(--color-border)',
                       borderRadius: '6px',
-                      background: '#f8fafc',
+                      background: 'var(--color-muted)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#475569',
+                      color: 'var(--color-secondary)',
                     }}
                   >
                     <Plus size={14} />
@@ -301,12 +300,12 @@ export function CartReviewScreen() {
                     height: '32px',
                     border: 'none',
                     borderRadius: '6px',
-                    background: '#fef2f2',
+                    background: 'var(--color-error-bg)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#dc2626',
+                    color: 'var(--color-destructive)',
                     flexShrink: 0,
                   }}
                 >
@@ -318,18 +317,18 @@ export function CartReviewScreen() {
             {/* Total */}
             <div
               style={{
-                background: '#fff',
+                background: 'var(--color-card)',
                 borderRadius: '12px',
                 padding: '16px',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-border)',
                 marginTop: '8px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>Total</span>
-              <span style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>
+              <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-foreground)' }}>Total</span>
+              <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-foreground)' }}>
                 ₱{totalPrice.toFixed(2)}
               </span>
             </div>
@@ -342,8 +341,8 @@ export function CartReviewScreen() {
         <div
           style={{
             padding: '16px',
-            background: '#fff',
-            borderTop: '1px solid #e2e8f0',
+            background: 'var(--color-card)',
+            borderTop: '1px solid var(--color-border)',
             position: 'sticky',
             bottom: '56px',
           }}
@@ -354,10 +353,10 @@ export function CartReviewScreen() {
             style={{
               width: '100%',
               padding: '16px',
-              background: saving ? '#64748b' : '#0f172a',
+              background: saving ? 'var(--color-muted)' : 'var(--color-primary-bg)',
               border: 'none',
               borderRadius: '12px',
-              color: '#fff',
+              color: 'var(--color-on-primary)',
               fontSize: '16px',
               fontWeight: 600,
               cursor: saving ? 'not-allowed' : 'pointer',
@@ -391,8 +390,8 @@ export function CartReviewScreen() {
             bottom: '140px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#0f172a',
-            color: '#fff',
+            background: 'var(--color-primary-bg)',
+            color: 'var(--color-on-primary)',
             padding: '12px 24px',
             borderRadius: '8px',
             fontSize: '14px',

@@ -11,8 +11,6 @@ import { db } from '@/db/database';
 import { generateId } from '@/utils/helpers';
 import type { Product, ProductDraft, Batch } from '@/types';
 
-const BOTTOM_NAV_HEIGHT = 80;
-
 export function ProductDetailScreen() {
   const { barcode } = useParams<{ barcode: string }>();
   const navigate = useNavigate();

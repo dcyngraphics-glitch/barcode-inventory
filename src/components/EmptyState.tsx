@@ -19,12 +19,12 @@ export function EmptyState({ title, subtitle, ctaLabel, onCta }: EmptyStateProps
         textAlign: 'center',
       }}
     >
-      <PackageOpen size={64} color="#94a3b8" strokeWidth={1.5} />
+      <PackageOpen size={64} color="var(--color-muted-foreground)" strokeWidth={1.5} />
       <h2
         style={{
           fontSize: '18px',
           fontWeight: 600,
-          color: '#0f172a',
+          color: 'var(--color-foreground)',
           margin: '16px 0 8px',
         }}
       >
@@ -33,7 +33,7 @@ export function EmptyState({ title, subtitle, ctaLabel, onCta }: EmptyStateProps
       <p
         style={{
           fontSize: '14px',
-          color: '#475569',
+          color: 'var(--color-secondary)',
           margin: '0 0 24px',
           maxWidth: '280px',
         }}
@@ -44,8 +44,8 @@ export function EmptyState({ title, subtitle, ctaLabel, onCta }: EmptyStateProps
         <button
           onClick={onCta}
           style={{
-            background: '#059669',
-            color: '#ffffff',
+            background: 'var(--color-accent-border)',
+            color: 'var(--color-on-accent)',
             padding: '12px 24px',
             borderRadius: '8px',
             fontWeight: 600,
