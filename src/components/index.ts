@@ -18,4 +18,3 @@ export { EditBatchSheet } from './EditBatchSheet';
 export { InventoryGroup } from './InventoryGroup';
 export { TutorialOverlay } from './TutorialOverlay';
 export { SearchBar } from './SearchBar';
-export { ModeIndicatorChip } from './ModeIndicatorChip';
