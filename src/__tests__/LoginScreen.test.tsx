@@ -59,3 +59,38 @@ describe('LoginScreen', () => {
     expect(screen.getByText(/created the first time/i)).toBeInTheDocument();
   });
 });
+
+describe('LoginScreen — token classes', () => {
+  it('screen center uses .screen-center token class, not inline styles', () => {
+    renderLogin();
+    const center = screen.getByTestId('screen-center');
+    expect(center).toHaveClass('screen-center');
+    expect(center).not.toHaveStyle({ background: '#F8FAFC' });
+    expect(center).not.toHaveStyle({ padding: '24px' });
+  });
+
+  it('login card uses .login-card token class, not inline #334155', () => {
+    renderLogin();
+    const card = screen.getByRole('button', { name: /sign in with email/i }).closest('.login-card');
+    expect(card).toHaveClass('login-card');
+    expect(card).not.toHaveStyle({ background: '#334155' });
+  });
+
+  it('submit button uses .login-submit token class, not inline gradient', () => {
+    renderLogin();
+    const btn = screen.getByRole('button', { name: /sign in with email/i });
+    expect(btn).toHaveClass('login-submit');
+    expect(btn).not.toHaveStyle({ background: 'linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%)' });
+    expect(btn).not.toHaveStyle({ color: '#ffffff' });
+  });
+
+  it('login-submit uses token colors from CSS variables', () => {
+    renderLogin();
+    const btn = screen.getByRole('button', { name: /sign in with email/i });
+    const style = window.getComputedStyle(btn);
+    expect(style.background).not.toContain('#059669');
+    expect(style.background).not.toContain('#0d9488');
+    expect(style.background).not.toContain('#17a974');
+    expect(style.color).not.toBe('rgb(255, 255, 255)');
+  });
+});

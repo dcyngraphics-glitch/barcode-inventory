@@ -13,9 +13,10 @@
   --color-secondary: #475569;        /* Medium slate — secondary text */
   --color-on-secondary: #f8fafc;     /* On secondary */
   --color-accent: #047857;           /* Emerald green — CTA, highlights */
-  --color-accent-text: #047857;     /* Emerald green — text on light bg */
-  --color-accent-border: #059669;   /* Emerald green — borders on light bg */
-  --color-primary-bg: #1e293b;       /* Dark slate — button/chip bg in light */
+    --color-accent-text: #047857;     /* Emerald green — text on light bg */
+    --color-accent-border: #059669;   /* Emerald green — borders on light bg */
+    --color-accent-border-rgb: 5, 150, 105;  /* RGB for rgba() usage */
+    --color-primary-bg: #1e293b;       /* Dark slate — button/chip bg in light */
   --color-on-accent: #ffffff;        /* On accent — white text on accent */
   --color-destructive: #dc2626;          /* Red — destructive actions, errors */
   --color-destructive-bg: #dc2626;      /* Red — destructive button bg */
@@ -156,10 +157,11 @@
   --color-destructive: #ef4444;
   --color-destructive-bg: #b91c1c;
   --color-good: #00875a;
-  --color-accent-text: #34d399;
-  --color-accent-border: #10b981;
+    --color-accent-text: #34d399;
+    --color-accent-border: #10b981;
+    --color-accent-border-rgb: 16, 185, 129;
 
-  --status-good-bg: #14532d;
+    --status-good-bg: #14532d;
   --status-good-text: #bbf7d0;
   --status-warning-bg: #451a03;
   --status-warning-text: #fde68a;
@@ -190,10 +192,11 @@
     --color-destructive: #ef4444;
     --color-destructive-bg: #b91c1c;
     --color-good: #00875a;
-    --color-accent-text: #34d399;
-    --color-accent-border: #10b981;
+      --color-accent-text: #34d399;
+      --color-accent-border: #10b981;
+      --color-accent-border-rgb: 16, 185, 129;
 
-    --status-good-bg: #14532d;
+      --status-good-bg: #14532d;
     --status-good-text: #bbf7d0;
     --status-warning-bg: #451a03;
     --status-warning-text: #fde68a;
@@ -2581,14 +2584,14 @@ select {
   padding: var(--space-md) var(--space-lg);
   border: none;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-accent-border) 0%, var(--color-accent) 50%, var(--color-good) 100%);
+  color: var(--color-on-accent);
   font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
   box-shadow:
-    0 4px 14px rgba(5, 150, 105, 0.4),
-    0 0 0 4px rgba(5, 150, 105, 0.15);
+    0 4px 14px rgba(var(--color-accent-border-rgb), 0.4),
+    0 0 0 4px rgba(var(--color-accent-border-rgb), 0.15);
   transition: transform var(--transition-base), box-shadow var(--transition-base);
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -2597,8 +2600,8 @@ select {
 .login-submit:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 6px 20px rgba(5, 150, 105, 0.5),
-    0 0 0 6px rgba(5, 150, 105, 0.2);
+    0 6px 20px rgba(var(--color-accent-border-rgb), 0.5),
+    0 0 0 6px rgba(var(--color-accent-border-rgb), 0.2);
 }
 
 .login-submit:active {

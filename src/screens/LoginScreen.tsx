@@ -12,7 +12,7 @@ export function LoginScreen() {
   const { cloudLogin, cloudError } = useAuth();
 
   return (
-    <div className="screen-center">
+    <div className="screen-center" data-testid="screen-center">
       <div className="login-card">
         <div className="login-logo">
           <Mail size={40} />
