@@ -123,9 +123,14 @@ export function UserInteractionPrompt() {
                 <label htmlFor={id}>{label}</label>
                 <input
                   id={id}
+                  className="login-input"
                   type={name === 'email' ? 'email' : 'text'}
-                  inputMode={name === 'otp' ? 'numeric' : undefined}
+                  // Deliberately NO inputMode. Dexie Cloud's OTP is alphanumeric, and
+                  // inputMode="numeric" forced a digits-only keypad on mobile, so the
+                  // letters in the code were physically untypeable.
                   autoComplete={name === 'otp' ? 'one-time-code' : undefined}
+                  autoCorrect={name === 'otp' ? 'off' : undefined}
+                  spellCheck={name === 'otp' ? false : undefined}
                   placeholder={field.placeholder ?? ''}
                   value={values[name] ?? ''}
                   onChange={(event) =>

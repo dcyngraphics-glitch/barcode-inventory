@@ -120,6 +120,27 @@ export function resolveThemeTokens(theme: ThemeName): Record<string, string> {
 }
 
 /**
+ * The declarations of the first CSS rule whose selector matches exactly.
+ *
+ * Lets a component test assert that a class-styled element declares its OWN colors,
+ * rather than inheriting them or falling back to the user-agent default — which is how
+ * the login input ended up rendering near-white text on the browser's white field.
+ * Only single-level rules are supported (no nested blocks).
+ */
+export function extractRuleDeclarations(selector: string): Record<string, string> {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = new RegExp(escaped + '\\s*\\{([^}]*)\\}').exec(CSS);
+  if (!match) throw new Error(`Rule not found in CSS: ${selector}`);
+  const declarations: Record<string, string> = {};
+  for (const decl of match[1]!.split(';')) {
+    const i = decl.indexOf(':');
+    if (i === -1) continue;
+    declarations[decl.slice(0, i).trim()] = decl.slice(i + 1).trim();
+  }
+  return declarations;
+}
+
+/**
  * Resolve a `var(--token)` / `var(--token, fallback)` reference to a concrete
  * hex color. Non-var() values pass through unchanged.
  */
