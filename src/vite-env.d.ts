@@ -4,7 +4,10 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
 
 interface ImportMetaEnv {
-  readonly VITE_DASHBOARD_API_URL?: string;
+  /** Dexie Cloud sync endpoint. Public by design; src/db/dexie.ts bakes in a default. */
+  readonly VITE_DEXIE_CLOUD_SYNC_URL?: string;
+  /** Overrides the local IndexedDB name. Leave unset — changing it orphans stored data. */
+  readonly VITE_DEXIE_CLOUD_DATABASE_NAME?: string;
 }
 
 interface ImportMeta {
