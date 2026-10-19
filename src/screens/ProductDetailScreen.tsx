@@ -284,201 +284,95 @@ export function ProductDetailScreen() {
   };
 
   if (!barcode) {
-    return (
-      <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>
-        No barcode provided
-      </div>
-    );
-  }
+      return (
+        <div className="empty-state">
+          <p className="empty-state-message">No barcode provided</p>
+        </div>
+      );
+    }
 
-  if (lookupLoading && !product) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: '#F8FAFC',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <header
-          style={{
-            height: '56px',
-            background: '#334155',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 16px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 30,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ArrowLeft size={24} color="#f8fafc" />
-            <h1
-              style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                color: '#f8fafc',
-                margin: 0,
-              }}
-            >
-              Product Details
-            </h1>
-          </div>
-        </header>
-        <main
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                border: '3px solid #E6E8EA',
-                borderTopColor: '#334155',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto 16px',
-              }}
-            />
-            <p>Looking up product...</p>
-          </div>
-        </main>
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
+    if (lookupLoading && !product) {
+      return (
+        <div className="loading-screen">
+          <header className="app-bar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ArrowLeft size={24} color="var(--color-on-primary)" />
+              <h1 className="app-bar-title">Product Details</h1>
+            </div>
+          </header>
+          <main className="loading-content">
+            <div className="loading-spinner" />
+            <p className="text-muted">Looking up product...</p>
+          </main>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      );
+    }
 
   // Bug fix #3: Show retry option when lookup has failed
   const showRetryOption = lookupError && !product && isNewProduct;
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#F8FAFC',
-        display: 'flex',
-        flexDirection: 'column',
-        paddingBottom: `${BOTTOM_NAV_HEIGHT}px`,
-      }}
-    >
-      {/* Top App Bar */}
-      <header
-        style={{
-          height: '56px',
-          background: '#334155',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-          position: 'sticky',
-          top: 0,
-          zIndex: 30,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#f8fafc',
-              cursor: 'pointer',
-              padding: '8px',
-              minWidth: '44px',
-              minHeight: '44px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            aria-label="Go back"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1
-            style={{
-              fontSize: '18px',
-              fontWeight: 600,
-              color: '#f8fafc',
-              margin: 0,
-            }}
-          >
-            Product Details
-          </h1>
-        </div>
-      </header>
+      <div className="screen-container">
+        {/* Top App Bar */}
+        <header className="app-bar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              className="app-bar-action"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <h1 className="app-bar-title">
+              Product Details
+            </h1>
+          </div>
+        </header>
 
-      {/* Main content */}
-      <main
-        style={{
-          flex: 1,
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}
-      >
+        {/* Main content */}
+        <main className="main-content">
         {/* Product Hero */}
                 <div className="card">
                   <ProductImage imageUrl={product?.imageUrl} name={product?.name || 'Product'} />
 
-          {product?.name && (
-            <>
-              <h2
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 600,
-                  color: '#0F172A',
-                  margin: '16px 0 4px',
-                }}
-              >
-                {product.name}
-              </h2>
-              {(product.brand || product.category) && (
-                <p
-                  style={{
-                    fontSize: '14px',
-                    color: '#475569',
-                    margin: 0,
-                  }}
-                >
-                  {[product.brand].filter(Boolean).join(' · ')}
-                </p>
-              )}
-            </>
-          )}
-
-          {/* Status Badge */}
-                    <div style={{ marginTop: '16px' }}>
-                      {isNewProduct ? (
-                        <span className="badge-good">
-                          New Product
-                        </span>
-                      ) : (
-                        <span className="badge-neutral">
-                          In Catalog
-                        </span>
+                  {product?.name && (
+                    <>
+                      <h2 className="product-hero-name">
+                        {product.name}
+                      </h2>
+                      {(product.brand || product.category) && (
+                        <p className="product-hero-meta">
+                          {[product.brand].filter(Boolean).join(' · ')}
+                        </p>
                       )}
-                    </div>
+                    </>
+                  )}
 
-          {/* Barcode display */}
-                    <p className="text-muted font-mono text-xs" style={{ marginTop: '12px' }}>
-                      {barcode}
-                    </p>
-        </div>
+                  {/* Status Badge */}
+                  <div className="status-badge-container">
+                    {isNewProduct ? (
+                      <span className="badge-good">
+                        New Product
+                      </span>
+                    ) : (
+                      <span className="badge-neutral">
+                        In Catalog
+                      </span>
+                    )}
+                  </div>
 
-        {/* Bug fix #3: Retry lookup button shown when API failure */}
+                  {/* Barcode display */}
+                  <p className="text-muted font-mono text-xs barcode-display">
+                    {barcode}
+                  </p>
+                </div>
+
+                {/* Bug fix #3: Retry lookup button shown when API failure */}
                 {showRetryOption && (
                   <button
                     onClick={handleRetry}
@@ -491,19 +385,19 @@ export function ProductDetailScreen() {
                   </button>
                 )}
 
-        {/* Editable Form */}
-                <div className="card" style={{ padding: '16px' }}>
+                {/* Editable Form */}
+                <div className="card form-card">
                   <ProductForm
-            key={product?.barcode || 'new'}
-            initialData={initialFormData}
-            isNewProduct={isNewProduct}
-            onSubmit={handleSubmit}
-            loading={loading}
-            error={error}
-          />
-        </div>
+                    key={product?.barcode || 'new'}
+                    initialData={initialFormData}
+                    isNewProduct={isNewProduct}
+                    onSubmit={handleSubmit}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
 
-        {/* Edit product details link */}
+                {/* Edit product details link */}
                 {!isNewProduct && product && (
                   <button
                     onClick={() => setEditSheetOpen(true)}
@@ -513,62 +407,41 @@ export function ProductDetailScreen() {
                     Edit product details
                   </button>
                 )}
-      </main>
+              </main>
 
-      {/* Toast */}
-      {toast && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '72px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: '#0F172A',
-            color: '#FFFFFF',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: 500,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            zIndex: 60,
-            animation: 'fade-in 200ms ease',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          }}
-          role="status"
-          aria-live="polite"
-        >
-          {toast.type === 'success' ? (
-            <CheckCircle size={16} color="#16A34A" />
-          ) : (
-            <AlertCircle size={16} color="#DC2626" />
-          )}
-          {toast.message}
-        </div>
-      )}
+              {/* Toast */}
+              {toast && (
+                <div className="toast toast-visible" role="status" aria-live="polite">
+                  {toast.type === 'success' ? (
+                    <CheckCircle size={16} color="var(--color-good)" />
+                  ) : (
+                    <AlertCircle size={16} color="var(--color-destructive)" />
+                  )}
+                  {toast.message}
+                </div>
+              )}
 
-      {/* Product Management Bottom Sheet */}
-      <ProductManagementSheet
-        open={editSheetOpen}
-        product={product}
-        onClose={() => setEditSheetOpen(false)}
-        onSave={handleEditSave}
-        onDelete={handleEditDelete}
-      />
+              {/* Product Management Bottom Sheet */}
+              <ProductManagementSheet
+                open={editSheetOpen}
+                product={product}
+                onClose={() => setEditSheetOpen(false)}
+                onSave={handleEditSave}
+                onDelete={handleEditDelete}
+              />
 
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
-    </div>
-  );
+              <style>{`
+                @keyframes fade-in {
+                  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+                  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                }
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+                .spin {
+                  animation: spin 1s linear infinite;
+                }
+              `}</style>
+            </div>
+          );
 }

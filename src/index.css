@@ -1497,6 +1497,77 @@ ol {
 }
 
 /* ==========================================================================
+   TOAST
+   ========================================================================== */
+
+.toast {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + var(--space-md));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-foreground);
+  color: var(--color-background);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  z-index: var(--z-toast);
+  animation: fade-in var(--transition-fast) ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast-visible {
+  opacity: 1;
+}
+
+.toast .check-circle,
+.toast .alert-circle {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   LOADING SPINNER (for loading screens)
+   ========================================================================== */
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.loading-screen {
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-container {
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+
+/* ==========================================================================
    FOCUS-visible overrides for interactive components
    ========================================================================== */
 
@@ -1539,13 +1610,73 @@ ol {
 }
 
 /* ==========================================================================
-   ANIMATIONS
+   TOAST
    ========================================================================== */
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.toast {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + var(--space-md));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-foreground);
+  color: var(--color-background);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  z-index: var(--z-toast);
+  animation: fade-in var(--transition-fast) ease;
+  box-shadow: var(--shadow-lg);
 }
+
+.toast-visible {
+  opacity: 1;
+}
+
+.toast .check-circle,
+.toast .alert-circle {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   LOADING SPINNER (for loading screens)
+   ========================================================================== */
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.loading-screen {
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+}
+
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
 
 @keyframes slide-up {
   from { transform: translate(-50%, -50%) translateY(20px); opacity: 0; }
@@ -1843,6 +1974,77 @@ select {
   min-height: 100dvh;
   padding: var(--space-xl);
   background: var(--color-background);
+}
+
+/* ==========================================================================
+   PRODUCT DETAIL SCREEN
+   ========================================================================== */
+
+.screen-container {
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.loading-screen {
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.main-content {
+  flex: 1;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.product-hero-name {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.product-hero-meta {
+  font-size: var(--text-sm);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.status-badge-container {
+  margin-top: var(--space-md);
+}
+
+.barcode-display {
+  margin-top: var(--space-md);
+}
+
+.form-card {
+  padding: var(--space-md);
 }
 
 /* ===== Till (cashier mode) ===== */
