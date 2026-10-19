@@ -13,7 +13,7 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-/** Comments legitimately *discuss* db.catalog.put(), so they must not count as calls. */
+/** Comments legitimately *discuss* db.products.put(), so they must not count as calls. */
 function stripComments(code: string): string {
   return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
@@ -21,7 +21,7 @@ function stripComments(code: string): string {
 /**
  * Regression guard for the catalog write path.
  *
- * `db.catalog.put()` / `db.catalog.delete()` bypass the private-ID derivation in
+ * `db.products.put()` / `db.products.delete()` bypass the private-ID derivation in
  * catalogService, in two different ways:
  *   - put() without `productId` throws a ConstraintError at runtime. The type system
  *     catches this now that `Product.productId` is required.
@@ -37,7 +37,7 @@ describe('catalog write path', () => {
     const offenders = sourceFiles(SRC)
       .filter((file) => !file.endsWith('catalogService.ts'))
       .filter((file) => !file.includes('__tests__'))
-      .filter((file) => /db\.catalog\.(put|delete|add)\(/.test(stripComments(readFileSync(file, 'utf8'))))
+      .filter((file) => /db\.products\.(put|delete|add)\(/.test(stripComments(readFileSync(file, 'utf8'))))
       .map((file) => file.slice(SRC.length + 1).replace(/\\/g, '/'));
 
     expect(offenders).toEqual([]);

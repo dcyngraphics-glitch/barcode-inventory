@@ -47,7 +47,7 @@ console.log(`[dexie] Using database name: ${databaseName}`);
 
 // Define the database interface
 interface BarcodeInventoryDB {
-  catalog: Dexie.Table<'catalog', string>;
+  products: Dexie.Table<'products', string>;
   inventory: Dexie.Table<'inventory', Batch>;
   settings: Dexie.Table<'settings', Settings>;
   sales: Dexie.Table<'sale', Sale>;
@@ -63,18 +63,29 @@ const db = new Dexie<BarcodeInventoryDB>(databaseName, { addons });
 console.log(`[dexie] Dexie instance created for ${databaseName}`);
 
 // Define the database schema (Dexie 4.x syntax: & = primary key, field = index)
-db.version(11).stores({
-  // catalog is keyed by productId ('#' + barcode), NOT by the barcode itself:
-  // barcodes are shared real-world identifiers, so two accounts scanning the same
-  // product would otherwise produce the same primary key. See utils/privateId.ts.
-  catalog: '&productId, barcode, name',
+db.version(12).stores({
+  // Keyed by productId ('#' + barcode), NOT by the barcode itself: barcodes are shared
+  // real-world identifiers, so two accounts scanning the same product would otherwise
+  // produce the same primary key. See utils/privateId.ts.
+  //
+  // The table is named `products`, not `catalog`, and that name is load-bearing.
+  // Dexie Cloud records a table's primary key at first sync and then refuses to change
+  // it — 422 "Illegal to change primary key" — and it keeps that key even after the
+  // table is deleted, so re-registering or re-importing cannot fix it either. The cloud
+  // database registered `catalog` as keyed by `barcode` back when that was true, which
+  // silently rejected every sync once the key became productId. A name the server has no
+  // memory of registers cleanly. NEVER rename this back to `catalog`.
+  products: '&productId, barcode, name',
+  catalog: null, // dropped: the cloud's `catalog` is permanently keyed by `barcode`
   inventory: '&batchId, barcode, expiryDate',
   settings: '&id', // id is '#settings' — a private singleton, one per account
   sales: '&saleId, dayKey'
 });
 // No .upgrade() here, and there never can be one for a primary-key change: IndexedDB
-// cannot alter a key path in place. The fresh database name above is the wipe.
-console.log(`[dexie] Schema defined with version 11`);
+// cannot alter a key path in place. The fresh database name above is the wipe. Swapping
+// `catalog` for `products` needs no rename — a different table name is an ordinary
+// schema change, so the local database (and the signed-in session inside it) survives.
+console.log(`[dexie] Schema defined with version 12`);
 
 // Configure Dexie Cloud. Skipped under Vitest so the addon never touches
 // fake-indexeddb (the fallback URL above would otherwise make this always truthy).

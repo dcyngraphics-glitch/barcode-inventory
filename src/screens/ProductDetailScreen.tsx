@@ -200,8 +200,8 @@ export function ProductDetailScreen() {
           expiryDate: data.expiryDate,
           scannedAt: now,
         };
-        savedProduct = await db.transaction('rw', [db.catalog, db.inventory], async () => {
-          // saveProduct derives the '#'-private primary key. Writing to db.catalog
+        savedProduct = await db.transaction('rw', [db.products, db.inventory], async () => {
+          // saveProduct derives the '#'-private primary key. Writing to db.products
           // directly would omit it and throw a ConstraintError at runtime.
           const written = await saveProduct(newProduct);
           await db.inventory.put(newBatch);
@@ -222,7 +222,7 @@ export function ProductDetailScreen() {
             batchId: generateId(), barcode, quantity: data.quantity,
             expiryDate: data.expiryDate, scannedAt: now,
           };
-          await db.transaction('rw', [db.catalog, db.inventory], async () => {
+          await db.transaction('rw', [db.products, db.inventory], async () => {
             if (update) {
               await saveProduct(update);
             }
@@ -268,7 +268,7 @@ export function ProductDetailScreen() {
   const handleEditDelete = async (barcodeToDelete: string) => {
     try {
       // Atomically delete product and all its batches in a single transaction
-      await db.transaction('rw', [db.catalog, db.inventory], async () => {
+      await db.transaction('rw', [db.products, db.inventory], async () => {
         await db.inventory.where('barcode').equals(barcodeToDelete).delete();
         // Delete by barcode, not by primary key: the key is '#' + barcode, so passing
         // the bare barcode here would match nothing and silently leave the row.

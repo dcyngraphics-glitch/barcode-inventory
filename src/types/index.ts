@@ -20,7 +20,7 @@ export interface Product {
    * Primary key: '#' + barcode. A Dexie Cloud private ID, so two accounts can hold
    * the same barcode without colliding.
    *
-   * Required on purpose. While it was optional, `db.catalog.put({...})` calls that
+   * Required on purpose. While it was optional, `db.products.put({...})` calls that
    * omitted it type-checked fine and failed only at runtime — which is how five
    * screens shipped broken. Writes go through catalogService, which derives it from
    * the barcode (see ProductDraft below).

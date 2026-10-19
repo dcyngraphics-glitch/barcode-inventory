@@ -13,7 +13,7 @@ import { SETTINGS_ID } from '@/types';
  */
 describe('seedCatalogIfEmpty', () => {
   beforeEach(async () => {
-    await db.table('catalog').clear();
+    await db.table('products').clear();
     await db.table('settings').clear();
   });
 
@@ -34,7 +34,7 @@ describe('seedCatalogIfEmpty', () => {
   it('keys every seeded product by the per-account private ID', async () => {
     await seedCatalogIfEmpty();
 
-    const rows = await db.catalog.toArray();
+    const rows = await db.products.toArray();
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) {
       expect(row.productId).toBe(`#${row.barcode}`);
@@ -50,7 +50,7 @@ describe('seedCatalogIfEmpty', () => {
 
   it('does not seed again once the flag is set, even if the catalog is emptied', async () => {
     await seedCatalogIfEmpty();
-    await db.table('catalog').clear();
+    await db.table('products').clear();
 
     await seedCatalogIfEmpty();
 

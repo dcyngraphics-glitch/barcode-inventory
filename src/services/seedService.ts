@@ -41,7 +41,7 @@ export async function seedCatalogIfEmpty(): Promise<void> {
   }));
 
   // bulkPut on an object store with keyPath 'barcode' automatically upserts
-  await db.catalog.bulkPut(products);
+  await db.products.bulkPut(products);
 
   // Mark as seeded — wrap in try/catch so a settings failure doesn't
   // leave the catalog unmarked (catalog is already seeded at this point)

@@ -38,11 +38,11 @@ export function CartReviewScreen() {
       const now = new Date().toISOString();
 
       // Atomic: all items saved in one transaction — all succeed or all fail
-      await db.transaction('rw', db.catalog, db.inventory, async () => {
+      await db.transaction('rw', db.products, db.inventory, async () => {
         for (const item of items) {
           // Save product to catalog if new (no existing product)
           if (!item.product) {
-            // saveProduct derives the '#'-private primary key; a raw db.catalog.put
+            // saveProduct derives the '#'-private primary key; a raw db.products.put
             // here would omit it and throw a ConstraintError at runtime.
             await saveProduct({
               barcode: item.barcode,

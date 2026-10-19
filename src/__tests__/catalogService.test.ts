@@ -18,7 +18,7 @@ const mockProduct: Product = {
 
 describe('catalogService', () => {
   beforeEach(async () => {
-    await db.table('catalog').clear();
+    await db.table('products').clear();
     await db.table('inventory').clear();
     await db.table('settings').clear();
   });
@@ -92,7 +92,7 @@ describe('catalogService', () => {
 
   it('stores products under the private productId, not the bare barcode', async () => {
     await saveProduct({ ...mockProduct, barcode: '4801' });
-    const rows = await db.catalog.toArray();
+    const rows = await db.products.toArray();
     expect(rows[0]!.productId).toBe('#4801');
     expect(rows[0]!.barcode).toBe('4801');
   });

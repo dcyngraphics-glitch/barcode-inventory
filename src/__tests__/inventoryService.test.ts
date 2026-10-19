@@ -23,7 +23,7 @@ const mockBatch: Batch = {
 
 describe('inventoryService', () => {
   beforeEach(async () => {
-    await db.table('catalog').clear();
+    await db.table('products').clear();
     await db.table('inventory').clear();
     await db.table('settings').clear();
   });

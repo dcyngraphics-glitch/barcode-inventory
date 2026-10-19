@@ -116,7 +116,7 @@ export function SettingsScreen() {
   const handleClearAll = useCallback(async () => {
     try {
       const db = await getDB();
-      await db.clear('catalog');
+      await db.clear('products');
       await db.clear('inventory');
       await db.clear('sales');
       // Reset settings to defaults
