@@ -319,6 +319,15 @@ ol {
 .text-accent { color: var(--color-accent-text); }
 .text-destructive { color: var(--color-destructive); }
 
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+.uppercase { text-transform: uppercase; }
+.tracking-wider { letter-spacing: 0.05em; }
+
+.opacity-70 { opacity: 0.7; }
+
 /* ==========================================================================
    BUTTONS
    ========================================================================== */
@@ -384,6 +393,11 @@ ol {
   opacity: 0.8;
 }
 
+.btn-secondary.btn-loading {
+  opacity: 0.6;
+  transition: opacity 200ms ease;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--color-primary);
@@ -392,6 +406,16 @@ ol {
 }
 
 .btn-ghost:hover:not(:disabled) {
+  background: var(--color-muted);
+}
+
+.cart-badge-active {
+  background: var(--color-background);
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.cart-badge-active:hover:not(:disabled) {
   background: var(--color-muted);
 }
 

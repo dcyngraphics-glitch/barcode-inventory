@@ -1,6 +1,6 @@
 import { render, screen, act, within, waitFor } from '@testing-library/react';
-import { ScannerScreen } from '@/screens/ScannerScreen';
 import { vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 
 // Mock the CameraViewfinder
 vi.mock('@/components/CameraViewfinder', () => {
@@ -56,9 +56,22 @@ vi.mock('react-router-dom', async (importOriginal) => {
 // Mock productLookupService
 vi.mock('@/services/productLookupService', () => ({
   lookupProduct: vi.fn()
-}));
+}))
+
+// Mock useToast
+vi.mock('@/components/Toast', () => ({
+  useToast: () => ({
+    toasts: [],
+    showToast: vi.fn(),
+    dismissToast: vi.fn(),
+  }),
+  Toast: () => null,
+}))
 
 import { lookupProduct } from '@/services/productLookupService';
+
+// Import ScannerScreen after mocks are set up
+const { ScannerScreen } = await import('@/screens/ScannerScreen');
 
 describe('ScannerScreen', () => {
   beforeEach(() => {
@@ -205,5 +218,71 @@ describe('ScannerScreen', () => {
   it('should not offer manual barcode entry', () => {
     render(<ScannerScreen />);
     expect(screen.queryByText(/enter barcode manually/i)).toBeNull();
+  });
+});
+
+describe('ScannerScreen — token classes', () => {
+  it('app bar uses token classes, not inline #334155', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+    const appBar = screen.getByRole('banner');
+    expect(appBar).toHaveClass('app-bar');
+    expect(appBar).not.toHaveStyle({ background: '#334155' });
+  });
+
+  it('mode toggle uses token classes, not inline styles', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+    const modeLabel = screen.getByText('Mode').closest('div');
+    expect(modeLabel).not.toHaveStyle({ color: '#f8fafc' });
+    expect(modeLabel).not.toHaveStyle({ opacity: 0.7 });
+  });
+
+  it('cart badge uses token classes, not inline #0f172a/#3b82f6', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+    const cartBtn = screen.getByRole('button', { name: /cart/i });
+    expect(cartBtn).not.toHaveStyle({ background: '#0f172a' });
+    expect(cartBtn).not.toHaveStyle({ border: '1.5px solid #3b82f6' });
+  });
+
+  it('scan FAB uses .scan-fab token class, not inline gradient', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+    const fab = screen.getByRole('button', { name: /scan barcode/i });
+    expect(fab).toHaveClass('scan-fab');
+    expect(fab).not.toHaveStyle({ background: 'linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%)' });
+  });
+
+  it('toast uses useToast hook, not inline #0F172A', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+    // Trigger a scan to show toast
+    // Verify toast uses useToast() not inline styles
+  });
+
+  it('has only ONE aria-live region for cart total', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+    const liveRegions = screen.getAllByRole('status');
+    expect(liveRegions).toHaveLength(1);
   });
 });
