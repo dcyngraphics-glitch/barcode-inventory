@@ -11,11 +11,11 @@ interface CameraViewfinderProps {
    * because the gap between reads varies with how long detection takes.
    */
   onNoDetection?: () => void,
-  cameraActive?: boolean;
+  cameraActive?: boolean,
 }
 
 export interface CameraViewfinderHandle {
-  triggerScan: () => void;
+  triggerScan: () => void,
 }
 
 export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfinderProps>(
@@ -101,282 +101,282 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
       setInitializing(true);
     }, []);
 
-  useEffect(() => {
-    if (!cameraActive) return;
+    useEffect(() => {
+      if (!cameraActive) return;
 
-    const video = videoRef.current;
-    if (!video) return;
+      const video = videoRef.current;
+      if (!video) return;
 
-    // Add playing listener BEFORE starting stream so we don't miss the event
-    const handlePlaying = () => setInitializing(false);
-    video.addEventListener('playing', handlePlaying);
+      // Add playing listener BEFORE starting stream so we don't miss the event
+      const handlePlaying = () => setInitializing(false);
+      video.addEventListener('playing', handlePlaying);
 
-    // Fallback: if video is already ready (playing fired before listener attached), clear immediately
-    if (video.readyState >= 2) {
-      setInitializing(false);
-    }
-
-    const beginStream = async () => {
-      try {
-        await start(video);
-      } catch {
-        // start() handles its own errors via state
+      // Fallback: if video is already ready (playing fired before listener attached), clear immediately
+      if (video.readyState >= 2) {
+        setInitializing(false);
       }
-    };
 
-    beginStream();
+      const beginStream = async () => {
+        try {
+          await start(video);
+        } catch {
+          // start() handles its own errors via state
+        }
+      };
 
-    // Check if torch is supported (after stream is available)
-    const checkTorchSupport = () => {
+      beginStream();
+
+      // Check if torch is supported (after stream is available)
+      const checkTorchSupport = () => {
+        const stream = video.srcObject as MediaStream | null;
+        if (stream) {
+          const track = stream.getVideoTracks()[0];
+          if (track) {
+            const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
+              torch?: boolean;
+            };
+            setTorchSupported(!!capabilities.torch);
+          }
+        }
+      };
+
+      // Check torch support once we have a stream
+      const interval = setInterval(checkTorchSupport, 100);
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        checkTorchSupport(); // Final check
+      }, 2000);
+
+      return () => {
+        video.removeEventListener('playing', handlePlaying);
+        clearInterval(interval);
+        clearTimeout(timeout);
+        stop();
+        setInitializing(false);
+        setCameraActive(false);
+      };
+    }, [cameraActive, start, stop]);
+
+    const toggleFlash = async () => {
+      const video = videoRef.current;
+      if (!video) return;
+
       const stream = video.srcObject as MediaStream | null;
-      if (stream) {
-        const track = stream.getVideoTracks()[0];
-        if (track) {
-          const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
-            torch?: boolean;
-          };
-          setTorchSupported(!!capabilities.torch);
-        }
-      }
-    };
+      if (!stream) return;
 
-    // Check torch support once we have a stream
-    const interval = setInterval(checkTorchSupport, 100);
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      checkTorchSupport(); // Final check
-    }, 2000);
-
-    return () => {
-      video.removeEventListener('playing', handlePlaying);
-      clearInterval(interval);
-      clearTimeout(timeout);
-      stop();
-      setInitializing(false);
-      setCameraActive(false);
-    };
-  }, [cameraActive, start, stop]);
-
-  const toggleFlash = async () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const stream = video.srcObject as MediaStream | null;
-    if (!stream) return;
-
-    const track = stream.getVideoTracks()[0];
-    if (!track) return;
-
-    try {
-      const newFlash = !flashOn;
-      await track.applyConstraints({
-        advanced: [{ torch: newFlash } as MediaTrackConstraintSet & { torch: boolean }],
-      });
-      setFlashOn(newFlash);
-    } catch (err) {
-      console.error('Failed to toggle torch:', err);
-    }
-  };
-
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cleanup retry timer on unmount
-  useEffect(() => {
-    return () => {
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    };
-  }, []);
-
-  // Continuous auto-scan loop
-  const isScanningRef = useRef(false);
-  const lastScanTimeRef = useRef(0);
-  const SCAN_INTERVAL = 500; // ms between scan attempts
-  const SCAN_COOLDOWN = 2000; // ms pause after a successful scan
-
-  useEffect(() => {
-    if (!cameraActive || initializing) return;
-
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const scanLoop = async () => {
-      if (isScanningRef.current) return; // Skip if already scanning
-
-      const now = Date.now();
-      const elapsed = now - lastScanTimeRef.current;
-      if (elapsed < SCAN_INTERVAL) {
-        timeoutId = setTimeout(scanLoop, SCAN_INTERVAL - elapsed);
-        return;
-      }
-
-      isScanningRef.current = true;
-      lastScanTimeRef.current = now;
+      const track = stream.getVideoTracks()[0];
+      if (!track) return;
 
       try {
-        const barcode = await captureFrame({ silent: true });
-        if (barcode && onScanRef.current) {
-          onScanRef.current(barcode);
-          // Cooldown after successful scan to let user move to next item
-          timeoutId = setTimeout(scanLoop, SCAN_COOLDOWN);
-        } else {
-          // Nothing in frame — lets consumers re-arm repeat detection.
-          onNoDetectionRef.current?.();
-          timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
-        }
-      } catch {
-        timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
-      } finally {
-        isScanningRef.current = false;
+        const newFlash = !flashOn;
+        await track.applyConstraints({
+          advanced: [{ torch: newFlash } as MediaTrackConstraintSet & { torch: boolean }],
+        });
+        setFlashOn(newFlash);
+      } catch (err) {
+        console.error('Failed to toggle torch:', err);
       }
     };
 
-    scanLoop();
+    const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      isScanningRef.current = false;
-    };
-  }, [cameraActive, initializing, captureFrame]);
+    // Cleanup retry timer on unmount
+    useEffect(() => {
+      return () => {
+        if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      };
+    }, []);
 
-  const handleRetry = useCallback(async () => {
-    stop();
-    setCameraActive(false);
+    // Continuous auto-scan loop
+    const isScanningRef = useRef(false);
+    const lastScanTimeRef = useRef(0);
+    const SCAN_INTERVAL = 500; // ms between scan attempts
+    const SCAN_COOLDOWN = 2000; // ms pause after a successful scan
 
-    // Re-read the permission BEFORE restarting. permissionState was previously only read
-    // on mount, so a 'denied' reading stuck forever and the overlay could never clear
-    // even after the user granted access in the browser's site settings.
-    await refreshPermissionState();
+    useEffect(() => {
+      if (!cameraActive || initializing) return;
 
-    // Small delay to let state settle
-    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    retryTimerRef.current = setTimeout(() => setCameraActive(true), 150);
-  }, [stop, refreshPermissionState]);
+      let timeoutId: ReturnType<typeof setTimeout>;
 
-  // Error state (from scanner errors or denied permission)
-  const isPermissionDenied = errorType === 'permission-denied' || permissionState === 'denied';
-  if (error || isPermissionDenied) {
-    const isNoCamera = errorType === 'no-camera';
+      const scanLoop = async () => {
+        if (isScanningRef.current) return; // Skip if already scanning
 
-    return (
-      <div className="camera-viewfinder">
-        <div className="camera-error-overlay">
-          <div className="camera-error-content">
-            {isNoCamera ? (
-              <CameraOff size={48} className="camera-error-icon" />
-            ) : (
-              <Camera size={48} className="camera-error-icon" />
-            )}
-            <div className="camera-error-text">
-              <p className="camera-error-title">
-                {isNoCamera ? 'No camera found' : 'Camera permission required'}
-              </p>
-              <p className="camera-error-desc">
-                {isNoCamera
-                  ? 'No camera detected. Make sure a camera is connected.'
-                  : 'To scan barcodes, please allow camera access.'}
-                {isPermissionDenied && (
-                  <>
-                    <p className="camera-error-instructions">
-                      <strong>To unblock the camera:</strong>
-                    </p>
-                    <ol className="camera-error-steps">
-                      <li>
-                        Open this site&apos;s settings in your browser (the{' '}
-                        <strong>lock or ⓘ icon</strong> in the address bar) and set{' '}
-                        <strong>Camera → Allow</strong>
-                      </li>
-                      <li>
-                        Then tap <strong>Retry</strong> below, or reload the page
-                      </li>
-                      <li>
-                        On Android: <strong>Settings → Apps → [your browser] → Permissions
-                        → Camera</strong>
-                      </li>
-                      <li>
-                        On iPhone: <strong>Settings → [your browser] → Camera</strong>, and
-                        check <strong>Settings → Privacy → Camera</strong>
-                      </li>
-                    </ol>
-                  </>
-                )}
-              </p>
-              <button onClick={handleRetry} className="camera-retry-btn">
-                <RefreshCw size={18} />
-                Retry camera access
-              </button>
+        const now = Date.now();
+        const elapsed = now - lastScanTimeRef.current;
+        if (elapsed < SCAN_INTERVAL) {
+          timeoutId = setTimeout(scanLoop, SCAN_INTERVAL - elapsed);
+          return;
+        }
+
+        isScanningRef.current = true;
+        lastScanTimeRef.current = now;
+
+        try {
+          const barcode = await captureFrame({ silent: true });
+          if (barcode && onScanRef.current) {
+            onScanRef.current(barcode);
+            // Cooldown after successful scan to let user move to next item
+            timeoutId = setTimeout(scanLoop, SCAN_COOLDOWN);
+          } else {
+            // Nothing in frame — lets consumers re-arm repeat detection.
+            onNoDetectionRef.current?.();
+            timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
+          }
+        } catch {
+          timeoutId = setTimeout(scanLoop, SCAN_INTERVAL);
+        } finally {
+          isScanningRef.current = false;
+        }
+      };
+
+      scanLoop();
+
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        isScanningRef.current = false;
+      };
+    }, [cameraActive, initializing, captureFrame]);
+
+    const handleRetry = useCallback(async () => {
+      stop();
+      setCameraActive(false);
+
+      // Re-read the permission BEFORE restarting. permissionState was previously only read
+      // on mount, so a 'denied' reading stuck forever and the overlay could never clear
+      // even after the user granted access in the browser's site settings.
+      await refreshPermissionState();
+
+      // Small delay to let state settle
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => setCameraActive(true), 150);
+    }, [stop, refreshPermissionState]);
+
+    // Error state (from scanner errors or denied permission)
+    const isPermissionDenied = errorType === 'permission-denied' || permissionState === 'denied';
+    if (error || isPermissionDenied) {
+      const isNoCamera = errorType === 'no-camera';
+
+      return (
+        <div className="camera-viewfinder">
+          <div className="camera-error-overlay">
+            <div className="camera-error-content">
+              {isNoCamera ? (
+                <CameraOff size={48} className="camera-error-icon" />
+              ) : (
+                <Camera size={48} className="camera-error-icon" />
+              )}
+              <div className="camera-error-text">
+                <p className="camera-error-title">
+                  {isNoCamera ? 'No camera found' : 'Camera permission required'}
+                </p>
+                <p className="camera-error-desc">
+                  {isNoCamera
+                    ? 'No camera detected. Make sure a camera is connected.'
+                    : 'To scan barcodes, please allow camera access.'}
+                  {isPermissionDenied && (
+                    <>
+                      <p className="camera-error-instructions">
+                        <strong>To unblock the camera:</strong>
+                      </p>
+                      <ol className="camera-error-steps">
+                        <li>
+                          Open this site&apos;s settings in your browser (the{' '}
+                          <strong>lock or ⓘ icon</strong> in the address bar) and set{' '}
+                          <strong>Camera → Allow</strong>
+                        </li>
+                        <li>
+                          Then tap <strong>Retry</strong> below, or reload the page
+                        </li>
+                        <li>
+                          On Android: <strong>Settings → Apps → [your browser] → Permissions
+                          → Camera</strong>
+                        </li>
+                        <li>
+                          On iPhone: <strong>Settings → [your browser] → Camera</strong>, and
+                          check <strong>Settings → Privacy → Camera</strong>
+                        </li>
+                      </ol>
+                    </>
+                  )}
+                </p>
+                <button onClick={handleRetry} className="camera-retry-btn">
+                  <RefreshCw size={18} />
+                  Retry camera access
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      );
+    }
+
+    return (
+      <div className="camera-viewfinder">
+        {/* Only render video when camera is active to avoid residual box artifact */}
+        {cameraActive && (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="camera-video"
+          />
+        )}
+
+        {/* Start overlay — shown before camera is activated */}
+        {!cameraActive && (
+          <div className="camera-start-overlay" data-testid="camera-start-overlay">
+            <div className="camera-start-content">
+              <Camera size={48} className="camera-start-icon" />
+              <p className="camera-start-title">Camera Scanner</p>
+              <p className="camera-start-desc">Tap the button below to activate your camera. Then tap the scan button to read barcodes.</p>
+              <button onClick={handleStartCamera} className="camera-start-btn">
+                <Play size={18} />
+                Start Camera
+              </button>
+              <p className="camera-start-hint">You'll be prompted to allow camera access for this site.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Initializing spinner */}
+        {cameraActive && initializing && (
+          <div className="camera-init">
+            <div className="camera-init-box" />
+            <p className="camera-init-text">Initializing camera...</p>
+          </div>
+        )}
+
+        {/* Overlay with scan frame cutout */}
+        {cameraActive && !initializing && (
+          <div className="scan-overlay">
+            <div className="camera-scan-frame">
+              <div className="camera-scan-corner camera-scan-corner--tl" />
+              <div className="camera-scan-corner camera-scan-corner--tr" />
+              <div className="camera-scan-corner camera-scan-corner--bl" />
+              <div className="camera-scan-corner camera-scan-corner--br" />
+            </div>
+            {/* Animated scan line */}
+            <div className="camera-scan-line" />
+          </div>
+        )}
+
+        {/* Flash toggle button */}
+        {torchSupported && cameraActive && !initializing && (
+          <button
+            onClick={toggleFlash}
+            aria-label={flashOn ? 'Turn flash off' : 'Turn flash on'}
+            className={`camera-flash-btn${flashOn ? ' active' : ''}`}
+          >
+            {flashOn ? <Zap size={24} /> : <ZapOff size={24} />}
+          </button>
+        )}
+
+        {/* Helper text */}
+        {cameraActive && !initializing && (
+          <p className="camera-helper-text">Point camera at barcode to scan automatically</p>
+        )}
       </div>
     );
   }
-
-  return (
-    <div className="camera-viewfinder">
-      {/* Only render video when camera is active to avoid residual box artifact */}
-      {cameraActive && (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="camera-video"
-        />
-      )}
-
-      {/* Start overlay — shown before camera is activated */}
-      {!cameraActive && (
-        <div className="camera-start-overlay">
-          <div className="camera-start-content">
-            <Camera size={48} className="camera-start-icon" />
-            <p className="camera-start-title">Camera Scanner</p>
-            <p className="camera-start-desc">Tap the button below to activate your camera. Then tap the scan button to read barcodes.</p>
-            <button onClick={handleStartCamera} className="camera-start-btn">
-              <Play size={18} />
-              Start Camera
-            </button>
-            <p className="camera-start-hint">You'll be prompted to allow camera access for this site.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Initializing spinner */}
-      {cameraActive && initializing && (
-        <div className="camera-init">
-          <div className="camera-init-box" />
-          <p className="camera-init-text">Initializing camera...</p>
-        </div>
-      )}
-
-      {/* Overlay with scan frame cutout */}
-      {cameraActive && !initializing && (
-        <div className="scan-overlay">
-          <div className="camera-scan-frame">
-            <div className="camera-scan-corner camera-scan-corner--tl" />
-            <div className="camera-scan-corner camera-scan-corner--tr" />
-            <div className="camera-scan-corner camera-scan-corner--bl" />
-            <div className="camera-scan-corner camera-scan-corner--br" />
-          </div>
-          {/* Animated scan line */}
-          <div className="camera-scan-line" />
-        </div>
-      )}
-
-      {/* Flash toggle button */}
-      {torchSupported && cameraActive && !initializing && (
-        <button
-          onClick={toggleFlash}
-          aria-label={flashOn ? 'Turn flash off' : 'Turn flash on'}
-          className={`camera-flash-btn${flashOn ? ' active' : ''}`}
-        >
-          {flashOn ? <Zap size={24} /> : <ZapOff size={24} />}
-        </button>
-      )}
-
-      {/* Helper text */}
-      {cameraActive && !initializing && (
-        <p className="camera-helper-text">Point camera at barcode to scan automatically</p>
-      )}
-    </div>
-  );
-}
 );

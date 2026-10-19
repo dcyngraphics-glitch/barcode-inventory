@@ -58,12 +58,16 @@
   --color-error-text: #cc2121;
 
   /* ======================================================================
-     CAMERA / SCANNER — Specialized scanner colors
-     ====================================================================== */
-  --color-camera-bg: #0f172a;        /* Camera viewfinder background */
-  --color-camera-surface: #1e213b;   /* Slightly lighter than bg */
-  --color-flash: #fbbf24;            /* Flash/indicator amber */
-  --color-scan-line: #3b82f6;        /* Scanning line accent */
+       CAMERA / SCANNER — Specialized scanner colors
+       ====================================================================== */
+    --color-camera-bg: #0f172a;        /* Camera viewfinder background */
+    --color-camera-surface: #1e213b;   /* Slightly lighter than bg */
+    --color-camera-overlay: rgba(0, 0, 0, 0.8);      /* Start overlay backdrop */
+    --color-camera-error-overlay: rgba(0, 0, 0, 0.6); /* Error overlay backdrop */
+    --color-camera-text-muted: #94a3b8;                /* Muted text on camera (light) */
+    --color-camera-hint: #6b7f96;                      /* Hint text on camera */
+    --color-flash: #fbbf24;            /* Flash/indicator amber */
+    --color-scan-line: #3b82f6;        /* Scanning line accent */
 
   /* ======================================================================
      TYPOGRAPHY — Refined Inter hierarchy with scanner-optimized sizes
@@ -1020,7 +1024,7 @@ ol {
 }
 
 .camera-error-title {
-  color: #f8fafc;
+  color: var(--color-card-foreground);
   font-weight: 500;
   margin-bottom: var(--space-sm);
 }
@@ -1195,75 +1199,77 @@ ol {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
 }
-   /* CAMERA ERROR OVERLAY & CONTENT
-   * ========================================================================== */
-.camera-start-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
-  border-radius: 12px;
-}
-.camera-start-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 32px;
-  text-align: center;
-}
-.camera-start-icon {
-  color: #f8fafc;
-  opacity: 0.9;
-}
-.camera-start-title {
-  color: #f8fafc;
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0;
-}
-.camera-start-desc {
-  color: #94a3b8;
-  font-size: 14px;
-  margin: 0;
-  max-width: 300px;
-  line-height: 1.4;
-}
-.camera-start-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #047857;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  min-height: 44px;
-}
-.camera-start-btn:active {
-  transform: scale(0.97);
-}
-.camera-start-hint {
-  color: #6b7f96;
-  font-size: 12px;
-  margin: 0;
-}
+   /* CAMERA START OVERLAY
+      * ========================================================================== */
+   .camera-start-overlay {
+     position: absolute;
+     inset: 0;
+     background: var(--color-camera-overlay);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 20;
+     border-radius: 12px;
+   }
+   .camera-start-content {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 16px;
+     padding: 32px;
+     text-align: center;
+   }
+   .camera-start-icon {
+     color: var(--color-on-primary);
+     opacity: 0.9;
+   }
+   .camera-start-title {
+     color: var(--color-on-primary);
+     font-size: 20px;
+     font-weight: 600;
+     margin: 0;
+   }
+   .camera-start-desc {
+     color: var(--color-camera-text-muted);
+     font-size: 14px;
+     margin: 0;
+     max-width: 300px;
+     line-height: 1.4;
+   }
+   .camera-start-btn {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     background: var(--color-accent);
+     color: var(--color-on-accent);
+     border: none;
+     padding: 12px 24px;
+     border-radius: 8px;
+     font-size: 16px;
+     font-weight: 600;
+     cursor: pointer;
+     min-height: 44px;
+   }
+   .camera-start-btn:active {
+     transform: scale(0.97);
+   }
+   .camera-start-hint {
+     color: var(--color-camera-hint);
+     font-size: 12px;
+     margin: 0;
+   }
 
-.camera-error-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
+   /* CAMERA ERROR OVERLAY & CONTENT
+      * ========================================================================== */
+   .camera-error-overlay {
+     position: fixed;
+     inset: 0;
+     background: var(--color-camera-error-overlay);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 50;
+   }
 
 .camera-error-content {
   background: var(--color-card);

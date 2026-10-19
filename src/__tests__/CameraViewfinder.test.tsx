@@ -123,23 +123,94 @@ describe('CameraViewfinder', () => {
   });
 
   it('re-reads the permission when the window regains focus', async () => {
-    // Coming back from the browser's settings should clear the overlay without the user
-    // having to find the Retry button.
-    mockPermissionsQuery.mockResolvedValue({ state: 'denied' });
+      // Coming back from the browser's settings should clear the overlay without the user
+      // having to find the Retry button.
+      mockPermissionsQuery.mockResolvedValue({ state: 'denied' });
 
-    await act(async () => {
-      render(<CameraViewfinder onScan={() => {}} />);
-    });
-    expect(screen.getByText('Camera permission required')).toBeInTheDocument();
+      await act(async () => {
+        render(<CameraViewfinder onScan={() => {}} />);
+      });
+      expect(screen.getByText('Camera permission required')).toBeInTheDocument();
 
-    mockPermissionsQuery.mockResolvedValue({ state: 'granted' });
+      mockPermissionsQuery.mockResolvedValue({ state: 'granted' });
 
-    await act(async () => {
-      window.dispatchEvent(new Event('focus'));
-    });
+      await act(async () => {
+        window.dispatchEvent(new Event('focus'));
+      });
 
-    await waitFor(() => {
-      expect(screen.queryByText('Camera permission required')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText('Camera permission required')).not.toBeInTheDocument();
+      });
     });
   });
-});
+
+  describe('CameraViewfinder — token classes', () => {
+      beforeEach(() => {
+        vi.clearAllMocks();
+        mockPermissionsQuery.mockResolvedValue({ state: 'prompt' });
+      });
+
+      it('start overlay uses token classes, not hardcoded colors', () => {
+        render(<CameraViewfinder onScan={vi.fn()} cameraActive={false} />);
+
+        const overlay = screen.getByTestId('camera-start-overlay');
+        expect(overlay).toBeInTheDocument();
+
+        const title = screen.getByText('Camera Scanner');
+        expect(title).not.toHaveStyle({ color: '#f8fafc' });
+
+        const desc = screen.getByText(/activate your camera/i).closest('p');
+        expect(desc).not.toHaveStyle({ color: '#94a3b8' });
+
+        const btn = screen.getByRole('button', { name: /start camera/i });
+        expect(btn).toHaveClass('camera-start-btn');
+        expect(btn).not.toHaveStyle({ background: '#047857' });
+        expect(btn).not.toHaveStyle({ color: 'white' });
+      });
+
+      it('start overlay hint uses token color, not hardcoded #6b7f96', () => {
+        render(<CameraViewfinder onScan={vi.fn()} cameraActive={false} />);
+
+        const hint = screen.getByText(/prompted to allow camera/i).closest('p');
+        expect(hint).not.toHaveStyle({ color: '#6b7f96' });
+      });
+
+      it('start overlay background uses token, not hardcoded rgba', () => {
+        render(<CameraViewfinder onScan={vi.fn()} cameraActive={false} />);
+
+        const overlay = screen.getByTestId('camera-start-overlay');
+        expect(overlay).not.toHaveStyle({ background: 'rgba(0, 0, 0, 0.8)' });
+      });
+
+      it('error overlay uses token classes, not hardcoded colors', async () => {
+        // Mock permission denied
+        mockPermissionsQuery.mockResolvedValue({ state: 'denied' });
+
+        await act(async () => {
+          render(<CameraViewfinder onScan={vi.fn()} cameraActive={false} />);
+        });
+
+        await waitFor(() => {
+          const errorOverlay = screen.queryByText('Camera permission required');
+          expect(errorOverlay).toBeInTheDocument();
+        });
+
+        const errorTitle = screen.getByText('Camera permission required').closest('p');
+        expect(errorTitle).not.toHaveStyle({ color: '#f8fafc' });
+
+        const retryBtn = screen.getByRole('button', { name: /retry camera access/i });
+        expect(retryBtn).toHaveClass('camera-retry-btn');
+      });
+
+      it('camera-retry-btn uses token colors', async () => {
+        mockPermissionsQuery.mockResolvedValue({ state: 'denied' });
+
+        await act(async () => {
+          render(<CameraViewfinder onScan={vi.fn()} cameraActive={false} />);
+        });
+
+        const retryBtn = screen.getByRole('button', { name: /retry camera access/i });
+        expect(retryBtn).not.toHaveStyle({ background: '#1e293b' });
+        expect(retryBtn).not.toHaveStyle({ color: '#f8fafc' });
+      });
+    });
