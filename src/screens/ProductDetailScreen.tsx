@@ -294,24 +294,19 @@ export function ProductDetailScreen() {
     if (lookupLoading && !product) {
       return (
         <div className="loading-screen">
-          <header className="app-bar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ArrowLeft size={24} color="var(--color-on-primary)" />
-              <h1 className="app-bar-title">Product Details</h1>
-            </div>
-          </header>
-          <main className="loading-content">
-            <div className="loading-spinner" />
-            <p className="text-muted">Looking up product...</p>
-          </main>
-          <style>{`
-            @keyframes spin {
-              to { transform: rotate(360deg); }
+                  <header className="app-bar">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ArrowLeft size={24} color="var(--color-on-primary)" />
+                      <h1 className="app-bar-title">Product Details</h1>
+                    </div>
+                  </header>
+                  <main className="loading-content">
+                    <div className="loading-spinner" />
+                    <p className="text-muted">Looking up product...</p>
+                  </main>
+                </div>
+              );
             }
-          `}</style>
-        </div>
-      );
-    }
 
   // Bug fix #3: Show retry option when lookup has failed
   const showRetryOption = lookupError && !product && isNewProduct;
@@ -373,17 +368,16 @@ export function ProductDetailScreen() {
                 </div>
 
                 {/* Bug fix #3: Retry lookup button shown when API failure */}
-                {showRetryOption && (
-                  <button
-                    onClick={handleRetry}
-                    disabled={lookupLoading}
-                    className="btn-secondary"
-                    style={{ opacity: lookupLoading ? 0.6 : 1, transition: 'opacity 200ms ease' }}
-                  >
-                    <RefreshCw size={16} className={lookupLoading ? 'spin' : ''} />
-                    {lookupLoading ? 'Retrying...' : 'Retry lookup'}
-                  </button>
-                )}
+                                {showRetryOption && (
+                                  <button
+                                    onClick={handleRetry}
+                                    disabled={lookupLoading}
+                                    className={`btn-secondary ${lookupLoading ? 'btn-loading' : ''}`}
+                                  >
+                                    <RefreshCw size={16} className={lookupLoading ? 'spin' : ''} />
+                                    {lookupLoading ? 'Retrying...' : 'Retry lookup'}
+                                  </button>
+                                )}
 
                 {/* Editable Form */}
                 <div className="card form-card">
@@ -422,26 +416,20 @@ export function ProductDetailScreen() {
               )}
 
               {/* Product Management Bottom Sheet */}
-              <ProductManagementSheet
-                open={editSheetOpen}
-                product={product}
-                onClose={() => setEditSheetOpen(false)}
-                onSave={handleEditSave}
-                onDelete={handleEditDelete}
-              />
+                    <ProductManagementSheet
+                      open={editSheetOpen}
+                      product={product}
+                      onClose={() => setEditSheetOpen(false)}
+                      onSave={handleEditSave}
+                      onDelete={handleEditDelete}
+                    />
 
-              <style>{`
-                @keyframes fade-in {
-                  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-                  to { opacity: 1; transform: translateX(-50%) translateY(0); }
-                }
-                @keyframes spin {
-                  to { transform: rotate(360deg); }
-                }
-                .spin {
-                  animation: spin 1s linear infinite;
-                }
-              `}</style>
-            </div>
-          );
+                    <style>{`
+                      @keyframes fade-in {
+                        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+                        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                      }
+                    `}</style>
+                  </div>
+                );
 }
