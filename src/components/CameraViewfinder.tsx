@@ -46,19 +46,45 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
       }
     }, [cameraActiveProp]);
 
-    // On mount, query camera permission and auto-start if previously granted
-    useEffect(() => {
-      navigator.permissions.query({ name: 'camera' }).then((status) => {
+    /**
+     * Re-read the camera permission from the browser.
+     *
+     * This has to be callable rather than a one-shot on mount. It used to be read exactly
+     * once, so once it came back 'denied' the error overlay below could never clear —
+     * granting access in the browser's site settings and pressing "Retry camera access"
+     * did nothing, because the overlay keyed off a value nothing ever re-read.
+     */
+    const refreshPermissionState = useCallback(async (): Promise<PermissionState> => {
+      try {
+        const status = await navigator.permissions.query({ name: 'camera' });
         setPermissionState(status.state);
-        if (status.state === 'granted') {
+        return status.state;
+      } catch {
+        // Permissions API not available (e.g. Safari) — fall through to manual start
+        setPermissionState('prompt');
+        return 'prompt';
+      }
+    }, []);
+
+    // On mount, read the permission once and auto-start if it is already granted
+    useEffect(() => {
+      refreshPermissionState().then((state) => {
+        if (state === 'granted') {
           setCameraActive(true);
           setInitializing(true);
         }
-      }).catch(() => {
-        // Permissions API not available — fall through to manual start
-        setPermissionState('prompt');
       });
-    }, []);
+    }, [refreshPermissionState]);
+
+    // Returning from the browser's site settings should clear the overlay on its own,
+    // rather than making the user find the Retry button.
+    useEffect(() => {
+      const handleFocus = () => {
+        void refreshPermissionState();
+      };
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }, [refreshPermissionState]);
 
     // Expose scan trigger for external button (positioned above bottom nav)
     useImperativeHandle(ref, () => ({
@@ -211,13 +237,19 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
     };
   }, [cameraActive, initializing, captureFrame]);
 
-  const handleRetry = useCallback(() => {
+  const handleRetry = useCallback(async () => {
     stop();
     setCameraActive(false);
+
+    // Re-read the permission BEFORE restarting. permissionState was previously only read
+    // on mount, so a 'denied' reading stuck forever and the overlay could never clear
+    // even after the user granted access in the browser's site settings.
+    await refreshPermissionState();
+
     // Small delay to let state settle
     if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     retryTimerRef.current = setTimeout(() => setCameraActive(true), 150);
-  }, [stop]);
+  }, [stop, refreshPermissionState]);
 
   // Error state (from scanner errors or denied permission)
   const isPermissionDenied = errorType === 'permission-denied' || permissionState === 'denied';
@@ -244,21 +276,25 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
                 {isPermissionDenied && (
                   <>
                     <p className="camera-error-instructions">
-                      <strong>How to fix in Edge:</strong>
+                      <strong>To unblock the camera:</strong>
                     </p>
                     <ol className="camera-error-steps">
-                      <li>Click the <strong>lock icon</strong> in the address bar</li>
-                      <li>Set <strong>Camera → Allow</strong></li>
-                      <li>Or go to <code>edge://settings/content/camera</code> and add this site</li>
-                      <li><strong>Reload</strong> the page after granting access</li>
-                    </ol>
-                    <p className="camera-error-instructions">
-                      Also check Windows: <strong>Settings → Privacy & Security → Camera</strong>
-                    </p>
-                    <ol className="camera-error-steps">
-                      <li>Make sure <strong>"Camera access"</strong> is turned on</li>
-                      <li>Ensure <strong>"Let apps access your camera"</strong> is enabled</li>
-                      <li>Check that your browser is in the allowed list</li>
+                      <li>
+                        Open this site&apos;s settings in your browser (the{' '}
+                        <strong>lock or ⓘ icon</strong> in the address bar) and set{' '}
+                        <strong>Camera → Allow</strong>
+                      </li>
+                      <li>
+                        Then tap <strong>Retry</strong> below, or reload the page
+                      </li>
+                      <li>
+                        On Android: <strong>Settings → Apps → [your browser] → Permissions
+                        → Camera</strong>
+                      </li>
+                      <li>
+                        On iPhone: <strong>Settings → [your browser] → Camera</strong>, and
+                        check <strong>Settings → Privacy → Camera</strong>
+                      </li>
                     </ol>
                   </>
                 )}

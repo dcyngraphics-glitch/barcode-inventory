@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
@@ -96,5 +96,50 @@ describe('CameraViewfinder', () => {
 
     // Should NOT show start button
     expect(screen.queryByText('Start Camera')).not.toBeInTheDocument();
+  });
+
+  it('clears the permission overlay on Retry once access has been granted in the browser', async () => {
+    // Regression: permissionState was read once on mount and never again, so a 'denied'
+    // reading stuck forever — granting access in the browser's site settings and tapping
+    // "Retry camera access" did nothing, because the overlay keyed off a value that
+    // nothing ever re-read.
+    mockPermissionsQuery.mockResolvedValue({ state: 'denied' });
+
+    await act(async () => {
+      render(<CameraViewfinder onScan={() => {}} />);
+    });
+    expect(screen.getByText('Camera permission required')).toBeInTheDocument();
+
+    // The user grants access in the browser's site settings, then taps Retry.
+    mockPermissionsQuery.mockResolvedValue({ state: 'granted' });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /retry camera access/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Camera permission required')).not.toBeInTheDocument();
+    });
+  });
+
+  it('re-reads the permission when the window regains focus', async () => {
+    // Coming back from the browser's settings should clear the overlay without the user
+    // having to find the Retry button.
+    mockPermissionsQuery.mockResolvedValue({ state: 'denied' });
+
+    await act(async () => {
+      render(<CameraViewfinder onScan={() => {}} />);
+    });
+    expect(screen.getByText('Camera permission required')).toBeInTheDocument();
+
+    mockPermissionsQuery.mockResolvedValue({ state: 'granted' });
+
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Camera permission required')).not.toBeInTheDocument();
+    });
   });
 });
