@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import { Receipt, AlertTriangle } from 'lucide-react';
-import { useSettingsContext } from '@/context/SettingsContext';
+import { useMode } from '@/context/ModeContext';
 import { ScreenSkeleton } from '@/components/ScreenSkeleton';
+import { EmptyState } from '@/components/EmptyState';
 import { getSalesForDay, getDayKeys, summarizeDay } from '@/services/saleService';
 import { toDayKey } from '@/utils/dayKey';
 import type { Sale } from '@/types';
@@ -36,7 +36,7 @@ function peso(value: number): string {
  * report automatically while past days stay available as history.
  */
 export function SalesScreen() {
-  const { settings, hasLoaded } = useSettingsContext();
+  const { isSell, hasLoaded, setMode } = useMode();
 
   const [dayKeys, setDayKeys] = useState<string[]>([]);
   const [selectedDay, setSelectedDay] = useState<string>(() => toDayKey(new Date()));
@@ -99,9 +99,18 @@ export function SalesScreen() {
     return <ScreenSkeleton rows={3} label="Loading sales" />;
   }
 
-  // Cashier Mode owns this screen; without it there is no report to show.
-  if (!settings.cashierMode) {
-    return <Navigate to="/" replace />;
+  // Sell owns this screen; in Shop there is no till, so there is no report to show.
+  // Offers the switch rather than redirecting: a silent bounce gives the user no idea
+  // why they were moved, and the always-visible switcher makes this a one-tap fix.
+  if (!isSell) {
+    return (
+      <EmptyState
+        title="Sales lives in Sell"
+        subtitle="Ring up sales at the till and the day's takings show up here."
+        ctaLabel="Switch to Sell"
+        onCta={() => setMode('sell')}
+      />
+    );
   }
 
   return (

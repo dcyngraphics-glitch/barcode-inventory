@@ -3,19 +3,21 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SalesScreen } from '@/screens/SalesScreen';
 
-const h = vi.hoisted(() => ({ cashierMode: true, hasLoaded: false }));
+// SalesScreen reads the device-local mode, not the synced cashierMode setting.
+const h = vi.hoisted(() => ({ isSell: true, hasLoaded: false }));
 
-vi.mock('@/context/SettingsContext', () => ({
-  useSettingsContext: () => ({
-    settings: { cashierMode: h.cashierMode },
-    updateSettings: vi.fn(),
+vi.mock('@/context/ModeContext', () => ({
+  useMode: () => ({
+    mode: h.isSell ? 'sell' : 'shop',
+    isSell: h.isSell,
+    setMode: vi.fn(),
     hasLoaded: h.hasLoaded,
   }),
 }));
 
 describe('SalesScreen loading state', () => {
   beforeEach(() => {
-    h.cashierMode = true;
+    h.isSell = true;
     h.hasLoaded = false;
   });
 

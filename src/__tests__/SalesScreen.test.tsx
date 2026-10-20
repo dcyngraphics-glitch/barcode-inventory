@@ -3,17 +3,20 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SalesScreen } from '@/screens/SalesScreen';
 
+// SalesScreen reads the device-local mode, not the synced cashierMode setting.
 const h = vi.hoisted(() => ({
-  cashierMode: true,
+  isSell: true,
   hasLoaded: true,
+  setMode: vi.fn(),
   dayKeys: [] as string[],
   sales: [] as Array<Record<string, unknown>>,
 }));
 
-vi.mock('@/context/SettingsContext', () => ({
-  useSettingsContext: () => ({
-    settings: { cashierMode: h.cashierMode },
-    updateSettings: vi.fn(),
+vi.mock('@/context/ModeContext', () => ({
+  useMode: () => ({
+    mode: h.isSell ? 'sell' : 'shop',
+    isSell: h.isSell,
+    setMode: h.setMode,
     hasLoaded: h.hasLoaded,
   }),
 }));
@@ -71,23 +74,38 @@ function renderScreen() {
 
 describe('SalesScreen', () => {
   beforeEach(() => {
-    h.cashierMode = true;
+    h.isSell = true;
     h.hasLoaded = true;
+    h.setMode.mockClear();
     h.dayKeys = [];
     h.sales = [];
   });
 
-  it('stays put while settings are still loading, instead of bouncing to /', async () => {
-    // The stored settings arrive a tick after mount; acting on the defaults here
-    // is what used to kick a cashier-mode user off /sales on every reload.
-    h.cashierMode = false;
+  it('shows a skeleton while the mode is loading, instead of bouncing to /', async () => {
+    // The stored mode arrives a tick after mount; acting on the default here is
+    // what used to kick a Sell user off /sales on every reload.
+    h.isSell = false;
     h.hasLoaded = false;
 
     renderScreen();
     await new Promise((r) => setTimeout(r, 60));
 
-    expect(screen.queryByText('Sales')).not.toBeInTheDocument();
+    // A skeleton — not a blank frame, and not a redirect.
+    expect(screen.getByTestId('loading-skeleton')).toBeInTheDocument();
     expect(screen.queryByText(/No sales recorded/i)).not.toBeInTheDocument();
+  });
+
+  it('offers a one-tap switch in Shop mode, instead of redirecting silently', async () => {
+    h.isSell = false;
+    h.hasLoaded = true;
+
+    renderScreen();
+
+    const cta = await screen.findByRole('button', { name: /switch to sell/i });
+    expect(screen.getByText(/sales lives in sell/i)).toBeInTheDocument();
+
+    fireEvent.click(cta);
+    expect(h.setMode).toHaveBeenCalledWith('sell');
   });
 
   it("shows today's total and sale count", async () => {
@@ -155,13 +173,5 @@ describe('SalesScreen', () => {
 
     expect(await screen.findByText('Top sellers')).toBeInTheDocument();
     expect(screen.getByText('Bear Brand')).toBeInTheDocument();
-  });
-
-  it('redirects away when Cashier Mode is off', async () => {
-    h.cashierMode = false;
-
-    renderScreen();
-
-    await waitFor(() => expect(screen.queryByText('Sales')).not.toBeInTheDocument());
   });
 });
