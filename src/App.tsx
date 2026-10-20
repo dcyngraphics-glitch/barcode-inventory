@@ -129,9 +129,12 @@ function MainApp() {
           <TutorialProvider>
             <ScanCartProvider>
               <InstallBanner />
+              <a href="#main" className="skip-link">Skip to content</a>
               <div className="app-container">
                 <ModeBar />
-                <AppRoutes />
+                <main id="main">
+                  <AppRoutes />
+                </main>
                 <BottomNav />
               </div>
               <TutorialOverlay />

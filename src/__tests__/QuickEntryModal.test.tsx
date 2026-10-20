@@ -78,3 +78,59 @@ describe('QuickEntryModal', () => {
     );
   });
 });
+
+/**
+ * The pooled audit found QuickEntryModal was the ONLY modal in the app with no
+ * `role="dialog"`, no `aria-modal`, no Escape handler and no focus trap.
+ * These mirror the ConfirmDialog pattern the rest of the app already follows.
+ */
+describe('QuickEntryModal — modal accessibility', () => {
+  it('exposes itself as a modal dialog', () => {
+    render(<QuickEntryModal barcode="B1" onSave={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
+  });
+
+  it('moves focus into the dialog on open', () => {
+    render(<QuickEntryModal barcode="B1" onSave={vi.fn()} onCancel={vi.fn()} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it('closes on Escape', () => {
+    const onCancel = vi.fn();
+    render(<QuickEntryModal barcode="B1" onSave={vi.fn()} onCancel={onCancel} />);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('traps Tab focus inside the dialog', () => {
+    render(<QuickEntryModal barcode="B1" onSave={vi.fn()} onCancel={vi.fn()} />);
+    const dialog = screen.getByRole('dialog');
+    const focusable = Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    expect(focusable.length).toBeGreaterThan(2);
+
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+
+    last.focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(first);
+
+    first.focus();
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
+
+  it('locks body scroll while open and restores it on unmount', () => {
+    const { unmount } = render(
+      <QuickEntryModal barcode="B1" onSave={vi.fn()} onCancel={vi.fn()} />,
+    );
+    expect(document.body.style.overflow).toBe('hidden');
+    unmount();
+    expect(document.body.style.overflow).toBe('');
+  });
+});

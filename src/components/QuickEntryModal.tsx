@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, DollarSign, Calendar } from 'lucide-react';
 
 export interface QuickEntryData {
@@ -21,6 +21,42 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
   const [expiryDate, setExpiryDate] = useState('');
   const [nameError, setNameError] = useState('');
   const [priceError, setPriceError] = useState('');
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Modal behaviour, matching ConfirmDialog: Escape closes, Tab cycles inside
+   * the dialog rather than escaping to the page behind, and body scroll is
+   * locked while it is open. QuickEntryModal was the only modal in the app
+   * missing all three.
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+        return;
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [onCancel]);
 
   const handleSave = () => {
     let invalid = false;
@@ -72,6 +108,10 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-entry-title"
         style={{
           background: 'var(--color-card)',
           borderRadius: '16px',
@@ -82,7 +122,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--color-foreground)' }}>
+          <h3 id="quick-entry-title" style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--color-foreground)' }}>
             Quick Entry
           </h3>
           <button
@@ -226,7 +266,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
               boxSizing: 'border-box',
             }}
           />
-          <span style={{ fontSize: '11px', color: 'var(--color-muted-foreground)', marginTop: '2px', display: 'block' }}>
+          <span style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginTop: '2px', display: 'block' }}>
             Leave empty for 30 days from today
           </span>
         </div>

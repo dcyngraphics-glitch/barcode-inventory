@@ -282,7 +282,7 @@ useEffect(() => {
               {/* Top App Bar */}
                     <header className="app-bar">
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-                        <ScanLine size={24} color="var(--color-on-primary)" />
+                        <ScanLine size={24} color="var(--color-on-primary)" aria-hidden="true" />
                         <h1 className="app-bar-title">Scan Product</h1>
                       </div>
 
@@ -378,7 +378,7 @@ useEffect(() => {
             </span>
           ) : (
             <>
-              <ScanLine size={28} />
+              <ScanLine size={28} aria-hidden="true" />
               <span>Scan Barcode</span>
             </>
           )}

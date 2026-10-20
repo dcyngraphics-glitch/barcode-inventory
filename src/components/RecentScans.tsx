@@ -173,7 +173,7 @@ export function RecentScans() {
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#059669',
+            color: 'var(--color-accent-border)',
             fontSize: 'var(--text-sm)',
             fontWeight: 500,
             cursor: 'pointer',
@@ -208,7 +208,7 @@ export function RecentScans() {
               width: '120px',
               flexShrink: 0,
               background: 'var(--color-card)',
-              border: '1px solid #334155',
+              border: '1px solid var(--color-secondary)',
               borderRadius: 'var(--radius-lg)',
               padding: 'var(--space-sm)',
               cursor: 'pointer',
@@ -245,7 +245,7 @@ export function RecentScans() {
                   }}
                 />
               ) : (
-                <Package size={32} color="#94a3b8" />
+                <Package size={32} color="var(--color-muted-foreground)" />
               )}
             </div>
 
@@ -276,14 +276,6 @@ export function RecentScans() {
           </button>
         ))}
       </div>
-
-      <style>{`
-        @keyframes shimmer {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
