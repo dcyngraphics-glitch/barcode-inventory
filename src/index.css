@@ -833,6 +833,38 @@ ol {
   margin-bottom: var(--space-sm);
 }
 
+/* App-mode switcher (components/AppModeSwitcher.tsx).
+   Sits in the app bar beside the title. min-height meets the app's 44px touch
+   target convention and still fits inside the 56px --appbar-height. */
+.app-mode-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  background: var(--color-camera-surface);
+}
+
+.app-mode-segment {
+  min-height: 44px;
+  min-width: 56px;
+  padding: 0 var(--space-sm);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-on-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.app-mode-segment--active {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
 .spinner {
   width: 20px;
   height: 20px;
