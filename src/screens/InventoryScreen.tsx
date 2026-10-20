@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { InventoryGroup as InventoryGroupType, Batch } from '@/types';
 import { calculateExpiryStatus } from '@/services/notificationService';
-import { updateBatch } from '@/services/inventoryService';
+import { updateBatch, deleteBatchWithSnapshot, restoreBatch } from '@/services/inventoryService';
 import { Toast, useToast } from '@/components/Toast';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
@@ -32,7 +32,7 @@ export function InventoryScreen() {
   const pullStartY = useRef(0);
   const pullDistance = useRef(0);
 
-  const { groups, loading, refresh, deleteBatch } = useInventory();
+  const { groups, loading, refresh } = useInventory();
   const { settings } = useSettingsContext();
   const alertWindowDays = settings?.alertWindowDays ?? 3;
 
@@ -65,14 +65,33 @@ export function InventoryScreen() {
       .filter((group) => group.batches.length > 0);
   }, [groups, searchQuery, filter, alertWindowDays]);
 
-  // Delete batch handler
+  // Delete batch handler — deletes with a snapshot so the user can undo
   const handleDeleteBatch = useCallback(async (): Promise<void> => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      // deleteBatch already refreshes internally — no explicit refresh needed
-      await deleteBatch(deleteTarget.batchId);
-      showToast('success', 'Batch removed');
+      // Snapshot-based, unlike the hook's deleteBatch, so the row can be put back.
+      const snapshot = await deleteBatchWithSnapshot(deleteTarget.batchId);
+      await refresh();
+      if (snapshot) {
+        // The longer lifetime keeps Undo reachable after the user registers what
+        // they just removed. Without a snapshot there is nothing to restore, so
+        // no action is offered rather than a button that silently does nothing.
+        showToast('success', 'Batch removed', {
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              void (async () => {
+                await restoreBatch(snapshot);
+                await refresh();
+              })();
+            },
+          },
+          durationMs: 6000,
+        });
+      } else {
+        showToast('success', 'Batch removed');
+      }
       setDeleteTarget(null);
     } catch (err) {
       console.error('Failed to delete batch:', err);
@@ -81,7 +100,7 @@ export function InventoryScreen() {
     } finally {
       setDeleting(false);
     }
-  }, [deleteTarget, showToast, deleteBatch]);
+  }, [deleteTarget, showToast, refresh]);
 
   // Set stock to a counted total
   const handleSetStock = useCallback(

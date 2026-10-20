@@ -29,6 +29,27 @@ export async function deleteBatch(batchId: string): Promise<void> {
   await db.inventory.delete(batchId);
 }
 
+/**
+ * Delete a batch and hand back the row that was removed, so the caller can offer an
+ * undo. Mirrors how saleService keeps SaleDeduction snapshots so that undoLastSale
+ * can recreate exactly what it deleted — one undo mechanism in this codebase, not two.
+ */
+export async function deleteBatchWithSnapshot(batchId: string): Promise<Batch | undefined> {
+  const existing = await db.inventory.get(batchId);
+  if (!existing) return undefined;
+  await db.inventory.delete(batchId);
+  return existing;
+}
+
+/**
+ * Put a snapshot back. The batchId is preserved so any reference held elsewhere
+ * still resolves. A put is naturally idempotent, so restoring twice cannot
+ * duplicate the row.
+ */
+export async function restoreBatch(snapshot: Batch): Promise<void> {
+  await db.inventory.put(snapshot);
+}
+
 export function sortBatchesByFIFO(batches: Batch[]): Batch[] {
   return [...batches].sort((a, b) => {
     if (a.expiryDate !== b.expiryDate) return a.expiryDate.localeCompare(b.expiryDate);
