@@ -800,6 +800,39 @@ ol {
   50% { opacity: 0.4; }
 }
 
+/* Full-screen loading placeholder (components/ScreenSkeleton.tsx).
+   Dimensions match the skeleton InventoryScreen shipped inline, so every
+   screen loads with the same rhythm. */
+.screen-skeleton {
+  padding: var(--space-md);
+}
+
+.screen-skeleton-bar {
+  height: 44px;
+  margin-bottom: var(--space-md);
+}
+
+.screen-skeleton-chips {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.screen-skeleton-chip {
+  height: 36px;
+  width: 80px;
+  border-radius: var(--radius-full);
+}
+
+.screen-skeleton-chip:first-child {
+  width: 100px;
+}
+
+.screen-skeleton-card {
+  height: 100px;
+  margin-bottom: var(--space-sm);
+}
+
 .spinner {
   width: 20px;
   height: 20px;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Receipt, AlertTriangle } from 'lucide-react';
 import { useSettingsContext } from '@/context/SettingsContext';
+import { ScreenSkeleton } from '@/components/ScreenSkeleton';
 import { getSalesForDay, getDayKeys, summarizeDay } from '@/services/saleService';
 import { toDayKey } from '@/utils/dayKey';
 import type { Sale } from '@/types';
@@ -91,8 +92,11 @@ export function SalesScreen() {
   // Wait for the stored settings before deciding anything. Acting on the defaults
   // bounces a cashier-mode user off /sales on every reload, because cashierMode
   // starts as false and the stored value only arrives a tick later.
+  //
+  // Renders a skeleton rather than null: returning null painted an empty frame on
+  // every reload of /sales, which reads as a broken app rather than a loading one.
   if (!hasLoaded) {
-    return null;
+    return <ScreenSkeleton rows={3} label="Loading sales" />;
   }
 
   // Cashier Mode owns this screen; without it there is no report to show.

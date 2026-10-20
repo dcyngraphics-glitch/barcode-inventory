@@ -15,6 +15,7 @@ import { EditBatchSheet } from '@/components/EditBatchSheet';
 import { SetStockSheet } from '@/components/SetStockSheet';
 import { setStock } from '@/services/stockService';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
+import { ScreenSkeleton } from '@/components/ScreenSkeleton';
 
 export function InventoryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,55 +159,11 @@ export function InventoryScreen() {
     pullDistance.current = 0;
   }, [refresh]);
 
-  // Loading skeleton
+  // Loading skeleton — shared component, so every screen loads with the same
+  // rhythm. This replaced an inline duplicate that carried its own
+  // `@keyframes shimmer`, which is why the shimmer keyframes are gone from here.
   if (loading) {
-    return (
-      <div style={{ padding: 'var(--space-md)' }}>
-        <div style={{ marginBottom: 'var(--space-md)' }}>
-          <div
-            style={{
-              height: '44px',
-              background: 'var(--color-muted)',
-              borderRadius: 'var(--radius-md)',
-              animation: 'shimmer 1.5s infinite',
-            }}
-          />
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--space-xs)', marginBottom: 'var(--space-md)' }}>
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              style={{
-                height: '36px',
-                width: i === 1 ? '100px' : '80px',
-                background: 'var(--color-muted)',
-                borderRadius: 'var(--radius-full)',
-                animation: 'shimmer 1.5s infinite',
-              }}
-            />
-          ))}
-        </div>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              height: '100px',
-              background: 'var(--color-muted)',
-              borderRadius: 'var(--radius-lg)',
-              marginBottom: 'var(--space-sm)',
-              animation: 'shimmer 1.5s infinite',
-            }}
-          />
-        ))}
-        <style>{`
-          @keyframes shimmer {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-          }
-        `}</style>
-      </div>
-    );
+    return <ScreenSkeleton rows={3} label="Loading inventory" />;
   }
 
   return (
