@@ -40,7 +40,7 @@
 ### 2. Inventory Screen — Batch Actions ⭐ HIGH IMPACT (Power User)
 **Problem:** Managing 100+ items requires repetitive tap → expand → delete/edit
 **Fixes:**
-- Swipe-to-delete on batch rows (already spec'd in UI-UX-SPEC, not implemented)
+- Swipe-to-delete on batch rows — **already implemented** (`BatchRow.tsx:18,38,46,87`); this entry was wrong
 - Long-press context menu: Delete / Edit / Set Stock / Duplicate
 - Bulk select mode (checkboxes) → bulk delete / bulk set stock / bulk extend expiry
 - "Sort by" dropdown: Expiry (FIFO/LIFO), Quantity, Name, Brand, Date Added
@@ -132,7 +132,7 @@
 | Fix 56 baseline type errors | Low | Mostly Dexie Cloud addon types; doesn't affect runtime |
 | Dexie Cloud 422 sync errors | Medium | Add retry with backoff; better user feedback |
 | Large components (>300 lines) | Medium | Split `ScannerScreen`, `InventoryScreen`, `SettingsScreen` |
-| Missing `focus-visible` on custom buttons | High | Accessibility regression risk |
+| ~~Missing `focus-visible` on custom buttons~~ | — | **Not a gap**: global rule at `index.css:302` plus 17 component-specific rules |
 | No performance budgets in CI | Medium | Add `vite-bundle-analyzer` threshold |
 
 ---
