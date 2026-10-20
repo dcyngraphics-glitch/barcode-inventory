@@ -115,10 +115,6 @@ export function SalesScreen() {
 
   return (
     <div className="sales-screen">
-      <header className="sales-header">
-        <h1 className="sales-title">Sales</h1>
-      </header>
-
       <main className="sales-main">
         {error && (
           <div role="alert" className="sales-error">

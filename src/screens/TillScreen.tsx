@@ -216,12 +216,8 @@ export function TillScreen() {
   }
 
   return (
-    <div className="till-screen">
-      <header className="till-header">
-        <h1 className="till-title">Till</h1>
-      </header>
-
-      <main className="till-main">
+      <div className="till-screen">
+        <main className="till-main">
         <CameraViewfinder onScan={handleBarcode} onNoDetection={handleNoDetection} cameraActive />
 
         <section className="till-basket" aria-label="Customer basket">
