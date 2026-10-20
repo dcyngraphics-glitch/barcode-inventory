@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ModeProvider } from '@/context/ModeContext';
+import { ScanCartProvider } from '@/context/ScanCartContext';
 import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 
 const setup = () =>
   render(
     <ModeProvider>
-      <AppModeSwitcher />
+      <ScanCartProvider>
+        <AppModeSwitcher />
+      </ScanCartProvider>
     </ModeProvider>
   );
 
@@ -115,7 +118,9 @@ describe('AppModeSwitcher', () => {
   it('renders nothing until the mode is known, so the header cannot flash', () => {
     const { container } = render(
       <ModeProvider>
-        <AppModeSwitcher />
+        <ScanCartProvider>
+          <AppModeSwitcher />
+        </ScanCartProvider>
       </ModeProvider>
     );
     // Synchronous first paint — before the effect settles there is no switcher.
