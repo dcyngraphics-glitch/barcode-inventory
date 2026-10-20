@@ -256,9 +256,24 @@ describe('ScannerScreen — token classes', () => {
         <ScannerScreen />
       </MemoryRouter>
     );
-    const modeLabel = screen.getByText('Mode').closest('div');
+    const modeLabel = screen.getByTestId('scan-mode-label').closest('div');
     expect(modeLabel).not.toHaveStyle({ color: '#f8fafc' });
     expect(modeLabel).not.toHaveStyle({ opacity: 0.7 });
+  });
+
+  it('labels the scan-method control "Scan", so it cannot read as "the mode"', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId('scan-mode-label')).toHaveTextContent('Scan');
+
+    // The Shop/Sell switcher is the only control that may read as "the mode".
+    // This label used to say "Mode", one row below that switcher, which made the
+    // two look like a hierarchy when they are unrelated.
+    expect(screen.queryByText(/^mode$/i)).not.toBeInTheDocument();
   });
 
   it('cart badge uses token classes, not inline #0f172a/#3b82f6', () => {

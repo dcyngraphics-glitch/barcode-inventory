@@ -308,8 +308,16 @@ useEffect(() => {
 
                   {/* Scan Mode Toggle */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-                                      <span className="text-xs text-muted font-medium uppercase tracking-wider">
-                                        Mode
+                                      {/* Labelled "Scan", not "Mode": the app's Shop/Sell
+                                          switcher sits directly above this bar, and two
+                                          controls both reading as "the mode" made the
+                                          hierarchy look like Shop/Sell > scan method, when
+                                          the two are unrelated. See AppModeSwitcher. */}
+                                      <span
+                                        data-testid="scan-mode-label"
+                                        className="text-xs text-muted font-medium uppercase tracking-wider"
+                                      >
+                                        Scan
                                       </span>
                                       <ModeSegmentedControl mode={scanMode} onChange={handleModeChange} className={modeAnimationClass} />
                                     </div>
