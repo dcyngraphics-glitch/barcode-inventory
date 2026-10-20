@@ -3,6 +3,7 @@ import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import { CameraViewfinder } from '@/components/CameraViewfinder';
 import { QuickEntryModal, type QuickEntryData } from '@/components/QuickEntryModal';
 import { Toast, useToast } from '@/components/Toast';
+import { ScreenSkeleton } from '@/components/ScreenSkeleton';
 import { useScanCart, type ScanCartItem } from '@/context/ScanCartContext';
 import { lookupProduct } from '@/services/productLookupService';
 import { recordSale, undoLastSale, type SaleLineInput } from '@/services/saleService';
@@ -208,6 +209,11 @@ export function TillScreen() {
   }, [clearCart, items, recording, showToast, undoRecordedSale]);
 
   const isEmpty = items.length === 0;
+
+  // Show skeleton while sale is being recorded
+  if (recording) {
+    return <ScreenSkeleton rows={2} label="Recording sale" />;
+  }
 
   return (
     <div className="till-screen">
