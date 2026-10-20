@@ -406,7 +406,7 @@ export function ProductManagementSheet({
                   margin: '0 0 12px',
                 }}
               >
-                Delete this product and all its batches? This cannot be undone.
+                Delete this product and all its batches? You can undo this for a few seconds.
               </p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button

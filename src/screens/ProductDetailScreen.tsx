@@ -5,7 +5,12 @@ import { ProductImage } from '@/components/ProductImage';
 import { ProductForm, type ProductFormData } from '@/components/ProductForm';
 import { ProductManagementSheet } from '@/components/ProductManagementSheet';
 import { useProductLookup } from '@/hooks/useProductLookup';
-import { saveProduct, updateProduct, deleteProduct } from '@/services/catalogService';
+import {
+  saveProduct,
+  updateProduct,
+  deleteProductWithSnapshot,
+  restoreProduct,
+} from '@/services/catalogService';
 import { buildProductUpdate } from '@/utils/productUpdate';
 import { db } from '@/db/database';
 import { generateId } from '@/utils/helpers';
@@ -20,7 +25,11 @@ export function ProductDetailScreen() {
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error';
+    action?: { label: string; onClick: () => void };
+  } | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   // Store timer IDs in refs for cleanup
@@ -133,10 +142,14 @@ export function ProductDetailScreen() {
   // product's name/brand/price blank and blocking "Update Inventory".
   const initialFormData = getInitialFormData();
 
-  const showToast = (message: string, type: 'success' | 'error') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error',
+    options?: { action?: { label: string; onClick: () => void }; durationMs?: number },
+  ) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ message, type });
-    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+    setToast({ message, type, action: options?.action });
+    toastTimerRef.current = setTimeout(() => setToast(null), options?.durationMs ?? 3000);
   };
 
   const handleSubmit = async (data: ProductFormData) => {
@@ -265,14 +278,33 @@ export function ProductDetailScreen() {
 
   const handleEditDelete = async (barcodeToDelete: string) => {
     try {
-      // Atomically delete product and all its batches in a single transaction
-      await db.transaction('rw', [db.products, db.inventory], async () => {
-        await db.inventory.where('barcode').equals(barcodeToDelete).delete();
-        // Delete by barcode, not by primary key: the key is '#' + barcode, so passing
-        // the bare barcode here would match nothing and silently leave the row.
-        await deleteProduct(barcodeToDelete);
-      });
-      showToast('Product deleted', 'success');
+      // Snapshot first: without it there is nothing to restore, so no undo could be
+      // offered. Deleting a product used to destroy its whole stock history with no
+      // way back, while batch delete and sales both had undo.
+      const snapshot = await deleteProductWithSnapshot(barcodeToDelete);
+      if (!snapshot) {
+        showToast('Product not found', 'error');
+        return;
+      }
+      const name = snapshot.product.name || barcodeToDelete;
+      showToast(
+        snapshot.batches.length > 0
+          ? `Deleted ${name} and ${snapshot.batches.length} batch(es)`
+          : `Deleted ${name}`,
+        'success',
+        {
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              void (async () => {
+                await restoreProduct(snapshot);
+                showToast('Product restored', 'success');
+              })();
+            },
+          },
+          durationMs: 6000,
+        },
+      );
       navigate('/inventory');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete product';
@@ -409,7 +441,28 @@ export function ProductDetailScreen() {
                   ) : (
                     <AlertCircle size={16} color="var(--color-destructive)" />
                   )}
-                  {toast.message}
+                  <span>{toast.message}</span>
+                  {toast.action && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toast.action!.onClick();
+                        setToast(null);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        fontWeight: 700,
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        padding: 0,
+                        font: 'inherit',
+                      }}
+                    >
+                      {toast.action.label}
+                    </button>
+                  )}
                 </div>
               )}
 

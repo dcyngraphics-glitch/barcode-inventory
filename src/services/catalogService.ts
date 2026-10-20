@@ -1,4 +1,4 @@
-import type { Product, ProductDraft } from '@/types';
+import type { Product, ProductDraft, Batch } from '@/types';
 import { db } from '@/db/database';
 import { productIdFor } from '@/utils/privateId';
 
@@ -21,6 +21,49 @@ export async function saveProduct(product: ProductDraft): Promise<Product> {
 
 export async function deleteProduct(barcode: string): Promise<void> {
   await db.products.delete(productIdFor(barcode));
+}
+
+export interface ProductDeleteSnapshot {
+  product: Product;
+  batches: Batch[];
+}
+
+/**
+ * Delete a product and every batch that belongs to it, returning everything that
+ * was removed so the caller can offer an undo.
+ *
+ * Without the snapshot there is nothing to restore, so the delete would be
+ * irreversible — which is how product deletion shipped: batch delete and sales
+ * both had undo, and deleting a product silently destroyed its whole stock
+ * history with no way back.
+ */
+export async function deleteProductWithSnapshot(
+  barcode: string,
+): Promise<ProductDeleteSnapshot | undefined> {
+  const product = await db.products.get(productIdFor(barcode));
+  if (!product) return undefined;
+
+  const batches = await db.inventory.where('barcode').equals(barcode).toArray();
+
+  // One transaction: a crash between the two deletes must not leave a product
+  // with no stock, or stock pointing at a product that no longer exists.
+  await db.transaction('rw', [db.products, db.inventory], async () => {
+    await db.inventory.where('barcode').equals(barcode).delete();
+    await db.products.delete(productIdFor(barcode));
+  });
+
+  return { product, batches };
+}
+
+/**
+ * Put a deleted product and its batches back. A put is naturally idempotent, so
+ * restoring twice cannot duplicate the rows.
+ */
+export async function restoreProduct(snapshot: ProductDeleteSnapshot): Promise<void> {
+  await db.transaction('rw', [db.products, db.inventory], async () => {
+    await db.inventory.bulkPut(snapshot.batches);
+    await db.products.put(snapshot.product);
+  });
 }
 
 export async function updateProduct(product: ProductDraft): Promise<void> {
