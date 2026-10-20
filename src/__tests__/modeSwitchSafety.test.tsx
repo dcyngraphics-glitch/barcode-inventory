@@ -27,16 +27,24 @@ const SeedCart = () => {
   );
 };
 
+/** Reads the live cart size, so the tests can prove what actually happened to it. */
+const CartCount = () => {
+  const { totalItems } = useScanCart();
+  return <span data-testid="cart-count">{totalItems}</span>;
+};
+
 const setup = () =>
   render(
     <ModeProvider>
       <ScanCartProvider>
         <SeedCart />
+        <CartCount />
         <AppModeSwitcher />
       </ScanCartProvider>
     </ModeProvider>
   );
 
+const cartCount = () => screen.getByTestId('cart-count').textContent;
 const dialogTitle = () => screen.queryByText(/items in the basket/i);
 
 describe('switching away from Sell with a non-empty basket', () => {
@@ -50,12 +58,15 @@ describe('switching away from Sell with a non-empty basket', () => {
     await screen.findByRole('radio', { name: 'Sell' });
 
     fireEvent.click(screen.getByText('seed-cart'));
+    expect(cartCount()).toBe('1');
+
     fireEvent.click(screen.getByRole('radio', { name: 'Shop' }));
 
     expect(await dialogTitle()).toBeInTheDocument();
-    // The switch must not have happened while the question is open — otherwise the
-    // basket is already gone and the dialog is theatre.
+    // Neither the mode nor the basket may change while the question is open —
+    // otherwise the basket is already gone and the dialog is theatre.
     expect(localStorage.getItem('appMode')).toBe('sell');
+    expect(cartCount()).toBe('1');
   });
 
   it('keeps the basket and stays in Sell when cancelled', async () => {
@@ -68,6 +79,9 @@ describe('switching away from Sell with a non-empty basket', () => {
 
     await waitFor(() => expect(dialogTitle()).not.toBeInTheDocument());
     expect(localStorage.getItem('appMode')).toBe('sell');
+    // The point of "Keep basket": the items must still be there. Without this the
+    // test would pass even if cancelling wiped the cart.
+    expect(cartCount()).toBe('1');
   });
 
   it('clears the basket and switches when confirmed', async () => {
@@ -79,6 +93,9 @@ describe('switching away from Sell with a non-empty basket', () => {
     fireEvent.click(await screen.findByRole('button', { name: /clear and switch/i }));
 
     await waitFor(() => expect(localStorage.getItem('appMode')).toBe('shop'));
+    // "Clear and switch" must actually clear — asserting only the mode would let a
+    // switch that leaves the basket behind pass.
+    expect(cartCount()).toBe('0');
   });
 
   it('switches immediately when the basket is empty', async () => {

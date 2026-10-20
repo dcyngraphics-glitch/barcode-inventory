@@ -8,7 +8,7 @@ import { RecentScans } from '@/components/RecentScans';
 import { PermissionPromptModal } from '@/components/PermissionPromptModal';
 import { ScreenTooltip } from '@/components/ScreenTooltip';
 import { useScanCart } from '@/context/ScanCartContext';
-import { useSettings } from '@/hooks/useSettings';
+import { useMode } from '@/context/ModeContext';
 import { lookupProduct } from '@/services/productLookupService';
 import type { Product } from '@/types';
 
@@ -49,7 +49,15 @@ function playBeep() {
 export function ScannerScreen() {
   const navigate = useNavigate();
   const { addItem, totalItems, totalPrice } = useScanCart();
-  const { settings } = useSettings();
+  /**
+   * Mode comes from ModeContext, never from the synced `settings.cashierMode`.
+   * That field is account-wide, so a device switched to Shop would still behave as
+   * Sell — mode and behaviour would disagree, which is the exact bug this design
+   * exists to remove. The router normally prevents ScannerScreen rendering in Sell
+   * (App.tsx renders it only when !isSell); reading the same source here keeps the
+   * two from ever disagreeing.
+   */
+  const { isSell } = useMode();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -105,8 +113,6 @@ useEffect(() => {
         setCameraActive(false);
       }
     }, [hasScannedSuccessfully]);
-
-  const cashierMode = settings?.cashierMode ?? false;
 
   // Listen for online/offline events
   useEffect(() => {
@@ -170,7 +176,7 @@ useEffect(() => {
       playBeep();
 
       // Spec flow (default): navigate to Product Detail
-      if (!cashierMode) {
+      if (!isSell) {
         navigate(`/product/${encodeURIComponent(barcode)}`);
         setScanning(false);
         setHasScannedSuccessfully(true);
@@ -212,7 +218,7 @@ useEffect(() => {
               } finally {
                 setScanning(false);
               }
-            }, [addItem, cashierMode, navigate, setHasScannedSuccessfully]);
+            }, [addItem, isSell, navigate, setHasScannedSuccessfully]);
 
   const handleScanClick = useCallback(async () => {
     if (processing) return;

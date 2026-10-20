@@ -34,6 +34,21 @@ vi.mock('@/hooks/useSettings');
 import { useSettings } from '@/hooks/useSettings';
 useSettings.mockReturnValue({ settings: { cashierMode: false } });
 
+/**
+ * ScannerScreen reads the mode from ModeContext, not from the synced
+ * settings.cashierMode — that field is account-wide, so a device switched to Shop
+ * would otherwise still behave as Sell.
+ */
+const modeMock = vi.hoisted(() => ({ isSell: false }));
+vi.mock('@/context/ModeContext', () => ({
+  useMode: () => ({
+    mode: modeMock.isSell ? 'sell' : 'shop',
+    isSell: modeMock.isSell,
+    setMode: vi.fn(),
+    hasLoaded: true,
+  }),
+}));
+
 // Mock useScanCart
 vi.mock('@/context/ScanCartContext', () => ({
   useScanCart: () => ({
@@ -76,6 +91,8 @@ const { ScannerScreen } = await import('@/screens/ScannerScreen');
 describe('ScannerScreen', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the mode flag so the Sell case cannot leak into later tests.
+    modeMock.isSell = false;
     // Set camera permission as granted to allow scanning in tests
     localStorage.setItem('cameraPermissionGranted', 'true');
     localStorage.setItem('permissionPromptShown', 'true');
@@ -161,8 +178,8 @@ describe('ScannerScreen', () => {
   });
 
   it('should show quick entry modal when product lookup fails (not-found)', async () => {
-      // Override useSettings to return cashierMode: true for this test
-      useSettings.mockReturnValue({ settings: { cashierMode: true } });
+      // Put the screen in Sell for this test, so a scan takes the cart path.
+      modeMock.isSell = true;
 
       // Mock lookupProduct to return not-found
       lookupProduct.mockResolvedValueOnce({ success: false, reason: 'not-found', source: 'manual' });

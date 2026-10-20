@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '@/App';
 
@@ -84,6 +84,14 @@ function renderApp() {
 }
 
 const signInButton = () => screen.queryByRole('button', { name: /sign in with email/i });
+
+/**
+ * Nav links only. `getAllByRole('link')` would count every link on the page, so an
+ * unrelated link could make the tab-count assertion pass or fail for the wrong
+ * reason. The bottom nav carries an aria-label, so scope to it.
+ */
+const navLinks = () =>
+  within(screen.getByRole('navigation', { name: /main navigation/i })).getAllByRole('link');
 
 describe('App Auth Gate', () => {
   beforeEach(() => {
@@ -181,13 +189,13 @@ describe('App routing follows the app mode', () => {
     sessionMock.isLoggedIn = true;
     const first = renderApp();
     await screen.findByText('Scanner Screen');
-    expect(screen.getAllByRole('link')).toHaveLength(3);
+    expect(navLinks()).toHaveLength(3);
     first.unmount();
 
     localStorage.setItem('appMode', 'sell');
     renderApp();
     await screen.findByText('Till Screen');
-    expect(screen.getAllByRole('link')).toHaveLength(4);
+    expect(navLinks()).toHaveLength(4);
   });
 
   it('ignores the synced cashierMode setting for routing', async () => {

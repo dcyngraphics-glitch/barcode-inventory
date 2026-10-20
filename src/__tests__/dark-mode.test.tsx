@@ -50,6 +50,11 @@ vi.mock('@/hooks/useSettings', () => ({
   }),
 }));
 
+// ScannerScreen reads the mode from ModeContext, not the synced settings.
+vi.mock('@/context/ModeContext', () => ({
+  useMode: () => ({ mode: 'shop', isSell: false, setMode: vi.fn(), hasLoaded: true }),
+}));
+
 // Mock useProductLookup
 const MOCK_PRODUCT = {
   barcode: '4800016601965',
