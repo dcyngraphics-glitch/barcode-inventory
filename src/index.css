@@ -865,6 +865,22 @@ ol {
   color: var(--color-on-accent);
 }
 
+/* Persistent mode bar (App.tsx ModeBar).
+   The app has no shared app bar — each screen builds its own header — so this
+   strip sits above the routes. Sticky, so the current mode and the one-tap
+   switcher stay on screen on every route. */
+.app-mode-bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--appbar-height);
+  padding: 0 var(--space-md);
+  background: var(--color-primary);
+}
+
 .spinner {
   width: 20px;
   height: 20px;

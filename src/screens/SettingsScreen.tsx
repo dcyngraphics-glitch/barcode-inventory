@@ -192,18 +192,11 @@ export function SettingsScreen() {
         />
       </div>
 
-      {/* Scanner Section */}
-      <h2 className="settings-section-label">
-        Scanner
-      </h2>
-      <div className="settings-card settings-card-stack">
-        <SettingsToggle
-          enabled={settings.cashierMode}
-          onChange={(enabled) => updateSettings({ cashierMode: enabled })}
-          label="Cashier Mode"
-          description="Scan a customer's items straight into the till, take payment, and track the day's sales"
-        />
-      </div>
+      {/* Cashier Mode used to be toggled here. It is now the always-visible Shop/Sell
+          switcher in the header (App.tsx ModeBar). A second control for the same state
+          would leave one of them silently dead — and this one would have been, since
+          routing no longer reads settings.cashierMode. That field still exists, but
+          only to seed the device-local mode once (see context/ModeContext.tsx). */}
 
       {/* Data Section */}
       <h2 className="settings-section-label">

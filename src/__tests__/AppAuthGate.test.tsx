@@ -137,8 +137,29 @@ describe('App Auth Gate', () => {
     expect(signInButton()).not.toBeInTheDocument();
   });
 
-  it('renders the till on the Scan tab when Cashier Mode is on', async () => {
-    settingsMock.cashierMode = true;
+  it('renders the scanner in Shop mode', async () => {
+    localStorage.setItem('appMode', 'shop');
+    sessionMock.isLoggedIn = true;
+    renderApp();
+
+    expect(await screen.findByText('Scanner Screen')).toBeInTheDocument();
+    expect(screen.queryByText('Till Screen')).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Routing used to read `settings.cashierMode`, which Dexie Cloud syncs to every
+ * device on the account. It now reads the device-local mode, so these tests drive
+ * `localStorage` rather than the settings mock. The last case pins that change
+ * explicitly, because the synced field still exists (it seeds the mode once).
+ */
+describe('App routing follows the app mode', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('renders the till in Sell mode', async () => {
+    localStorage.setItem('appMode', 'sell');
     sessionMock.isLoggedIn = true;
     renderApp();
 
@@ -146,8 +167,32 @@ describe('App Auth Gate', () => {
     expect(screen.queryByText('Scanner Screen')).not.toBeInTheDocument();
   });
 
-  it('renders the receiving scanner when Cashier Mode is off', async () => {
-    settingsMock.cashierMode = false;
+  it('renders the receiving scanner in Shop mode', async () => {
+    localStorage.setItem('appMode', 'shop');
+    sessionMock.isLoggedIn = true;
+    renderApp();
+
+    expect(await screen.findByText('Scanner Screen')).toBeInTheDocument();
+    expect(screen.queryByText('Till Screen')).not.toBeInTheDocument();
+  });
+
+  it('shows three nav tabs in Shop and four in Sell', async () => {
+    localStorage.setItem('appMode', 'shop');
+    sessionMock.isLoggedIn = true;
+    const first = renderApp();
+    await screen.findByText('Scanner Screen');
+    expect(screen.getAllByRole('link')).toHaveLength(3);
+    first.unmount();
+
+    localStorage.setItem('appMode', 'sell');
+    renderApp();
+    await screen.findByText('Till Screen');
+    expect(screen.getAllByRole('link')).toHaveLength(4);
+  });
+
+  it('ignores the synced cashierMode setting for routing', async () => {
+    settingsMock.cashierMode = true;
+    localStorage.setItem('appMode', 'shop');
     sessionMock.isLoggedIn = true;
     renderApp();
 

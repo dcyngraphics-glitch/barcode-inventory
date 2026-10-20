@@ -10,6 +10,7 @@ import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { CartReviewScreen } from '@/screens/CartReviewScreen';
 import { LoginScreen } from '@/screens/LoginScreen';
 import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext';
+import { ModeProvider, useMode } from '@/context/ModeContext';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { ScanCartProvider, useScanCart } from '@/context/ScanCartContext';
@@ -22,6 +23,7 @@ import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
 import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
+import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -123,33 +125,48 @@ function MainApp() {
     <ErrorBoundary>
       <SettingsProvider>
         <ThemeAndNotifications />
-        <TutorialProvider>
-          <ScanCartProvider>
-            <InstallBanner />
-            <div className="app-container">
-              <AppRoutes />
-              <BottomNav />
-            </div>
-            <TutorialOverlay />
-          </ScanCartProvider>
-        </TutorialProvider>
+        <ModeProvider>
+          <TutorialProvider>
+            <ScanCartProvider>
+              <InstallBanner />
+              <div className="app-container">
+                <ModeBar />
+                <AppRoutes />
+                <BottomNav />
+              </div>
+              <TutorialOverlay />
+            </ScanCartProvider>
+          </TutorialProvider>
+        </ModeProvider>
       </SettingsProvider>
     </ErrorBoundary>
   );
 }
 
-/** Route selection lives inside SettingsProvider so it can read cashierMode:
- *  with Cashier Mode on, the Scan tab IS the till. */
+/** Route selection reads the device-local mode: in Sell the Scan tab IS the till. */
 function AppRoutes() {
-  const { settings, hasLoaded } = useSettingsContext();
+  const { isSell, hasLoaded } = useMode();
 
   return (
     <Routes>
-      {/* Hold the first paint until settings are read, so a cashier-mode user
-          doesn't get a flash of the scanner (and a camera prompt) on cold start. */}
+      {/* Hold the first paint until the mode is known, so a Sell device doesn't get
+          a flash of the scanner (and a camera prompt) on cold start. A splash rather
+          than null: rendering nothing reads as a broken app, not a loading one. */}
       <Route
         path="/"
-        element={!hasLoaded ? null : settings.cashierMode ? <TillScreen /> : <ScannerScreen />}
+        element={
+          !hasLoaded ? (
+            <div className="screen-center">
+              <div className="loading-spinner" role="status" aria-label="Loading">
+                <div className="spinner" />
+              </div>
+            </div>
+          ) : isSell ? (
+            <TillScreen />
+          ) : (
+            <ScannerScreen />
+          )
+        }
       />
       <Route path="/product/:barcode" element={<ProductDetailScreen />} />
       <Route path="/inventory" element={<InventoryScreen />} />
@@ -255,10 +272,10 @@ const navItems = [
 
 function BottomNav() {
   const location = useLocation();
-  const { settings } = useSettingsContext();
+  const { isSell } = useMode();
 
-  // Sales only exists in Cashier Mode — without a till there is nothing to report.
-  const items = settings.cashierMode
+  // Sales only exists in Sell — without a till there is nothing to report.
+  const items = isSell
     ? [
         { path: '/', icon: ScanLine, label: 'Scan' },
         { path: '/sales', icon: Receipt, label: 'Sales' },
@@ -286,5 +303,20 @@ function BottomNav() {
         );
       })}
     </nav>
+  );
+}
+
+/**
+ * Persistent mode bar.
+ *
+ * The app has no shared app bar — each screen builds its own header — so the
+ * switcher lives here, once, above the routes. Sticky, so the current mode is always
+ * on screen and switching is always one tap, on every screen.
+ */
+function ModeBar() {
+  return (
+    <div className="app-mode-bar">
+      <AppModeSwitcher />
+    </div>
   );
 }
