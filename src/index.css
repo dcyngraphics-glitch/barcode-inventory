@@ -34,6 +34,7 @@
   --color-border: #7a93b2;           /* Input borders, subtle separation */
   --color-header: #334155;         /* Screen headers (till / sales), light */
   --appbar-bg: linear-gradient(135deg, #1e293b 0%, #657387 100%);  /* App bar */
+  --cta-bg: linear-gradient(135deg, #047857 0%, #05705f 50%, #065f46 100%);  /* Primary CTA — dark enough for white 15px/700 */
   --color-border-focus: #3b82f6;     /* Focus ring color */
 
   /* ======================================================================
@@ -1117,13 +1118,13 @@ ol {
 }
 
 .camera-error-title {
-  color: var(--color-card-foreground);
+  color: var(--color-on-primary);
   font-weight: 500;
   margin-bottom: var(--space-sm);
 }
 
 .camera-error-desc {
-  color: var(--color-muted-foreground);
+  color: var(--color-camera-text-muted);
   font-size: var(--text-sm);
 }
 
@@ -1962,14 +1963,14 @@ ol {
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-full);
   border: none;
-  background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%);
+  background: var(--cta-bg);
   color: #ffffff;
   font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
   box-shadow:
-    0 4px 14px rgba(5, 150, 105, 0.4),
-    0 0 0 4px rgba(5, 150, 105, 0.15);
+    0 4px 14px rgba(4, 120, 87, 0.4),
+    0 0 0 4px rgba(4, 120, 87, 0.15);
   transition: transform var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-base);
   min-height: 56px;
   -webkit-tap-highlight-color: transparent;
@@ -2388,12 +2389,12 @@ select {
   min-height: 52px;
   border: none;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #17a974 100%);
+  background: var(--cta-bg);
   color: #ffffff;
   font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.4);
   transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
@@ -2695,7 +2696,7 @@ select {
   padding: var(--space-md) var(--space-lg);
   border: none;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-accent-border) 0%, var(--color-accent) 50%, var(--color-good) 100%);
+  background: var(--cta-bg);
   color: var(--color-on-accent);
   font-size: var(--text-base);
   font-weight: 700;
