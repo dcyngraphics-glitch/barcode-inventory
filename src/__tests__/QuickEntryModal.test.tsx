@@ -133,4 +133,26 @@ describe('QuickEntryModal — modal accessibility', () => {
     unmount();
     expect(document.body.style.overflow).toBe('');
   });
+
+  it('returns focus to trigger element on close', () => {
+    const onCancel = vi.fn();
+    const trigger = document.createElement('button');
+    trigger.textContent = 'Open Modal';
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    render(<QuickEntryModal barcode="B1" onSave={vi.fn()} onCancel={onCancel} />);
+
+    // Modal is open, focus should be inside
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    // Close the modal
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    // Focus should return to trigger
+    expect(document.activeElement).toBe(trigger);
+
+    document.body.removeChild(trigger);
+  });
 });

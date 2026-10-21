@@ -273,7 +273,7 @@ const navItems = [
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
-function BottomNav() {
+export function BottomNav() {
   const location = useLocation();
   const { isSell } = useMode();
 

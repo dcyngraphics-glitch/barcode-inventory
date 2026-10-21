@@ -208,3 +208,40 @@ describe('type floors', () => {
     }
   });
 });
+
+describe('focus-visible — WCAG 2.4.7 focus indicators', () => {
+  const FOCUS_COMPONENTS = [
+    '.scan-fab',
+    '.mode-toggle',
+    '.app-mode-segment',
+  ] as const;
+
+  it.each(FOCUS_COMPONENTS)('%s declares an explicit :focus-visible rule', (component) => {
+    const selector = `${component}:focus-visible`;
+    const decls = declsFor(selector);
+    expect(decls, `${selector} must have a :focus-visible rule`).toBeTruthy();
+    expect(Object.keys(decls).length, `${selector} must declare at least one property`).toBeGreaterThan(0);
+  });
+
+  it.each(FOCUS_COMPONENTS)('%s :focus-visible uses a 2px solid outline with a design token', (component) => {
+    const selector = `${component}:focus-visible`;
+    const decls = declsFor(selector);
+    const outline = decls['outline'] ?? '';
+    expect(outline, `${selector} must declare an outline`).toBeTruthy();
+    // Must be 2px solid with a var() token (not a hardcoded color)
+    expect(outline, `${selector} outline must be 2px solid var(--token)`).toMatch(/^2px\s+solid\s+var\(--/);
+    // Must use --color-accent or --color-accent-border or --color-focus
+    expect(outline, `${selector} outline must use --color-accent, --color-accent-border, or --color-focus`).toMatch(/var\(--color-(accent|accent-border|focus)\)/);
+    // Must declare outline-offset
+    const offset = decls['outline-offset'] ?? '';
+    expect(offset, `${selector} must declare outline-offset`).toBeTruthy();
+    expect(parseFloat(offset), `${selector} outline-offset must be >= 2px`).toBeGreaterThanOrEqual(2);
+  });
+
+  it('defines --color-focus token for focus ring consistency', () => {
+    const light = resolveThemeTokens('light');
+    const dark = resolveThemeTokens('dark');
+    expect(light['--color-focus'], 'light theme must define --color-focus').toBeDefined();
+    expect(dark['--color-focus'], 'dark theme must define --color-focus').toBeDefined();
+  });
+});

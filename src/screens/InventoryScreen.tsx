@@ -179,16 +179,9 @@ export function InventoryScreen() {
       }}
     >
       {/* Header */}
-      <div
-        style={{
-          fontSize: 'var(--text-2xl)',
-          fontWeight: 600,
-          color: 'var(--color-foreground)',
-          marginBottom: 'var(--space-md)',
-        }}
-      >
-        My Inventory
-      </div>
+            <h1 className="text-2xl font-semibold text-foreground mb-3">
+              My Inventory
+            </h1>
 
       {/* Search bar */}
       <div style={{ marginBottom: 'var(--space-sm)' }}>

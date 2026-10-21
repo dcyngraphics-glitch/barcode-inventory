@@ -233,12 +233,28 @@ describe('ScannerScreen', () => {
   });
 
   it('should not offer manual barcode entry', () => {
-    render(<ScannerScreen />);
-    expect(screen.queryByText(/enter barcode manually/i)).toBeNull();
-  });
-});
+      render(<ScannerScreen />);
+      expect(screen.queryByText(/enter barcode manually/i)).toBeNull();
+    });
 
-describe('ScannerScreen — token classes', () => {
+    it('should render with a single h1 heading "Scan Product"', () => {
+      render(<ScannerScreen />);
+      const h1Elements = screen.getAllByRole('heading', { level: 1 });
+      expect(h1Elements).toHaveLength(1);
+      expect(h1Elements[0]).toHaveTextContent('Scan Product');
+    });
+
+    it('should not have any h2 or h3 before the h1', () => {
+      render(<ScannerScreen />);
+      const h1 = screen.getByRole('heading', { level: 1 });
+      const headings = screen.getAllByRole('heading');
+      const h1Index = headings.indexOf(h1);
+      // h1 should be the first heading
+      expect(h1Index).toBe(0);
+    });
+  });
+
+  describe('ScannerScreen — token classes', () => {
   it('app bar uses token classes, not inline #334155', () => {
     render(
       <MemoryRouter>

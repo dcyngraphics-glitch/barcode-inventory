@@ -254,3 +254,32 @@ describe('TillScreen', () => {
     });
   });
 });
+
+
+describe('TillScreen — touch targets', () => {
+  it('declares 44x44px minimums for quantity +/- and remove buttons', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { fileURLToPath } = await import('node:url');
+    const path = await import('node:path');
+    const cssPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../index.css');
+    const css = readFileSync(cssPath, 'utf-8');
+
+    const qtyRule = css.match(/\.till-line-qty button\s*\{([^}]+)\}/)?.[1] ?? '';
+    expect(qtyRule, '.till-line-qty button rule must exist').toBeTruthy();
+    expect(qtyRule).toMatch(/min-height:\s*44px/);
+    expect(qtyRule).toMatch(/min-width:\s*44px/);
+
+    const removeRule = css.match(/\.till-line-remove\s*\{([^}]+)\}/)?.[1] ?? '';
+    expect(removeRule, '.till-line-remove rule must exist').toBeTruthy();
+    expect(removeRule).toMatch(/min-height:\s*44px/);
+    expect(removeRule).toMatch(/min-width:\s*44px/);
+  });
+
+  it('renders the quantity and remove controls with accessible names', () => {
+    // The basket lines only render with items in the cart.
+    h.cartItems = [cartItem()];
+    render(<TillScreen />);
+    expect(screen.getByLabelText(/decrease quantity/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/remove/i)).toBeInTheDocument();
+  });
+});

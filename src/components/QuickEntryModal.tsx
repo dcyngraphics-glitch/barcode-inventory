@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { X, DollarSign, Calendar } from 'lucide-react';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 export interface QuickEntryData {
   name: string;
@@ -12,9 +13,11 @@ interface QuickEntryModalProps {
   barcode: string;
   onSave: (data: QuickEntryData) => void;
   onCancel: () => void;
+  /** The element that triggered the modal; focus returns here on close. */
+  triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
-export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalProps) {
+export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: QuickEntryModalProps) {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [price, setPrice] = useState('');
@@ -24,39 +27,10 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   /**
-   * Modal behaviour, matching ConfirmDialog: Escape closes, Tab cycles inside
-   * the dialog rather than escaping to the page behind, and body scroll is
-   * locked while it is open. QuickEntryModal was the only modal in the app
-   * missing all three.
+   * Modal behaviour (WCAG 2.4.3): focus moves in on open, Tab cycles inside,
+   * Escape closes, body scroll locks, and focus returns to the trigger on close.
    */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onCancel();
-        return;
-      }
-      if (e.key === 'Tab' && dialogRef.current) {
-        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [onCancel]);
+  const { returnFocus } = useModalFocus(dialogRef, { triggerRef, onEscape: onCancel });
 
   const handleSave = () => {
     let invalid = false;
@@ -83,12 +57,18 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
       resolvedExpiry = d.toISOString().split('T')[0]!;
     }
 
+    returnFocus();
     onSave({
       name: trimmedName,
       brand: brand.trim(),
       price: priceNum,
       expiryDate: resolvedExpiry,
     });
+  };
+
+  const handleCancel = () => {
+    returnFocus();
+    onCancel();
   };
 
   return (
@@ -104,7 +84,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         padding: '16px',
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onCancel();
+        if (e.target === e.currentTarget) handleCancel();
       }}
     >
       <div
@@ -126,7 +106,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             Quick Entry
           </h3>
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             aria-label="Close"
             style={{
               background: 'transparent',
@@ -142,7 +122,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
           </button>
         </div>
 
-        <p style={{ fontSize: '12px',  color: 'var(--color-muted-foreground)', marginBottom: '16px', fontFamily: 'monospace' }}>
+        <p style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginBottom: '16px', fontFamily: 'monospace' }}>
           {barcode}
         </p>
 
@@ -150,7 +130,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         <div style={{ marginBottom: '12px' }}>
           <label
             htmlFor="quick-entry-name"
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             Product name
           </label>
@@ -174,7 +154,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             }}
           />
           {nameError && (
-            <span style={{ fontSize: '12px',  color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
+            <span style={{ fontSize: '12px', color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
               {nameError}
             </span>
           )}
@@ -184,7 +164,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
         <div style={{ marginBottom: '12px' }}>
           <label
             htmlFor="quick-entry-brand"
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             Brand (optional)
           </label>
@@ -208,7 +188,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
 
         <div style={{ marginBottom: '12px' }}>
           <label
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <DollarSign size={14} /> Price (₱)
@@ -226,7 +206,6 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
               setPriceError('');
             }}
             placeholder="0.00"
-            autoFocus
             style={{
               width: '100%',
               padding: '10px 12px',
@@ -238,7 +217,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
             }}
           />
           {priceError && (
-            <span style={{ fontSize: '12px',  color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
+            <span style={{ fontSize: '12px', color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
               {priceError}
             </span>
           )}
@@ -246,7 +225,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
 
         <div style={{ marginBottom: '20px' }}>
           <label
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500,  color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <Calendar size={14} /> Expiry Date
@@ -273,7 +252,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel }: QuickEntryModalPr
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             style={{
               flex: 1,
               padding: '12px',

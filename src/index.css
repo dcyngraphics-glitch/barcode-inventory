@@ -32,10 +32,11 @@
   --color-muted: #f1f5f9;            /* Muted backgrounds, dividers */
   --color-muted-foreground: #3d4a5c; /* Secondary text, placeholders */
   --color-border: #7a93b2;           /* Input borders, subtle separation */
-  --color-header: #334155;         /* Screen headers (till / sales), light */
-  --appbar-bg: linear-gradient(135deg, #1e293b 0%, #657387 100%);  /* App bar */
-  --cta-bg: linear-gradient(135deg, #047857 0%, #05705f 50%, #065f46 100%);  /* Primary CTA — dark enough for white 15px/700 */
-  --color-border-focus: #3b82f6;     /* Focus ring color */
+    --color-header: #334155;         /* Screen headers (till / sales), light */
+    --appbar-bg: linear-gradient(135deg, #1e293b 0%, #657387 100%);  /* App bar */
+    --cta-bg: linear-gradient(135deg, #047857 0%, #05705f 50%, #065f46 100%);  /* Primary CTA — dark enough for white 15px/700 */
+    --color-border-focus: #3b82f6;     /* Focus ring color */
+    --color-focus: #3b82f6;            /* Focus ring color (alias for border-focus) */
 
   /* ======================================================================
      STATUSES — Semantic status colors for expiry tracking
@@ -726,12 +727,12 @@ ol {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 8px;
   color: var(--color-muted-foreground);
   cursor: pointer;
   transition: color var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
-  padding: var(--space-xs) 0;
+  padding: 8px 0;
 }
 
 .bottom-nav-item.active {
@@ -879,6 +880,11 @@ ol {
 .app-mode-segment--active {
   background: var(--color-accent);
   color: var(--color-on-accent);
+}
+
+.app-mode-segment:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 /* Persistent mode bar (App.tsx ModeBar).
@@ -1999,6 +2005,11 @@ ol {
   cursor: not-allowed;
 }
 
+.scan-fab:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 .scan-fab--processing {
   background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
   box-shadow:
@@ -2315,8 +2326,10 @@ select {
 }
 
 .till-line-qty button {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2344,8 +2357,10 @@ select {
 }
 
 .till-line-remove {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
