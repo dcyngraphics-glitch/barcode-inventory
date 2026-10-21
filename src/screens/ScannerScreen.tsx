@@ -253,14 +253,7 @@ useEffect(() => {
   }, []);
 
   return (
-    <div
-          style={{
-            minHeight: '100vh',
-            background: 'var(--color-background)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
+    <div className="scanner-screen">
         {/* Visually hidden live region for screen readers */}
                       <div
                         style={{
@@ -281,12 +274,12 @@ useEffect(() => {
                       </div>
               {/* Top App Bar */}
                     <header className="app-bar">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                      <div className="app-bar-row">
                         <ScanLine size={24} color="var(--color-on-primary)" aria-hidden="true" />
                         <h1 className="app-bar-title">Scan Product</h1>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                      <div className="app-bar-row">
                   {/* Offline indicator */}
                   {!isOnline && (
                     <div
@@ -307,7 +300,7 @@ useEffect(() => {
                   )}
 
                   {/* Scan Mode Toggle */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                                    <div className="app-bar-row">
                                       {/* Labelled "Scan", not "Mode": the app's Shop/Sell
                                           switcher sits directly above this bar, and two
                                           controls both reading as "the mode" made the
@@ -343,15 +336,7 @@ useEffect(() => {
                                           </header>
 
                                           {/* Main content */}
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          padding: 'var(--space-md)',
-          gap: 'var(--space-md)',
-        }}
-      >
+      <main className="scanner-main">
         {/* Camera Viewfinder */}
         <CameraViewfinder
           ref={viewfinderRef}

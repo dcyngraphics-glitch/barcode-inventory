@@ -334,3 +334,54 @@ describe('ScannerScreen', () => {
     expect(liveRegions).toHaveLength(1);
   });
 });
+
+describe('ScannerScreen — layout token classes', () => {
+  it('root container uses the .scanner-screen utility class, not inline minHeight/background', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toBeInTheDocument();
+
+    // Class-based layout: the token system now owns these declarations.
+    expect(root).toHaveClass('scanner-screen');
+
+    // And no leftover inline minHeight/background to drift from the tokens.
+    const inlineStyle = root.getAttribute('style') ?? '';
+    expect(inlineStyle).not.toContain('min-height');
+    expect(inlineStyle).not.toContain('background');
+  });
+
+  it('main content area uses the .scanner-main utility class, not inline flex/padding/gap', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+
+    const main = screen.getByRole('main');
+    expect(main).toHaveClass('scanner-main');
+    const inlineStyle = main.getAttribute('style') ?? '';
+    expect(inlineStyle).not.toContain('flex');
+    expect(inlineStyle).not.toContain('padding');
+    expect(inlineStyle).not.toContain('gap');
+  });
+
+  it('app-bar rows use the .app-bar-row utility class, not inline flex styles', () => {
+    render(
+      <MemoryRouter>
+        <ScannerScreen />
+      </MemoryRouter>
+    );
+
+    const appBar = screen.getByRole('banner');
+    const rows = appBar.querySelectorAll('.app-bar-row');
+    expect(rows.length).toBeGreaterThanOrEqual(3);
+    rows.forEach((row) => {
+      expect(row).not.toHaveAttribute('style');
+    });
+  });
+});
