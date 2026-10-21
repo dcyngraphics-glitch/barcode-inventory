@@ -115,6 +115,9 @@ export function SalesScreen() {
 
   return (
     <div className="sales-screen">
+      {/* No visible Sales header is rendered; a visually hidden page heading keeps
+          the document outline and screen-reader landmark navigation intact. */}
+      <h1 className="sr-only">Sales Report</h1>
       <main className="sales-main">
         {error && (
           <div role="alert" className="sales-error">

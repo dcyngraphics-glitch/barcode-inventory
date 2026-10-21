@@ -217,6 +217,9 @@ export function TillScreen() {
 
   return (
       <div className="till-screen">
+        {/* The visual Till header was removed to reclaim vertical space; the page
+            still needs a programmatic heading for WCAG 1.3.1, so it is hidden. */}
+        <h1 className="sr-only">Point of Sale</h1>
         <main className="till-main">
         <CameraViewfinder onScan={handleBarcode} onNoDetection={handleNoDetection} cameraActive />
 
