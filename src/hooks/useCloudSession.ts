@@ -74,7 +74,11 @@ export function useCloudSession(): CloudSession {
 
     const subscription = cloud.currentUser.subscribe((user: any) => {
       setSession((previous) => ({
-        isLoading: Boolean(user?.isLoading),
+        // The addon's UNAUTHORIZED_USER emission fires on mount (and again on logout
+        // and login-start) with isLoading:true. Only a real logged-in session may
+        // re-drive isLoading, or a cold start would get pinned on the splash. A real
+        // restored session always carries isLoading:false, so we only read it then.
+        isLoading: user?.isLoggedIn ? Boolean(user?.isLoading) : previous.isLoading,
         isLoggedIn: Boolean(user?.isLoggedIn),
         email: user?.email ?? null,
         // A storage failure is terminal; a later session emission must not mask it.
