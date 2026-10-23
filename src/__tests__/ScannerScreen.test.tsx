@@ -100,6 +100,11 @@ describe('ScannerScreen', () => {
     window.dispatchEvent(new Event('focus'));
   });
 
+  it('renders AppModeSwitcher in the app bar for Shop/Sell mode', () => {
+    render(<ScannerScreen />);
+    expect(screen.getByRole('radiogroup', { name: /app section/i })).toBeInTheDocument();
+  });
+
   it('should start scanning automatically on mount and stop after first successful scan', async () => {
     // Render the component
     render(<ScannerScreen />);
