@@ -10,7 +10,8 @@ import { ScreenTooltip } from '@/components/ScreenTooltip';
 import { useScanCart } from '@/context/ScanCartContext';
 import { useMode } from '@/context/ModeContext';
 import { lookupProduct } from '@/services/productLookupService';
-import type { Product } from '@/types';
+import { addBatch } from '@/services/inventoryService';
+import type { Product, Batch } from '@/types';
 
 // Beep audio using Web Audio API oscillator — reuse a single AudioContext
 let sharedAudioCtx: AudioContext | null = null;
@@ -244,6 +245,17 @@ useEffect(() => {
         needsInfo: false,
         source: 'manual',
       });
+
+      // Save to inventory for unknown products (manual/fallback)
+      const batch: Batch = {
+        batchId: `${quickEntryBarcode}-${Date.now()}`,
+        barcode: quickEntryBarcode,
+        quantity: 1,
+        expiryDate: data.expiryDate,
+        scannedAt: new Date().toISOString(),
+        notes: 'Manual entry — product not found in catalog',
+      };
+      addBatch(batch).catch((err: Error) => console.warn('Inventory save failed:', err));
 
       setQuickEntryBarcode(null);
     }, [quickEntryBarcode, addItem]);
