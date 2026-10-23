@@ -279,64 +279,56 @@ useEffect(() => {
                       </div>
 
                       <div className="app-bar-row">
-                  {/* Offline indicator */}
-                  {!isOnline && (
-                    <div
-                      className="scanner-offline"
-                      role="status"
-                      aria-live="polite"
-                      title="You are offline"
-                    >
-                      <WifiOff size={16} />
-                      <span>Offline</span>
-                    </div>
-                  )}
+                        {/* Offline indicator */}
+                        {!isOnline && (
+                          <div
+                            className="scanner-offline"
+                            role="status"
+                            aria-live="polite"
+                            title="You are offline"
+                          >
+                            <WifiOff size={16} />
+                            <span>Offline</span>
+                          </div>
+                        )}
 
-                  {/* Scan Mode Toggle */}
-                                    <div className="app-bar-row">
-                                      {/* Labelled "Scan", not "Mode": the app's Shop/Sell
-                                          switcher sits directly above this bar, and two
-                                          controls both reading as "the mode" made the
-                                          hierarchy look like Shop/Sell > scan method, when
-                                          the two are unrelated. See AppModeSwitcher. */}
-                                      {/* Shop/Sell switcher. It used to live in a
-                                          sticky bar above every route (App.tsx
-                                          ModeBar); here it sits in the one app bar
-                                          this screen already has, so the mode is
-                                          still one tap away without a second
-                                          full-width strip of header. */}
-                                      <AppModeSwitcher />
+                        {/* Shop/Sell switcher. It used to live in a sticky bar above every
+                            route (App.tsx ModeBar); it now sits in this screen's own app bar,
+                            so the mode is still one tap away without a second full-width header. */}
+                        <AppModeSwitcher />
 
-                                      <span
-                                        data-testid="scan-mode-label"
-                                        className="scanner-scan-label"
-                                      >
-                                        Scan
-                                      </span>
-                                      <ModeSegmentedControl mode={scanMode} onChange={handleModeChange} className={modeAnimationClass} />
-                                    </div>
+                        {/* Scan method: Auto/Manual. This is the only gate on the FAB's
+                            triggerScan() — see isScanAllowed — so it cannot be dropped. */}
+                        <span
+                          data-testid="scan-mode-label"
+                          className="scanner-scan-label"
+                        >
+                          Scan
+                        </span>
+                        <ModeSegmentedControl mode={scanMode} onChange={handleModeChange} className={modeAnimationClass} />
+                      </div>
 
-                  {/* Cart Badge */}
-                                    <button
-                                      onClick={() => navigate('/cart')}
-                                      className={`btn-ghost ${totalItems > 0 ? 'cart-badge-active' : ''}`}
-                                      aria-label={`Cart with ${totalItems} item${totalItems === 1 ? '' : 's'}, ₱${totalPrice.toFixed(2)} total`}
-                                    >
-                                      <ShoppingCart size={18} />
-                                      {totalItems > 0 && (
-                                        <>
-                                          <span>{totalItems}</span>
-                                          <span className="text-xs opacity-70">
-                                            ₱{totalPrice.toFixed(2)}
-                                          </span>
-                                        </>
-                                      )}
-                                    </button>
+                      <div className="app-bar-row app-bar-row--actions">
+                        {/* Cart Badge */}
+                        <button
+                          onClick={() => navigate('/cart')}
+                          className={`btn-ghost ${totalItems > 0 ? 'cart-badge-active' : ''}`}
+                          aria-label={`Cart with ${totalItems} item${totalItems === 1 ? '' : 's'}, ₱${totalPrice.toFixed(2)} total`}
+                        >
+                          <ShoppingCart size={18} />
+                          {totalItems > 0 && (
+                            <>
+                              <span>{totalItems}</span>
+                              <span className="text-xs opacity-70">
+                                ₱{totalPrice.toFixed(2)}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </header>
 
-                                            </div>
-                                          </header>
-
-                                          {/* Main content */}
+{/* Main content */}
       <main className="scanner-main">
         {/* Camera Viewfinder */}
         <CameraViewfinder

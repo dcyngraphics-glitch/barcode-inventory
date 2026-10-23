@@ -2091,6 +2091,12 @@ ol {
   gap: var(--space-sm);
 }
 
+
+/* Right-aligned action row in the app bar (cart). */
+.app-bar-row--actions {
+  justify-content: flex-end;
+}
+
 /* ==========================================================================
    CAMERA SCAN LINE — animated laser line
    ========================================================================== */
