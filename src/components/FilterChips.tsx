@@ -14,7 +14,7 @@ const FILTERS: { key: FilterType; label: string }[] = [
 
 export function FilterChips({ active, onChange }: FilterChipsProps) {
   return (
-    <div className="filter-chips" role="tablist" aria-label="Filter by expiry status">
+    <div className="filter-chips filter-chips--spacious" role="tablist" aria-label="Filter by expiry status">
       {FILTERS.map((filter) => {
         const isActive = active === filter.key;
         return (

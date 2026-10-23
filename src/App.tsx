@@ -23,7 +23,6 @@ import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
 import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
-import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -131,7 +130,6 @@ function MainApp() {
               <InstallBanner />
               <a href="#main" className="skip-link">Skip to content</a>
               <div className="app-container">
-                <ModeBar />
                 <main id="main">
                   <AppRoutes />
                 </main>
@@ -309,17 +307,3 @@ export function BottomNav() {
   );
 }
 
-/**
- * Persistent mode bar.
- *
- * The app has no shared app bar — each screen builds its own header — so the
- * switcher lives here, once, above the routes. Sticky, so the current mode is always
- * on screen and switching is always one tap, on every screen.
- */
-function ModeBar() {
-  return (
-    <div className="app-mode-bar">
-      <AppModeSwitcher />
-    </div>
-  );
-}

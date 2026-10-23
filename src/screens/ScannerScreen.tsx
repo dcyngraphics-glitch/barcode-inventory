@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ScanLine, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
 import { QuickEntryModal, type QuickEntryData } from '@/components/QuickEntryModal';
+import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
 import { RecentScans } from '@/components/RecentScans';
 import { PermissionPromptModal } from '@/components/PermissionPromptModal';
@@ -219,7 +220,7 @@ useEffect(() => {
               } finally {
                 setScanning(false);
               }
-            }, [addItem, isSell, navigate, setHasScannedSuccessfully]);
+            }, [addItem, isSell, isScanAllowed, navigate, setHasScannedSuccessfully]);
 
   const handleScanClick = useCallback(async () => {
     if (processing) return;
@@ -267,21 +268,7 @@ useEffect(() => {
   return (
     <div className="scanner-screen">
         {/* Visually hidden live region for screen readers */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          width: '1px',
-                          height: '1px',
-                          padding: 0,
-                          margin: 'calc(-1 * var(--space-xs))',
-                          overflow: 'hidden',
-                          clip: 'rect(0, 0, 0, 0)',
-                          whiteSpace: 'nowrap',
-                          border: 0
-                        }}
-                        role="status"
-                        aria-live="polite"
-                      >
+                      <div className="visually-hidden" role="status" aria-live="polite">
                         {totalItems} items, ₱{totalPrice.toFixed(2)}
                       </div>
               {/* Top App Bar */}
@@ -295,16 +282,10 @@ useEffect(() => {
                   {/* Offline indicator */}
                   {!isOnline && (
                     <div
-                                  role="status"
-                                  aria-live="polite"
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 'var(--space-xs)',
-                                    color: 'var(--color-muted-foreground)',
-                                    fontSize: 'var(--text-xs)',
-                                  }}
-                                  title="You are offline"
+                      className="scanner-offline"
+                      role="status"
+                      aria-live="polite"
+                      title="You are offline"
                     >
                       <WifiOff size={16} />
                       <span>Offline</span>
@@ -318,9 +299,17 @@ useEffect(() => {
                                           controls both reading as "the mode" made the
                                           hierarchy look like Shop/Sell > scan method, when
                                           the two are unrelated. See AppModeSwitcher. */}
+                                      {/* Shop/Sell switcher. It used to live in a
+                                          sticky bar above every route (App.tsx
+                                          ModeBar); here it sits in the one app bar
+                                          this screen already has, so the mode is
+                                          still one tap away without a second
+                                          full-width strip of header. */}
+                                      <AppModeSwitcher />
+
                                       <span
                                         data-testid="scan-mode-label"
-                                        className="text-xs text-muted font-medium uppercase tracking-wider"
+                                        className="scanner-scan-label"
                                       >
                                         Scan
                                       </span>
@@ -331,7 +320,7 @@ useEffect(() => {
                                     <button
                                       onClick={() => navigate('/cart')}
                                       className={`btn-ghost ${totalItems > 0 ? 'cart-badge-active' : ''}`}
-                                      aria-label={`Cart with ${totalItems} items`}
+                                      aria-label={`Cart with ${totalItems} item${totalItems === 1 ? '' : 's'}, ₱${totalPrice.toFixed(2)} total`}
                                     >
                                       <ShoppingCart size={18} />
                                       {totalItems > 0 && (
