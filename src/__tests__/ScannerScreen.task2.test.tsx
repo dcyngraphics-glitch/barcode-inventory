@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ScannerScreen } from '@/screens/ScannerScreen';
 import { ModeProvider } from '@/context/ModeContext';
@@ -17,9 +17,8 @@ describe('ScannerScreen task 2', () => {
     expect(btn.getAttribute('aria-label')).toMatch(/Cart with \d+ items, ₱[\d.]+ total/);
   });
 
-  it('AppModeSwitcher present in app bar', async () => {
+  it('no longer renders the Shop/Sell switcher — it lives in Settings now', () => {
     wrap(<ScannerScreen />);
-    const radiogroup = await screen.findByRole('radiogroup', { name: /app section/i });
-    expect(radiogroup).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: /app section/i })).toBeNull();
   });
 });

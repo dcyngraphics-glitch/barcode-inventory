@@ -23,7 +23,6 @@ import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
 import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
-import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -130,10 +129,6 @@ function MainApp() {
             <ScanCartProvider>
               <InstallBanner />
               <a href="#main" className="skip-link">Skip to content</a>
-              {/* Shared app-mode switcher. The scanner renders its own copy inside its
-                  app bar (ScannerScreen); every other screen gets it here, so no
-                  screen loses the mode. */}
-              <ModeBar />
               <div className="app-container">
                 <main id="main">
                   <AppRoutes />
@@ -309,21 +304,5 @@ export function BottomNav() {
         );
       })}
     </nav>
-  );
-}
-
-/**
- * Shared mode bar.
- *
- * The scanner screen owns its own app bar, so it renders the switcher inside
- * it (ScannerScreen.tsx) rather than through this strip — a second full-width
- * header stacked on the scanner's own app bar was the finding this removes.
- * Every other screen has no header of its own, so the strip lives here.
- */
-function ModeBar() {
-  return (
-    <div className="app-mode-bar">
-      <AppModeSwitcher />
-    </div>
   );
 }

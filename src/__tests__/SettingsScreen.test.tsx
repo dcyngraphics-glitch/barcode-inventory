@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { ModeProvider } from '@/context/ModeContext';
+import { ScanCartProvider } from '@/context/ScanCartContext';
 import { useSettings } from '@/hooks/useSettings';
 import { DEFAULT_SETTINGS } from '@/types';
 import { getPermissionStatus } from '@/services/notificationService';
@@ -34,9 +36,13 @@ const renderSettings = () =>
     <MemoryRouter>
       <AuthProvider>
         <SettingsProvider>
-          <TutorialProvider>
-            <SettingsScreen />
-          </TutorialProvider>
+          <ScanCartProvider>
+            <ModeProvider>
+              <TutorialProvider>
+                <SettingsScreen />
+              </TutorialProvider>
+            </ModeProvider>
+          </ScanCartProvider>
         </SettingsProvider>
       </AuthProvider>
     </MemoryRouter>
@@ -66,9 +72,13 @@ describe('SettingsScreen accessibility', () => {
       <MemoryRouter>
         <AuthProvider>
           <SettingsProvider>
-            <TutorialProvider>
-              <SettingsScreen />
-            </TutorialProvider>
+            <ScanCartProvider>
+              <ModeProvider>
+                <TutorialProvider>
+                  <SettingsScreen />
+                </TutorialProvider>
+              </ModeProvider>
+            </ScanCartProvider>
           </SettingsProvider>
         </AuthProvider>
       </MemoryRouter>
@@ -90,9 +100,13 @@ describe('SettingsScreen About links', () => {
       <MemoryRouter>
         <AuthProvider>
           <SettingsProvider>
-            <TutorialProvider>
-              <SettingsScreen />
-            </TutorialProvider>
+            <ScanCartProvider>
+              <ModeProvider>
+                <TutorialProvider>
+                  <SettingsScreen />
+                </TutorialProvider>
+              </ModeProvider>
+            </ScanCartProvider>
           </SettingsProvider>
         </AuthProvider>
       </MemoryRouter>
@@ -126,16 +140,20 @@ describe('SettingsScreen decorative icons', () => {
       <MemoryRouter>
         <AuthProvider>
           <SettingsProvider>
-            <TutorialProvider>
-              <SettingsScreen />
-            </TutorialProvider>
+            <ScanCartProvider>
+              <ModeProvider>
+                <TutorialProvider>
+                  <SettingsScreen />
+                </TutorialProvider>
+              </ModeProvider>
+            </ScanCartProvider>
           </SettingsProvider>
         </AuthProvider>
       </MemoryRouter>
     );
 
   it('should mark icons inside buttons as aria-hidden', () => {
-    const { container } = renderSettings();
+      const { container } = renderSettings();
     const icons = Array.from(container.querySelectorAll('button svg'));
     expect(icons.length).toBeGreaterThan(0);
     icons.forEach((svg) => {

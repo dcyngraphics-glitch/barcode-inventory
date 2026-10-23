@@ -91,35 +91,20 @@ function hexLiterals(selector: string): string[] {
   );
 }
 
-describe('sticky layering — the mode bar must outrank every screen header', () => {
+describe('sticky layering — screen headers own the top edge', () => {
   const HEADERS = ['.app-bar', '.till-header', '.sales-header'] as const;
 
-  it('gives the mode bar a higher z-index than every screen header', () => {
-    const tokens = resolveThemeTokens('light');
-    const modeZ = toNumber(declsFor('.app-mode-bar')['z-index']!, tokens);
-
-    for (const header of HEADERS) {
-      const headerZ = toNumber(declsFor(header)['z-index']!, tokens);
-      expect(
-        modeZ,
-        `${header} z-index (${headerZ}) must sit below the mode bar (${modeZ})`
-      ).toBeGreaterThan(headerZ);
-    }
+  // The Shop/Sell switcher used to sit in a sticky bar above every route, and these
+  // headers pinned below it at `top: var(--appbar-height)`. The switcher now lives in
+  // Settings, so a non-zero top would leave a blank strip above every screen.
+  it.each(HEADERS)('%s pins at top: 0', (header) => {
+    const top = declsFor(header).top;
+    expect(top, `${header} must declare a top`).toBeTruthy();
+    expect(top, `${header} must pin at top: 0`).toBe('0');
   });
 
-  it('pins every screen header below the mode bar instead of all three sharing top: 0', () => {
-    // When two sticky elements share top: 0 and one outranks the other, the loser is
-    // covered at rest — not just on scroll. The headers must pin beneath the bar.
-    for (const header of HEADERS) {
-      const top = declsFor(header).top;
-      expect(top, `${header} must declare a non-zero top`).toBeTruthy();
-      expect(top, `${header} must not pin at top: 0`).not.toBe('0');
-    }
-  });
-
-  it('uses a z-index token for the mode bar, not a literal', () => {
-    const z = declsFor('.app-mode-bar')['z-index']!;
-    expect(z).toMatch(/^calc\(var\(--/);
+  it('declares no mode-bar rule, because nothing renders one', () => {
+    expect(CSS).not.toContain('.app-mode-bar');
   });
 });
 
@@ -169,10 +154,6 @@ describe('contrast — the pairs the pooled audit proved invisible', () => {
     }
   );
 
-  it('still passes the pre-existing probe pairs (no regression)', () => {
-    const body = ratio('.app-mode-bar', 'background', 'background', 'light');
-    expect(body).toBeGreaterThanOrEqual(1);
-  });
 });
 
 describe('type floors', () => {

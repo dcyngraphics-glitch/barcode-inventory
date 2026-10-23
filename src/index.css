@@ -600,16 +600,14 @@ ol {
   border: 0;
 }
 
-
 /* Filter chip row — breathing room between chips (audit finding). */
 .filter-chips--spacious {
   display: flex;
   flex-wrap: nowrap;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-
 
 .filter-chip {
   display: inline-flex;
@@ -700,7 +698,7 @@ ol {
 
 .app-bar {
   position: sticky;
-  top: var(--appbar-height);
+  top: 0;
   z-index: var(--z-header);
   display: flex;
   align-items: center;
@@ -929,22 +927,6 @@ ol {
 .app-mode-segment:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-}
-
-/* Persistent mode bar (App.tsx ModeBar).
-   The app has no shared app bar — each screen builds its own header — so this
-   strip sits above the routes. Sticky, so the current mode and the one-tap
-   switcher stay on screen on every route. */
-.app-mode-bar {
-  position: sticky;
-  top: 0;
-  z-index: calc(var(--z-header) + 1);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-height: var(--appbar-height);
-  padding: 0 var(--space-md);
-  background: var(--color-primary);
 }
 
 .spinner {
@@ -1431,7 +1413,6 @@ ol {
   box-shadow: var(--shadow-xl);
 }
 
-
 @keyframes shimmer {
   0% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -1746,7 +1727,6 @@ ol {
   padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
-
 /* ==========================================================================
    FOCUS-visible overrides for interactive components
    ========================================================================== */
@@ -1792,7 +1772,6 @@ ol {
 /* ==========================================================================
    TOAST
    ========================================================================== */
-
 
 .toast-visible {
   opacity: 1;
@@ -2091,7 +2070,6 @@ ol {
   gap: var(--space-sm);
 }
 
-
 /* Right-aligned action row in the app bar (cart). */
 .app-bar-row--actions {
   justify-content: flex-end;
@@ -2286,7 +2264,7 @@ select {
   gap: var(--space-sm);
   padding: 0 var(--space-md);
   position: sticky;
-  top: var(--appbar-height);
+  top: 0;
   z-index: var(--z-header);
 }
 
@@ -2508,7 +2486,7 @@ select {
   align-items: center;
   padding: 0 var(--space-md);
   position: sticky;
-  top: var(--appbar-height);
+  top: 0;
   z-index: var(--z-header);
 }
 
@@ -2987,14 +2965,9 @@ select {
   outline-offset: 2px;
 }
 
-
-
-
-
 /* ==========================================================================
    ANIMATIONS
    ========================================================================== */
-
 
 .pulse-animate {
   animation: pulse 0.3s ease;

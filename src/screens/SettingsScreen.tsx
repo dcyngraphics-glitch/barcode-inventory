@@ -14,6 +14,7 @@ import { SettingsToggle } from '@/components/SettingsToggle';
 import { SettingsStepper } from '@/components/SettingsStepper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Toast, useToast } from '@/components/Toast';
+import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 
 type ThemeOption = 'auto' | 'light' | 'dark';
 
@@ -192,11 +193,15 @@ export function SettingsScreen() {
         />
       </div>
 
-      {/* Cashier Mode used to be toggled here. It is now the always-visible Shop/Sell
-          switcher in the header (App.tsx ModeBar). A second control for the same state
-          would leave one of them silently dead — and this one would have been, since
-          routing no longer reads settings.cashierMode. That field still exists, but
-          only to seed the device-local mode once (see context/ModeContext.tsx). */}
+      {/* Mode Section — Shop (receive and stock) or Sell (ring up sales at the till).
+          This used to be a sticky bar above every route; it lives in Settings now.
+          It reads ModeContext, not settings.cashierMode, so it is the live control. */}
+      <h2 className="settings-section-label">
+        Mode
+      </h2>
+      <div className="settings-card">
+        <AppModeSwitcher />
+      </div>
 
       {/* Data Section */}
       <h2 className="settings-section-label">

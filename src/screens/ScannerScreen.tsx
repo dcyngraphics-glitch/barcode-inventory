@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ScanLine, WifiOff, ShoppingCart } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
 import { QuickEntryModal, type QuickEntryData } from '@/components/QuickEntryModal';
-import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
 import { RecentScans } from '@/components/RecentScans';
 import { PermissionPromptModal } from '@/components/PermissionPromptModal';
@@ -292,10 +291,6 @@ useEffect(() => {
                           </div>
                         )}
 
-                        {/* Shop/Sell switcher. It used to live in a sticky bar above every
-                            route (App.tsx ModeBar); it now sits in this screen's own app bar,
-                            so the mode is still one tap away without a second full-width header. */}
-                        <AppModeSwitcher />
 
                         {/* Scan method: Auto/Manual. This is the only gate on the FAB's
                             triggerScan() — see isScanAllowed — so it cannot be dropped. */}
