@@ -3,6 +3,10 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 
+import { SettingsProvider } from '@/context/SettingsContext';
+import { TutorialProvider } from '@/context/TutorialContext';
+import { AuthProvider } from '@/context/AuthContext';
+
 import { DEFAULT_SETTINGS } from '@/types';
 
 // ---- Module-scope mocks ----
@@ -38,9 +42,32 @@ vi.mock('@/hooks/useSettings', () => ({
   }),
 }));
 
-vi.mock('@/context/TutorialContext', () => ({
-  useTutorial: () => ({ reopen: vi.fn() }),
-}));
+vi.mock('@/context/TutorialContext', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TutorialProvider: ({ children }: { children: React.ReactNode }) => children,
+    useTutorial: () => ({ reopen: vi.fn() }),
+  }
+})
+
+vi.mock('@/context/ModeContext', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    ModeProvider: ({ children }: { children: React.ReactNode }) => children,
+    useMode: () => ({ mode: 'shop', setMode: vi.fn(), seedMode: vi.fn() }),
+  }
+})
+
+vi.mock('@/context/ScanCartContext', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    ScanCartProvider: ({ children }: { children: React.ReactNode }) => children,
+    useScanCart: () => ({ cart: [], addToCart: vi.fn(), clearCart: vi.fn(), removeFromCart: vi.fn(), setScanCart: vi.fn(), setCartLength: vi.fn(), cartLength: 0 }),
+  }
+});
 
 vi.mock('@/services/notificationService', () => ({
   requestPermission: vi.fn().mockResolvedValue('granted'),
@@ -83,7 +110,13 @@ vi.mock('@/components/Toast', () => ({
 function renderSettings() {
   return render(
     <MemoryRouter>
-      <SettingsScreen />
+      <AuthProvider>
+        <SettingsProvider>
+          <TutorialProvider>
+            <SettingsScreen />
+          </TutorialProvider>
+        </SettingsProvider>
+      </AuthProvider>
     </MemoryRouter>,
   );
 }
