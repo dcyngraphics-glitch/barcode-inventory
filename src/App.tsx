@@ -13,7 +13,7 @@ import { SettingsProvider, useSettingsContext } from '@/context/SettingsContext'
 import { ModeProvider, useMode } from '@/context/ModeContext';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
-import { ScanCartProvider, useScanCart } from '@/context/ScanCartContext';
+import { ScanCartProvider } from '@/context/ScanCartContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider } from '@/context/AuthContext';
 import { useCloudSession } from '@/hooks/useCloudSession';
@@ -178,10 +178,37 @@ function AppRoutes() {
   );
 }
 
+/** localStorage key counting how many times the app has been opened. */
+const INSTALL_VISIT_KEY = 'installBannerVisits';
+
+/**
+ * Show the banner on the third visit rather than on arrival, so an install prompt
+ * does not interrupt a first-time user.
+ *
+ * It used to be gated on `totalItems >= 3`, where `totalItems` is the SELL-mode
+ * scan cart. That cart is only ever populated by the till (ScannerScreen's
+ * `isSell` branch), so in the default Shop mode it is permanently 0 — the banner
+ * was unreachable for exactly the users it was meant for.
+ */
+const INSTALL_TRIGGER_VISITS = 3;
+
 function InstallBanner() {
-  const { totalItems } = useScanCart();
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [visits, setVisits] = useState(0);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    let count = 0;
+    try {
+      count = Number(localStorage.getItem(INSTALL_VISIT_KEY)) || 0;
+      count += 1;
+      localStorage.setItem(INSTALL_VISIT_KEY, String(count));
+    } catch {
+      // Storage unavailable (private mode, blocked cookies). Count this visit
+      // in memory only so the banner can still appear.
+    }
+    setVisits(count);
+  }, []);
 
   // Install promotion logic
   useEffect(() => {
@@ -197,36 +224,30 @@ function InstallBanner() {
     };
   }, []);
 
-  useEffect(() => {
-    if (totalItems >= 3 && installPromptEvent !== null) {
-      setShowInstallBanner(true);
-    }
-  }, [totalItems, installPromptEvent]);
-
   const handleInstall = async () => {
     if (installPromptEvent) {
       // Show the prompt
       installPromptEvent.prompt();
       // Wait for the user to respond to the prompt
       const { outcome } = await installPromptEvent.userChoice;
-      // Optionally, send analytics event
       console.log(`Install promotion outcome: ${outcome}`);
       // We've used the prompt, can't reuse it
       setInstallPromptEvent(null);
-      setShowInstallBanner(false);
+      setDismissed(true);
     }
   };
 
   const handleClose = () => {
-    setInstallPromptEvent(null);
-    setShowInstallBanner(false);
+    // Hide for this session only. Nulling the prompt event here would make the
+    // banner unreachable for the rest of the page's life, even on later visits.
+    setDismissed(true);
   };
 
-  if (!showInstallBanner) return null;
+  if (dismissed || visits < INSTALL_TRIGGER_VISITS || installPromptEvent === null) return null;
 
   return (
     <InstallPromotionBanner
-      visible={showInstallBanner}
+      visible={true}
       onInstall={handleInstall}
       onClose={handleClose}
     />

@@ -27,7 +27,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'icon-192.png',
+        'icon-512.png',
+        'icon-maskable-512.png',
+        'apple-touch-icon.png',
+      ],
       manifest: {
         name: 'Barcode Inventory',
         short_name: 'BarInv',
@@ -36,12 +42,19 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
+        // `id` pins the app's identity across installs and must match start_url.
+        id: './',
+        // Chrome's installability check requires a 192x192 AND a 512x512 RASTER
+        // icon; an SVG with sizes:"any" does not satisfy it, so an SVG-only
+        // manifest makes the app impossible to install. The SVGs stay (crisp at
+        // any size, and the favicon), but the PNGs carry the install check.
+        // `purpose: 'maskable'` is a separate full-bleed icon: launchers crop a
+        // regular icon to a circle, which would cut the dashed frame off.
         icons: [
-          {
-            src: 'favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-          },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
       workbox: {

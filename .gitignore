@@ -13,6 +13,14 @@ dist
 dist-ssr
 *.local
 
+# TypeScript incremental build cache. It is machine-local (absolute paths) and
+# changes on every compile, so committing it only produces pointless churn.
+*.tsbuildinfo
+
+# A stale nested clone of this repo was found under docs/.git; it is moved aside
+# rather than deleted, and must never be committed as a gitlink.
+docs/.git.stale-nested-repo/
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
