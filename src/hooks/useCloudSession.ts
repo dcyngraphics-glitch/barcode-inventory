@@ -37,6 +37,14 @@ export function useCloudSession(): CloudSession {
     error: null,
   });
 
+  // Bypass mode: treat guest as signed in immediately so the UI can be tested
+  // without an account. The real auth flow (useCloudSession + dexie.ts) is
+  // untouched — this only short-circuits the gate for testing.
+  if (import.meta.env.VITE_BYPASS_LOGIN === 'true') {
+    setSession({ isLoading: false, isLoggedIn: true, email: null, error: null });
+    return session;
+  }
+
   useEffect(() => {
     let cancelled = false;
 

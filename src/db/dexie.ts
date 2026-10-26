@@ -99,6 +99,7 @@ console.log(`[dexie] Schema defined with version 12`);
 if (!env.VITEST) {
   try {
     if (db.cloud) {
+      const bypassLogin = !!env.VITE_BYPASS_LOGIN;
       db.cloud.configure({
         databaseUrl: syncUrl,
         // requireAuth:true blocks every db call until the user authenticates on
@@ -107,13 +108,17 @@ if (!env.VITEST) {
         // silently hangs. With requireAuth true, the DB enforces auth and keeps
         // every read/write scoped to the authenticated account's private realm,
         // so two phones signed into the same account share data correctly.
-        requireAuth: true,
+        //
+        // Bypassed for testing: when VITE_BYPASS_LOGIN is set, the app treats
+        // the guest as signed in and skips the requireAuth gate so the UI can
+        // be inspected without an account.
+        requireAuth: bypassLogin ? false : true,
         // The app renders the login prompts itself from db.cloud.userInteraction
         // (see components/UserInteractionPrompt.tsx), so they carry this app's styling.
         // Without this the addon injects its own generic dialog on top of the UI.
         customLoginGui: true,
       });
-      console.log(`[dexie] Dexie Cloud configured with syncUrl: ${syncUrl}`);
+      console.log(`[dexie] Dexie Cloud configured with syncUrl: ${syncUrl}${bypassLogin ? ' (login bypassed for testing)' : ''}`);
     } else {
       console.warn('[dexie] Dexie Cloud addon not initialized — sync disabled');
     }

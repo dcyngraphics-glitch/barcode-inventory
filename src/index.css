@@ -2788,6 +2788,39 @@ select {
   color: var(--color-muted-foreground);
 }
 
+.login-guest-hint {
+  margin-top: var(--space-md);
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.login-guest-link {
+  background: none;
+  border: none;
+  color: var(--color-accent-border);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.login-guest-link:hover {
+  color: var(--color-accent);
+}
+
+.code-inline {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  background: var(--color-muted);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--color-secondary);
+}
+
 /* Status screens */
 .status-card {
   display: flex;

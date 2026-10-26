@@ -39,6 +39,14 @@ export function LoginScreen() {
           We&apos;ll email you a one-time code — no password to remember. Your account is
           created the first time you sign in.
         </p>
+
+        <p className="login-guest-hint">
+          <button type="button" className="login-guest-link">
+            Continue as guest
+          </button>{' '}
+          — skip sign-in for UI testing. Set <code className="code-inline">VITE_BYPASS_LOGIN=true</code>
+          in <code className="code-inline">.env</code>, then reload the dev server.
+        </p>
       </div>
     </div>
   );
