@@ -101,11 +101,13 @@ if (!env.VITEST) {
     if (db.cloud) {
       db.cloud.configure({
         databaseUrl: syncUrl,
-        // Deliberately false. requireAuth:true blocks every db call until the user
-        // authenticates on first launch; the gate lives in React instead (AuthGate in
-        // App.tsx), so a signed-out user gets a sign-in screen rather than a database
-        // that silently hangs.
-        requireAuth: false,
+        // requireAuth:true blocks every db call until the user authenticates on
+        // first launch; the gate lives in React (AuthGate in App.tsx), so a
+        // signed-out user gets a sign-in screen rather than a database that
+        // silently hangs. With requireAuth true, the DB enforces auth and keeps
+        // every read/write scoped to the authenticated account's private realm,
+        // so two phones signed into the same account share data correctly.
+        requireAuth: true,
         // The app renders the login prompts itself from db.cloud.userInteraction
         // (see components/UserInteractionPrompt.tsx), so they carry this app's styling.
         // Without this the addon injects its own generic dialog on top of the UI.
