@@ -46,7 +46,12 @@ export function useCloudSession(): CloudSession {
     // this the gate waits on isLoading forever and the app sits on the splash screen.
     // (Found by loading the built app; the unit tests could not catch it because they
     // stub db.cloud and never exercise the addon's ready hook.)
-    Promise.resolve((db as any).open?.()).catch((err: unknown) => {
+    Promise.resolve((db as any).open?.()).then(() => {
+      if (cancelled) return;
+      // DB opened successfully: settle isLoading so the app can leave the splash
+      // screen. The session subscription below will drive isLoggedIn from here.
+      setSession((prev) => ({ ...prev, isLoading: false, error: null }));
+    }).catch((err: unknown) => {
       if (cancelled) return;
       console.error('[auth] Failed to open the local database:', err);
       // Settle instead of leaving isLoading true: an open failure used to pin the app
