@@ -32,7 +32,10 @@ export function useModalFocus(
   // re-running it would re-capture the trigger after focus had moved into the
   // dialog, snapping focus back to the first field while the user types.
   const escapeRef = useRef(onEscape);
-  escapeRef.current = onEscape;
+
+  useEffect(() => {
+    escapeRef.current = onEscape;
+  }, [onEscape]);
 
   useEffect(() => {
     previousActiveElement.current =

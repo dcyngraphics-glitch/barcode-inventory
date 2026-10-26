@@ -1,124 +1,127 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Mono:wght@400;500&display=swap');
 
 /* ==========================================================================
    DESIGN TOKENS
-   ========================================================================== */
+   ========================================================================= */
 
 :root {
   /* ======================================================================
-     PRIMARY PALETTE — Industrial Slate with Emerald Accent
+     PRIMARY PALETTE — Apple-inspired: warm paper, near-black, Apple blue CTA
      ====================================================================== */
-  --color-primary: #1e293b;          /* Dark slate — primary text/accents */
-  --color-on-primary: #f8fafc;       /* On primary — for buttons/badges on dark */
-  --color-secondary: #475569;        /* Medium slate — secondary text */
-  --color-on-secondary: #f8fafc;     /* On secondary */
-  --color-accent: #047857;           /* Emerald green — CTA, highlights */
-    --color-accent-text: #047857;     /* Emerald green — text on light bg */
-    --color-accent-border: #059669;   /* Emerald green — borders on light bg */
-    --color-accent-border-rgb: 5, 150, 105;  /* RGB for rgba() usage */
-    --color-primary-bg: #1e293b;       /* Dark slate — button/chip bg in light */
-  --color-on-accent: #ffffff;        /* On accent — white text on accent */
-  --color-destructive: #dc2626;          /* Red — destructive actions, errors */
-  --color-destructive-bg: #dc2626;      /* Red — destructive button bg */
-  --color-on-destructive: #ffffff;       /* On destructive — white text */
+  --color-primary: #1d1d1f;           /* Near-black — primary text/accents */
+  --color-on-primary: #ffffff;        /* On primary — for buttons */
+  --color-secondary: #595959;         /* Medium grey — secondary text */
+  --color-on-secondary: #ffffff;
+  --color-accent: #0071e0;            /* Apple blue — CTA, highlights */
+  --color-accent-text: #0071e0;       /* Apple blue — text on light bg */
+  --color-accent-border: #0077ed;     /* Apple blue — borders on light bg */
+  --color-accent-border-rgb: 0, 113, 224;
+  --color-accent-bg: #e8f4fe;         /* Light blue wash for accents */
+  --color-on-accent: #ffffff;         /* On accent — white text on accent */
+  --color-primary-bg: #ffffff;        /* White bg for buttons/cards in light */
+  --color-on-accent-hover: #0063c1;   /* Apple blue hover */
+  --color-destructive: #d63638;       /* Apple red — destructive, errors */
+  --color-destructive-bg: #d63638;    /* Red — destructive button bg */
+  --color-on-destructive: #ffffff;    /* On destructive — white text */
 
   /* ======================================================================
-     SURFACE PALETTE — Layered depth for touch-friendly UI
+     SURFACE PALETTE — Layered depth with subtle warm paper
      ====================================================================== */
-  --color-background: #f8fafc;       /* Page background — subtle warm white */
-  --color-foreground: #0f172b;       /* Primary text on light bg */
-  --color-card: #ffffff;             /* Card surfaces */
-  --color-card-foreground: #0f172b;  /* Text on cards */
-  --color-muted: #f1f5f9;            /* Muted backgrounds, dividers */
-  --color-muted-foreground: #3d4a5c; /* Secondary text, placeholders */
-  --color-border: #7a93b2;           /* Input borders, subtle separation */
-    --color-header: #334155;         /* Screen headers (till / sales), light */
-    --appbar-bg: linear-gradient(135deg, #1e293b 0%, #657387 100%);  /* App bar */
-    --cta-bg: linear-gradient(135deg, #047857 0%, #05705f 50%, #065f46 100%);  /* Primary CTA — dark enough for white 15px/700 */
-    --color-border-focus: #3b82f6;     /* Focus ring color */
-    --color-focus: #3b82f6;            /* Focus ring color (alias for border-focus) */
+  --color-background: #f5f5f7;        /* Warm paper — page background */
+  --color-foreground: #1d1d1f;        /* Near-black — primary text on light */
+  --color-card: #ffffff;              /* White card surfaces */
+  --color-card-foreground: #1d1d1f;   /* Text on cards */
+  --color-muted: #e8e8ed;             /* Subtle divider/background */
+  --color-muted-foreground: #767676;  /* Secondary text, placeholders */
+  --color-border: #d2d2d7;            /* Hairline — input borders, separators */
+  --color-header: #1d1d1f;            /* Screen headers (till/sales), near-black */
+  --appbar-bg: #1d1d1f;               /* App bar — near-black (dark mode style) */
+  --cta-bg: #0071e0;                  /* Apple blue CTA — primary button */
+  --color-border-focus: #0071e0;      /* Focus ring color */
+  --color-focus: #0071e0;             /* Focus ring color (alias for border-focus) */
 
   /* ======================================================================
-     STATUSES — Semantic status colors for expiry tracking
+     STATUSES — Semantic status colors
      ====================================================================== */
-  --color-good: #047857;             /* Good — no expiry concern */
-  --color-warning: #d97706;          /* Warning — expiring soon */
-  --color-expired: #dc2626;          /* Expired — action required */
+  --color-good: #0071e0;              /* Green/blue for good status */
+  --color-warning: #f2a900;           /* Warm amber — Sell register layer only */
+  --color-expired: #d63638;           /* Red — expired items */
 
   /* Status badge backgrounds (with lower-opacity backgrounds) */
-  --status-good-bg: #dcfce7;         /* Very light green */
-  --status-good-text: #047857;       /* Dark emerald text */
-  --status-warning-bg: #fef3c7;      /* Very light amber */
-  --status-warning-text: #92400e;    /* Dark amber text */
-  --status-expired-bg: #fee2e2;      /* Very light red */
-  --status-expired-text: #991b1b;    /* Dark red text */
-  --status-neutral-bg: #f8fafc;      /* Neutral/default state */
-  --status-neutral-text: #64748b;    /* Muted taupe */
+  --status-good-bg: #dcf5f9;          /* Very light blue */
+  --status-good-text: #0071e0;        /* Apple blue text */
+  --status-warning-bg: #fdf0d5;       /* Very light amber */
+  --status-warning-text: #b87f00;     /* Dark amber text */
+  --status-expired-bg: #fdecea;       /* Very light red */
+  --status-expired-text: #d63638;     /* Red text */
+  --status-neutral-bg: #f5f5f7;       /* Neutral paper */
+  --status-neutral-text: #767676;     /* Muted grey */
 
   /* ======================================================================
      ERROR / DESTRUCTIVE
      ====================================================================== */
   --color-error-bg: #fee2e2;
-  --color-error-border: #fecaca;
-  --color-error-text: #cc2121;
+  --color-error-border: #f5c6c2;
+  --color-error-text: #b91c1c;  /* Darker red — passes 4.5:1 on error bg */
 
   /* ======================================================================
-       CAMERA / SCANNER — Specialized scanner colors
-       ====================================================================== */
-    --color-camera-bg: #0f172a;        /* Camera viewfinder background */
-    --color-camera-surface: #1e213b;   /* Slightly lighter than bg */
-    --color-camera-overlay: rgba(0, 0, 0, 0.8);      /* Start overlay backdrop */
-    --color-camera-error-overlay: rgba(0, 0, 0, 0.6); /* Error overlay backdrop */
-    --color-camera-text-muted: #94a3b8;                /* Muted text on camera (light) */
-    --color-camera-hint: #6b7f96;                      /* Hint text on camera */
-    --color-flash: #fbbf24;            /* Flash/indicator amber */
-    --color-scan-line: #3b82f6;        /* Scanning line accent */
+     CAMERA / SCANNER — Specialized scanner colors
+     ====================================================================== */
+  --color-camera-bg: #000000;         /* Camera viewfinder background */
+  --color-camera-surface: #1a1a1b;    /* Slightly lighter than bg */
+  --color-camera-overlay: rgba(0, 0, 0, 0.85);  /* Start overlay backdrop */
+  --color-camera-error-overlay: rgba(0, 0, 0, 0.65);
+  --color-camera-text-muted: #a8a8a8; /* Muted text on camera (light) */
+  --color-camera-hint: #8a8a8a;       /* Hint text on camera */
+  --color-flash: #fbbf24;             /* Flash/indicator amber */
+  --color-scan-line: #0071e0;         /* Scanning line accent */
 
   /* ======================================================================
      TYPOGRAPHY — Refined Inter hierarchy with scanner-optimized sizes
      ====================================================================== */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
   --text-xs: 12px;
-  --text-sm: 13px;
-  --text-base: 16px;                 /* Base — optimized for mobile scanning */
-  --text-input: 16px;              /* Input text — iOS zooms fields under 16px */
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-input: 17px;                /* Input text — iOS zooms fields under 17px */
   --text-lg: 18px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-3xl: 30px;
-  --text-4xl: 36px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 48px;
 
   /* ======================================================================
-     SPACING — Consistent rhythm, tighter for mobile scanner
+     SPACING — Refined rhythm, generous for premium feel
      ====================================================================== */
-  --space-xs: 3px;
-  --space-sm: 6px;
-  --space-md: 12px;
-  --space-lg: 20px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
   --space-xl: 32px;
-  --space-2xl: 44px;
-  --space-3xl: 60px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
 
   /* ======================================================================
-     SHADOW — Subtle, purposeful depth (reduced for scanner performance)
+     SHADOW — Subtle, layered depth (Apple-inspired)
      ====================================================================== */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
 
   /* ======================================================================
-     BORDER RADIUS — Rounded but not pill-shaped; scanner- friendly
+     BORDER RADIUS — Apple-inspired: subtle curves
      ====================================================================== */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
   --radius-full: 999px;
 
   /* ======================================================================
-     TRANSITIONS — Purposeful, accessible motion
+     TRANSITIONS — Purposeful, accessible
      ====================================================================== */
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
@@ -126,7 +129,7 @@
   --transition-smoothed: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ======================================================================
-     Z-INDEX — Stacking order for overlays, modals, FAB
+     Z-INDEX — Stacking order
      ====================================================================== */
   --z-base: 1;
   --z-dropdown: 10;
@@ -140,82 +143,126 @@
   /* ======================================================================
      LAYOUT CONSTRAINTS — Mobile-first, thumb-friendly
      ====================================================================== */
-  --app-max-width: 480px;          /* Narrow for one-handed use */
-  --appbar-height: 56px;           /* Standard app bar */
-  --bottom-nav-height: 56px;       /* Reduced from 64 for screen real estate */
+  --app-max-width: 480px;
+  --appbar-height: 56px;
+  --bottom-nav-height: 56px;
   --bottom-nav-total: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
-  --till-footer-height: 77px;      /* Fixed total/Paid bar — scroll clearance must match it */
+  --till-footer-height: 77px;
 }
 
 /* Dark mode — data-theme attribute (explicit toggle) */
 [data-theme="dark"] {
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-card: #1e293b;
-  --color-card-foreground: #f8fafc;
-  --color-muted: #334155;
-  --color-muted-foreground: #9eadc2;
-  --color-border: #657387;
-  --color-header: #1e293b;         /* Screen headers, dark */
-  --color-primary: #8090a7;
-  --color-primary-bg: #475569;
-  --color-on-primary: #ffffff;
-  --color-secondary: #738195;
-  --color-destructive: #ef4444;
-  --color-destructive-bg: #b91c1c;
-  --color-good: #00875a;
-    --color-accent-text: #34d399;
-    --color-accent-border: #10b981;
-    --color-accent-border-rgb: 16, 185, 129;
+  --color-background: #000000;         /* Near-black — page background */
+  --color-foreground: #f5f5f7;         /* Warm white — primary text */
+  --color-card: #1a1a1b;               /* Near-black card */
+  --color-card-foreground: #f5f5f7;    /* Warm white text on cards */
+  --color-muted: #2d2d2f;              /* Dark muted divider */
+  --color-muted-foreground: #989898;   /* Muted text on dark */
+  --color-border: #2d2d2f;             /* Hairline border in dark */
+  --color-header: #f5f5f7;             /* Screen headers, warm white */
+  --color-primary: #989898;            /* Muted grey for primary text */
+  --color-primary-bg: #2d2d2f;         /* Dark bg for buttons/cards */
+  --color-on-primary: #000000;         /* On primary — near-black text (inverted) */
+  --color-secondary: #767676;          /* Muted grey */
+  --color-on-secondary: #000000;
+  --color-accent-text: #3b82f0;        /* Apple blue on dark bg */
+  --color-accent-border: #3b82f0;      /* Apple blue borders on dark */
+  --color-accent-border-rgb: 59, 130, 240;
+  --color-accent-bg: #1a2a3a;          /* Dark blue wash */
+  --color-on-accent: #ffffff;          /* White on accent */
+  --color-on-accent-hover: #4d9aff;
+  --color-destructive: #ff6b6b;
+  --color-destructive-bg: #d63638;
+  --color-on-destructive: #ffffff;
 
-    --status-good-bg: #14532d;
-  --status-good-text: #bbf7d0;
-  --status-warning-bg: #451a03;
-  --status-warning-text: #fde68a;
-  --status-expired-bg: #450a0a;
-  --status-expired-text: #fecaca;
-  --status-neutral-bg: #334155;
-  --status-neutral-text: #cbd5e1;
+  --status-good-bg: #1a2a3a;
+  --status-good-text: #3b82f0;
+  --status-warning-bg: #4a3f00;
+  --status-warning-text: #f2a900;
+  --status-expired-bg: #4a0a0a;
+  --status-expired-text: #ff6b6b;
+  --status-neutral-bg: #2d2d2f;
+  --status-neutral-text: #989898;
 
-  --color-error-bg: #450a0a;
-  --color-error-border: #7f1d1d;
-  --color-error-text: #fecaca;
+  --color-error-bg: #4a0a0a;
+  --color-error-border: #7a1a1a;
+  --color-error-text: #ff6b6b;
+
+  --color-camera-bg: #000000;
+  --color-camera-surface: #151516;
+  --color-camera-overlay: rgba(0, 0, 0, 0.9);
+  --color-camera-error-overlay: rgba(0, 0, 0, 0.7);
+  --color-camera-text-muted: #989898;
+  --color-camera-hint: #767676;
+  --color-flash: #fbbf24;
+  --color-scan-line: #3b82f0;
+
+  --appbar-bg: #000000;
+  --cta-bg: #0071e0;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
 }
 
 /* Dark mode — system preference fallback */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-background: #0f172a;
-    --color-foreground: #f8fafc;
-    --color-card: #1e293b;
-    --color-card-foreground: #f8fafc;
-    --color-muted: #334155;
-    --color-muted-foreground: #9eadc2;
-    --color-border: #657387;
-  --color-header: #1e293b;         /* Screen headers, dark */
-    --color-primary: #8090a7;
-    --color-primary-bg: #475569;
-    --color-on-primary: #ffffff;
-    --color-secondary: #738195;
-    --color-destructive: #ef4444;
-    --color-destructive-bg: #b91c1c;
-    --color-good: #00875a;
-      --color-accent-text: #34d399;
-      --color-accent-border: #10b981;
-      --color-accent-border-rgb: 16, 185, 129;
+    --color-background: #000000;
+    --color-foreground: #f5f5f7;
+    --color-card: #1a1a1b;
+    --color-card-foreground: #f5f5f7;
+    --color-muted: #2d2d2f;
+    --color-muted-foreground: #989898;
+    --color-border: #2d2d2f;
+    --color-header: #f5f5f7;
+    --color-primary: #989898;
+    --color-primary-bg: #2d2d2f;
+    --color-on-primary: #000000;
+    --color-secondary: #767676;
+    --color-on-secondary: #000000;
+    --color-accent-text: #3b82f0;
+    --color-accent-border: #3b82f0;
+    --color-accent-border-rgb: 59, 130, 240;
+    --color-accent-bg: #1a2a3a;
+    --color-on-accent: #ffffff;
+    --color-on-accent-hover: #4d9aff;
+    --color-destructive: #ff6b6b;
+    --color-destructive-bg: #d63638;
+    --color-on-destructive: #ffffff;
 
-      --status-good-bg: #14532d;
-    --status-good-text: #bbf7d0;
-    --status-warning-bg: #451a03;
-    --status-warning-text: #fde68a;
-    --status-expired-bg: #450a0a;
-    --status-expired-text: #fecaca;
-    --status-neutral-bg: #334155;
-    --status-neutral-text: #cbd5e1;
+    --status-good-bg: #1a2a3a;
+    --status-good-text: #3b82f0;
+    --status-warning-bg: #4a3f00;
+    --status-warning-text: #f2a900;
+    --status-expired-bg: #4a0a0a;
+    --status-expired-text: #ff6b6b;
+    --status-neutral-bg: #2d2d2f;
+    --status-neutral-text: #989898;
 
-    --color-error-bg: #450a0a;
-    --color-error-border: #7f1d1d;
-    --color-error-text: #fecaca;
+    --color-error-bg: #4a0a0a;
+    --color-error-border: #7a1a1a;
+    --color-error-text: #ff6b6b;
+
+    --color-camera-bg: #000000;
+    --color-camera-surface: #151516;
+    --color-camera-overlay: rgba(0, 0, 0, 0.9);
+    --color-camera-error-overlay: rgba(0, 0, 0, 0.7);
+    --color-camera-text-muted: #989898;
+    --color-camera-hint: #767676;
+    --color-flash: #fbbf24;
+    --color-scan-line: #3b82f0;
+
+    --appbar-bg: #000000;
+    --cta-bg: #0071e0;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -345,25 +392,26 @@ ol {
 
 /* ==========================================================================
    BUTTONS
-   ========================================================================== */
+   ========================================================================= */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: var(--text-base);
-  min-height: 44px;
-  transition: opacity var(--transition-base), background var(--transition-base),
-    color var(--transition-base), border-color var(--transition-base);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  min-height: 40px;
+  transition: background var(--transition-base), color var(--transition-base),
+    border-color var(--transition-base), transform var(--transition-fast);
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  border: none;
 }
 
 .btn:disabled {
@@ -377,26 +425,27 @@ ol {
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--color-on-accent-hover);
+  color: var(--color-on-accent);
 }
 
 .btn-primary:active:not(:disabled) {
-  opacity: 0.8;
+  transform: scale(0.98);
 }
 
 .btn-secondary {
   background: transparent;
   color: var(--color-primary);
-  border: 2px solid var(--color-primary);
+  border: 1.5px solid var(--color-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: var(--color-muted);
+  border-color: var(--color-muted);
 }
 
 .btn-destructive {
-  background: var(--color-destructive-bg, var(--color-destructive));
+  background: var(--color-destructive-bg);
   color: var(--color-on-destructive);
 }
 
@@ -431,14 +480,14 @@ ol {
 }
 
 .cart-badge-active:hover:not(:disabled) {
-  background: var(--color-primary-bg);
-  border-color: var(--color-primary-bg);
-  color: var(--color-on-primary);
+  background: var(--color-accent);
+  border-color: var(--color-accent-hover);
+  color: var(--color-on-accent);
 }
 
 /* ==========================================================================
    CARDS
-   ========================================================================== */
+   ==========================================================================
 
 .card {
   background: var(--color-card);
@@ -446,7 +495,7 @@ ol {
   padding: var(--space-md);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
 .card-elevated {
@@ -462,7 +511,7 @@ ol {
 }
 
 .card-title {
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-card-foreground);
   line-height: 1.3;
@@ -470,7 +519,7 @@ ol {
 
 /* ==========================================================================
    FORM ELEMENTS
-   ========================================================================== */
+   ==========================================================================
 
 .form-field {
   margin-bottom: var(--space-md);
@@ -479,7 +528,7 @@ ol {
 .form-label {
   display: block;
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
 }
@@ -488,8 +537,8 @@ ol {
 .select,
 .textarea {
   width: 100%;
-  padding: var(--space-md);
-  border: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--text-input);
   background: var(--color-card);
@@ -500,7 +549,9 @@ ol {
   appearance: none;
 }
 
-.input::placeholder {
+.input::placeholder,
+.select::placeholder,
+.textarea::placeholder {
   color: var(--color-muted-foreground);
 }
 
@@ -508,8 +559,8 @@ ol {
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 113, 224, 0.15);
 }
 
 .input:disabled,
@@ -636,8 +687,8 @@ ol {
 }
 
 .filter-chip-inactive:hover {
-  background: var(--color-primary-bg);
-  color: var(--color-on-primary);
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 
 /* ==========================================================================
@@ -651,6 +702,10 @@ ol {
   z-index: var(--z-overlay);
   animation: fade-in var(--transition-fast) ease;
 }
+
+/* ==========================================================================
+   MODALS & BOTTOM SHEETS
+   ========================================================================== */
 
 .modal {
   position: fixed;
@@ -677,7 +732,7 @@ ol {
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: var(--space-lg);
   padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-lg);
   max-width: var(--app-max-width);
   margin: 0 auto;
   z-index: var(--z-modal);
@@ -687,7 +742,7 @@ ol {
 .bottom-sheet-handle {
   width: 40px;
   height: 4px;
-  background: var(--color-border);
+  background: var(--color-muted);
   border-radius: var(--radius-full);
   margin: 0 auto var(--space-md);
 }
@@ -711,7 +766,7 @@ ol {
 }
 
 .app-bar-title {
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 600;
   flex: 1;
   overflow: hidden;
@@ -741,10 +796,25 @@ ol {
 .app-bar-action:hover {
   opacity: 0.8;
 }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--color-on-primary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: opacity var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-bar-action:hover {
+  opacity: 0.8;
+}
 
 /* ==========================================================================
-   BOTTOM NAVIGATION
-   ========================================================================== */
+   BOTTOM NAVIGATION — Apple-style tab bar
+   ==========================================================================
 
 .bottom-nav {
   position: fixed;
@@ -769,16 +839,17 @@ ol {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   color: var(--color-muted-foreground);
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: color var(--transition-fast), background var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
   padding: 8px 0;
 }
 
 .bottom-nav-item.active {
-  color: var(--color-primary);
+  color: var(--color-accent);
+  background: var(--color-accent-bg);
 }
 
 .bottom-nav-item:hover {
@@ -787,7 +858,7 @@ ol {
 
 .bottom-nav-label {
   font-size: var(--text-xs);
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -3137,7 +3208,7 @@ select {
   color: var(--color-foreground);
 }
 .permission-prompt-modal-button-deny:hover:not(:disabled) {
-  background: var(--color-primary-bg);
+  background: var(--color-primary);
   color: var(--color-on-primary);
 }
 

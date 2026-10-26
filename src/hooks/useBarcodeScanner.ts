@@ -39,10 +39,10 @@ export function useBarcodeScanner() {
   const scanningRef = useRef(false);
 
   const hasBarcodeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
-  let cancelled = false;
+  const cancelledRef = useRef(false);
 
   const stop = useCallback(() => {
-    cancelled = true;
+    cancelledRef.current = true;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -74,7 +74,7 @@ export function useBarcodeScanner() {
       // Synchronous guard: prevent double-start from concurrent calls
       if (startingRef.current) return;
       startingRef.current = true;
-      cancelled = false;
+      cancelledRef.current = false;
 
       if (scanningRef.current) {
         startingRef.current = false;
@@ -89,11 +89,11 @@ export function useBarcodeScanner() {
           video: { facingMode: { ideal: 'environment' } },
           audio: false,
         });
-        if (cancelled) return;
+        if (cancelledRef.current) return;
         streamRef.current = stream;
         video.srcObject = stream;
         await video.play();
-        if (cancelled) return;
+        if (cancelledRef.current) return;
 
         if (hasBarcodeDetector && window.BarcodeDetector) {
           detectorRef.current = new window.BarcodeDetector({
