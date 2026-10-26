@@ -256,6 +256,7 @@ export function InventoryScreen() {
                               try {
                                 await updateBatch(batch);
                                 showToast('success', 'Batch updated');
+                                await refresh();
                               } catch (err) {
                                 console.error('Failed to update batch:', err);
                                 showToast('error', 'Failed to update batch');

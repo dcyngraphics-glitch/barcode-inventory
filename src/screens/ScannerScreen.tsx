@@ -139,7 +139,7 @@ useEffect(() => {
         if (newMode === 'auto') {
           setManualScanAllowed(true);
         } else {
-          setManualScanAllowed(false);
+          setManualScanAllowed(true);
           setHasScannedSuccessfully(false);
           setCameraActive(true);
         }

@@ -23,6 +23,7 @@ import { seedCatalogIfEmpty } from '@/services/seedService';
 import { notifyExpiringItems, getPermissionStatus } from '@/services/notificationService';
 import { getAllBatches } from '@/services/inventoryService';
 import { InstallPromotionBanner } from '@/components/InstallPromotionBanner';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -128,6 +129,7 @@ function MainApp() {
           <TutorialProvider>
             <ScanCartProvider>
               <InstallBanner />
+              <OfflineIndicator />
               <a href="#main" className="skip-link">Skip to content</a>
               <div className="app-container">
                 <main id="main">
