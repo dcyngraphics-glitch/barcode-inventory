@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/barcode-inventory/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1e293b" />
+    <meta name="description" content="Scan barcodes, track inventory, get expiry notifications" />
+
+    <!-- Installability / standalone shell. Without these the app opens in browser
+         chrome even when launched from the home screen. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BarInv" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- 180x180 is the iOS home-screen size; the previous value (/icon-192.png)
+         404'd because no such file existed, so iOS fell back to a screenshot. -->
+    <link rel="apple-touch-icon" href="/barcode-inventory/apple-touch-icon.png" />
+    <title>Barcode Inventory</title>
+    <script>
+      // Apply the theme before the first frame is painted.
+      //
+      // useTheme resolves the theme from IndexedDB, which is async, so the right
+      // value only arrives after React mounts. Until then there is no data-theme
+      // attribute and CSS falls back to prefers-color-scheme — which is wrong
+      // whenever the user's saved choice differs from the OS setting, producing a
+      // visible flash of the opposite theme on every cold start. Reading the last
+      // resolved value (cached by useTheme) closes that window; the OS preference
+      // is the fallback for a first-ever load.
+      (function () {
+        try {
+          var stored = localStorage.getItem('resolvedTheme');
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = stored === 'dark' || stored === 'light' ? stored : (dark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          /* storage unavailable — the stylesheet's media query still applies */
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/barcode-inventory/assets/index-llzh49GW.js"></script>
+    <link rel="modulepreload" crossorigin href="/barcode-inventory/assets/vendor-Dvwkxfce.js">
+    <link rel="stylesheet" crossorigin href="/barcode-inventory/assets/index-C0iJja_W.css">
+  <link rel="manifest" href="/barcode-inventory/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/barcode-inventory/registerSW.js"></script></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
