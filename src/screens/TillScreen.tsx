@@ -12,8 +12,8 @@ import { recordSale, undoLastSale, type SaleLineInput } from '@/services/saleSer
 export const UNDO_WINDOW_MS = 6000;
 
 /**
- * How long a barcode must be ABSENT from the frame before the same code counts
- * as a new scan.
+ * A barcode must be ABSENT from the frame for this long before the same code
+ * counts as a new scan.
  *
  * Presence, not a countdown: the viewfinder re-reads a code that is still in
  * frame every ~2s, and that gap varies with how long detection takes, so any
@@ -50,7 +50,8 @@ function toSaleLine(item: ScanCartItem): SaleLineInput {
  * subtracts stock, where receiving adds it.
  */
 export function TillScreen() {
-  const { items, addItem, removeItem, updateItem, clearCart, totalPrice, totalItems } = useScanCart();
+  const { items, addItem, removeItem, updateItem, clearCart, totalPrice, totalItems } =
+    useScanCart();
   const { toasts, showToast, dismissToast } = useToast();
 
   const [quickEntryBarcode, setQuickEntryBarcode] = useState<string | null>(null);
@@ -197,7 +198,9 @@ export function TillScreen() {
       // The Undo lives in the toast, which self-dismisses after the same window,
       // so no separate timer or state is needed to bound it.
       showToast('success', `Sale recorded ₱${sale.total.toFixed(2)}`, {
-        action: { label: 'Undo', onClick: () => { void undoRecordedSale(recordedSale); } },
+        action: { label: 'Undo', onClick: () => {
+          void undoRecordedSale(recordedSale);
+        } },
         durationMs: UNDO_WINDOW_MS,
       });
     } catch (err) {
@@ -216,11 +219,11 @@ export function TillScreen() {
   }
 
   return (
-      <div className="till-screen">
-        {/* The visual Till header was removed to reclaim vertical space; the page
-            still needs a programmatic heading for WCAG 1.3.1, so it is hidden. */}
-        <h1 className="sr-only">Point of Sale</h1>
-        <main className="till-main">
+    <div className="till-screen">
+      {/* The visual Till header was removed to reclaim vertical space; the page
+          still needs a programmatic heading for WCAG 1.3.1, so it is hidden. */}
+      <h1 className="sr-only">Point of Sale</h1>
+      <main className="till-main">
         <CameraViewfinder onScan={handleBarcode} onNoDetection={handleNoDetection} cameraActive />
 
         <section className="till-basket" aria-label="Customer basket">
@@ -276,18 +279,38 @@ export function TillScreen() {
         </section>
       </main>
 
-      <footer className="till-footer">
+      {/* The register bar — amber accent for the Sell layer only. */}
+      <footer
+        className="till-footer"
+        style={{
+          backgroundColor: 'var(--color-warning)',
+          color: 'var(--status-warning-text)',
+          borderTop: '1px solid rgba(242,169,0,0.25)',
+        }}
+      >
         <div className="till-total">
           <span className="till-total-label">
             {totalItems} item{totalItems === 1 ? '' : 's'}
           </span>
-          <span className="till-total-value">₱{totalPrice.toFixed(2)}</span>
+          <span
+            className="till-total-value text-3xl"
+            style={{ color: 'var(--status-warning-text)' }}
+          >
+            ₱{totalPrice.toFixed(2)}
+          </span>
         </div>
         <button
           type="button"
           className="till-paid"
           onClick={handlePaid}
           disabled={isEmpty || recording}
+          style={{
+            backgroundColor: 'var(--color-warning)',
+            color: 'var(--status-warning-text)',
+            boxShadow: 'none',
+            padding: 'var(--space-md) var(--space-lg)',
+            borderRadius: 'var(--radius-full)',
+          }}
         >
           {recording ? 'Recording…' : 'Paid'}
         </button>

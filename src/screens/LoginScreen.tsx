@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react';
+import { ScanLine } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 /**
@@ -7,6 +7,9 @@ import { useAuth } from '@/context/AuthContext';
  * db.cloud.userInteraction, which UserInteractionPrompt renders on top of this card.
  *
  * So this is only the entry point — one button, and whatever went wrong last time.
+ *
+ * Apple-inspired brand mark: a clean, centered barcode lockup with the brand name in
+ * display type + supporting line. Replaces the flat Mail icon from the previous design.
  */
 export function LoginScreen() {
   const { cloudLogin, cloudError } = useAuth();
@@ -14,13 +17,18 @@ export function LoginScreen() {
   return (
     <div className="screen-center" data-testid="screen-center">
       <div className="login-card">
+        {/* Apple-inspired barcode brand mark: clean, centered lockup with the brand name in display type + supporting line */}
         <div className="login-logo">
-          <Mail size={40} />
+          <div className="brand-mark">
+            <ScanLine size={28} className="brand-mark-glyph" />
+            <span className="brand-mark-name">Bar</span>
+            <span className="brand-mark-name">Inv</span>
+          </div>
         </div>
 
-        <h1>Inventory</h1>
+        <h1>Barcode Inventory</h1>
         <p className="login-subtitle">
-          Sign in to keep your inventory in sync across your phones
+          Scan barcodes, track inventory, get expiry notifications
         </p>
 
         <div className="login-form">
@@ -52,6 +60,28 @@ export function LoginScreen() {
           </p>
         )}
       </div>
+
+      <style>{`
+        .brand-mark {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-sm);
+          color: var(--color-primary);
+        }
+        .brand-mark-glyph {
+          display: block;
+          color: var(--color-accent);
+        }
+        .brand-mark-name {
+          font-family: var(--font-sans);
+          font-weight: 700;
+          font-size: var(--text-2xl);
+          letter-spacing: -0.03em;
+          color: var(--color-foreground);
+          line-height: 1.1;
+        }
+      `}</style>
     </div>
   );
 }

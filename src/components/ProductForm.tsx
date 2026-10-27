@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { Plus, Minus } from 'lucide-react';
-import { FormField } from './FormField';
 
 export interface ProductFormData {
   name: string;
@@ -87,11 +86,36 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="form-stack">
+      <style>{`
+        /* 2px hairline focus ring on form inputs (no shadow blob) */
+        .form-input:focus,
+        .form-currency-input:focus,
+        .form-stepper-input:focus {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+          box-shadow: none;
+        }
+      `}</style>
+
       {/* Product Name */}
-      <FormField id="product-name" label="Product Name" error={validationErrors.name}>
+      <div className="form-field">
+        <label
+          htmlFor="product-name"
+          style={{
+            display: 'block',
+            fontSize: '17px',
+            fontWeight: 600,
+            color: 'var(--color-foreground)',
+            marginBottom: '4px',
+          }}
+        >
+          Product Name
+        </label>
         <input
           id="product-name"
-          ref={(el) => { fieldRefs.current.name = el; }}
+          ref={(el) => {
+            fieldRefs.current.name = el;
+          }}
           type="text"
           value={formData.name}
           onChange={(e) => updateField('name', e.target.value)}
@@ -100,10 +124,27 @@ export function ProductForm({
           aria-invalid={!!validationErrors.name}
           aria-describedby={validationErrors.name ? getErrorId('name') : undefined}
         />
-      </FormField>
+        {validationErrors.name && (
+          <span id={getErrorId('name')} className="form-error" role="alert">
+            {validationErrors.name}
+          </span>
+        )}
+      </div>
 
       {/* Brand */}
-      <FormField id="product-brand" label="Brand">
+      <div className="form-field">
+        <label
+          htmlFor="product-brand"
+          style={{
+            display: 'block',
+            fontSize: '17px',
+            fontWeight: 600,
+            color: 'var(--color-foreground)',
+            marginBottom: '4px',
+          }}
+        >
+          Brand
+        </label>
         <input
           id="product-brand"
           type="text"
@@ -112,15 +153,29 @@ export function ProductForm({
           placeholder="Enter brand"
           className="form-input"
         />
-      </FormField>
+      </div>
 
       {/* Price */}
-      <FormField id="product-price" label="Price (₱)" error={validationErrors.price}>
+      <div className="form-field">
+        <label
+          htmlFor="product-price"
+          style={{
+            display: 'block',
+            fontSize: '17px',
+            fontWeight: 600,
+            color: 'var(--color-foreground)',
+            marginBottom: '4px',
+          }}
+        >
+          Price (₱)
+        </label>
         <div className="form-currency-wrap">
           <span className="form-currency-symbol">₱</span>
           <input
             id="product-price"
-            ref={(el) => { fieldRefs.current.price = el; }}
+            ref={(el) => {
+              fieldRefs.current.price = el;
+            }}
             type="text"
             inputMode="decimal"
             value={formData.price}
@@ -129,9 +184,10 @@ export function ProductForm({
               const sanitized = e.target.value.replace(/[^0-9.]/g, '');
               // Prevent multiple decimal points
               const parts = sanitized.split('.');
-              const cleaned = parts.length > 2
-                ? parts[0] + '.' + parts.slice(1).join('')
-                : sanitized;
+              const cleaned =
+                parts.length > 2
+                  ? parts[0] + '.' + parts.slice(1).join('')
+                  : sanitized;
               updateField('price', cleaned);
             }}
             placeholder="0.00"
@@ -140,13 +196,32 @@ export function ProductForm({
             aria-describedby={validationErrors.price ? getErrorId('price') : undefined}
           />
         </div>
-      </FormField>
+        {validationErrors.price && (
+          <span id={getErrorId('price')} className="form-error" role="alert">
+            {validationErrors.price}
+          </span>
+        )}
+      </div>
 
       {/* Expiry Date */}
-      <FormField id="product-expiry" label="Expiry Date (optional)" error={validationErrors.expiryDate}>
+      <div className="form-field">
+        <label
+          htmlFor="product-expiry"
+          style={{
+            display: 'block',
+            fontSize: '17px',
+            fontWeight: 600,
+            color: 'var(--color-foreground)',
+            marginBottom: '4px',
+          }}
+        >
+          Expiry Date
+        </label>
         <input
           id="product-expiry"
-          ref={(el) => { fieldRefs.current.expiryDate = el; }}
+          ref={(el) => {
+            fieldRefs.current.expiryDate = el;
+          }}
           type="date"
           value={formData.expiryDate}
           onChange={(e) => updateField('expiryDate', e.target.value)}
@@ -154,10 +229,27 @@ export function ProductForm({
           aria-invalid={!!validationErrors.expiryDate}
           aria-describedby={validationErrors.expiryDate ? getErrorId('expiryDate') : undefined}
         />
-      </FormField>
+        {validationErrors.expiryDate && (
+          <span id={getErrorId('expiryDate')} className="form-error" role="alert">
+            {validationErrors.expiryDate}
+          </span>
+        )}
+      </div>
 
       {/* Quantity */}
-      <FormField id="product-quantity" label="Quantity" error={validationErrors.quantity}>
+      <div className="form-field">
+        <label
+          htmlFor="product-quantity"
+          style={{
+            display: 'block',
+            fontSize: '17px',
+            fontWeight: 600,
+            color: 'var(--color-foreground)',
+            marginBottom: '4px',
+          }}
+        >
+          Quantity
+        </label>
         <div className="form-stepper">
           <button
             type="button"
@@ -170,7 +262,9 @@ export function ProductForm({
           </button>
           <input
             id="product-quantity"
-            ref={(el) => { fieldRefs.current.quantity = el; }}
+            ref={(el) => {
+              fieldRefs.current.quantity = el;
+            }}
             type="text"
             inputMode="numeric"
             value={formData.quantity}
@@ -195,7 +289,12 @@ export function ProductForm({
             <Plus size={20} />
           </button>
         </div>
-      </FormField>
+        {validationErrors.quantity && (
+          <span id={getErrorId('quantity')} className="form-error" role="alert">
+            {validationErrors.quantity}
+          </span>
+        )}
+      </div>
 
       {/* Error message */}
       {error && (
@@ -209,20 +308,14 @@ export function ProductForm({
       )}
 
       {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="form-submit"
-      >
+      <button type="submit" disabled={loading} className="form-submit">
         {loading ? (
           <>
             <span className="spinner-inline" />
             {isNewProduct ? 'Adding...' : 'Updating...'}
           </>
         ) : (
-          isNewProduct
-            ? 'Add to Inventory'
-            : 'Update Inventory'
+          isNewProduct ? 'Add to Inventory' : 'Update Inventory'
         )}
       </button>
     </form>

@@ -118,7 +118,7 @@ export function ConfirmDialog({
           id="confirm-body"
           style={{
             fontSize: '14px',
-            color: 'var(--color-muted-foreground)',
+            color: 'var(--color-foreground)',
             margin: '0 0 24px',
             lineHeight: 1.5,
           }}

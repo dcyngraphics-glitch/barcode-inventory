@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Info, Moon, Sun, Monitor, ExternalLink, AlertTriangle, HelpCircle, LogOut, UserRound } from 'lucide-react';
+import { Download, Trash2, Info, ExternalLink, AlertTriangle, HelpCircle, LogOut, UserRound, Settings as SettingsIcon } from 'lucide-react';
+import { SettingsToggle } from '@/components/SettingsToggle';
+import { SettingsStepper } from '@/components/SettingsStepper';
+import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 import type { Product, Batch } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { useSettings } from '@/hooks/useSettings';
@@ -10,25 +13,16 @@ import { useAuth } from '@/context/AuthContext';
 import { getAllProducts } from '@/services/catalogService';
 import { getAllBatches } from '@/services/inventoryService';
 import { getDB } from '@/db/database';
-import { SettingsToggle } from '@/components/SettingsToggle';
-import { SettingsStepper } from '@/components/SettingsStepper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Toast, useToast } from '@/components/Toast';
-import { AppModeSwitcher } from '@/components/AppModeSwitcher';
 
 type ThemeOption = 'auto' | 'light' | 'dark';
 
-const THEME_CYCLE: Record<ThemeOption, ThemeOption> = {
-  auto: 'light',
-  light: 'dark',
-  dark: 'auto',
-};
-
-const THEME_ICON: Record<ThemeOption, React.ReactNode> = {
-  auto: <Monitor size={18} aria-hidden="true" />,
-  light: <Sun size={18} aria-hidden="true" />,
-  dark: <Moon size={18} aria-hidden="true" />,
-};
+const THEMES: { value: ThemeOption; label: string }[] = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+];
 
 const THEME_LABEL: Record<ThemeOption, string> = {
   auto: 'Auto',
@@ -71,11 +65,13 @@ export function SettingsScreen() {
     [updateSettings]
   );
 
-  // Handle theme cycle
-  const handleThemeCycle = useCallback(() => {
-    const nextTheme = THEME_CYCLE[settings.theme];
-    updateSettings({ theme: nextTheme });
-  }, [settings, updateSettings]);
+  // Handle theme change (select one of auto / light / dark directly)
+  const handleThemeChange = useCallback(
+    (theme: ThemeOption) => {
+      updateSettings({ theme });
+    },
+    [updateSettings]
+  );
 
   // Handle export
   const handleExport = useCallback(async () => {
@@ -163,152 +159,181 @@ export function SettingsScreen() {
   const [permissionStatus] = useState<NotificationPermission>(() => getPermissionStatus());
 
   const permissionDenied = settings?.notificationsEnabled && permissionStatus === 'denied';
+
   return (
     <div className="settings-screen">
       {/* Header */}
-      <h1 className="settings-header">
-        Settings
-      </h1>
+      <header className="settings-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+          <SettingsIcon size={22} aria-hidden="true" />
+          <h1 className="settings-header-title">Settings</h1>
+        </div>
+      </header>
 
       {/* Notifications Section */}
-      <h2 className="settings-section-label">
-        Notifications
-      </h2>
-      <div className="settings-card settings-card-stack">
-        <SettingsToggle
-          enabled={settings.notificationsEnabled}
-          onChange={handleNotificationToggle}
-          label="Push Notifications"
-          description="Get notified when items are about to expire"
-        />
-        {permissionDenied && (
-          <div className="settings-warning">
-            <AlertTriangle size={16} aria-hidden="true" />
-            Notifications blocked by browser
-          </div>
-        )}
-        <SettingsStepper
-          value={settings.alertWindowDays}
-          onChange={handleAlertWindowChange}
-          min={1}
-          max={30}
-          disabled={!settings.notificationsEnabled}
-          label="Alert Window"
-          helperText="We'll notify you this many days before an item expires"
-        />
-      </div>
+      <section className="settings-section">
+        <h2 className="settings-section-label">Notifications</h2>
+        <div className="settings-card settings-card-stack">
+          <SettingsToggle
+            enabled={settings.notificationsEnabled}
+            onChange={handleNotificationToggle}
+            label="Push Notifications"
+            description="Get notified when items are about to expire"
+          />
+          {permissionDenied && (
+            <div className="settings-warning">
+              <AlertTriangle size={14} aria-hidden="true" />
+              Notifications blocked by browser
+            </div>
+          )}
+          <SettingsStepper
+            value={settings.alertWindowDays}
+            onChange={handleAlertWindowChange}
+            min={1}
+            max={30}
+            disabled={!settings.notificationsEnabled}
+            label="Alert Window"
+            helperText="We'll notify you this many days before an item expires"
+          />
+        </div>
+      </section>
 
       {/* Mode Section — Shop (receive and stock) or Sell (ring up sales at the till).
-          This used to be a sticky bar above every route; it lives in Settings now.
-          It reads ModeContext, not settings.cashierMode, so it is the live control. */}
-      <h2 className="settings-section-label">
-        Mode
-      </h2>
-      <div className="settings-card">
-        <AppModeSwitcher />
-      </div>
+          This reads ModeContext, not settings.cashierMode, so it is the live control. */}
+      <section className="settings-section">
+        <h2 className="settings-section-label">Mode</h2>
+        <div className="settings-card">
+          <AppModeSwitcher />
+        </div>
+      </section>
+
+      {/* Theme Section — plain list, two columns never clash */}
+      <section className="settings-section">
+        <h2 className="settings-section-label">Theme</h2>
+        <div className="settings-card">
+          {THEMES.map(({ value: theme }) => (
+            <button
+              key={theme}
+              type="button"
+              onClick={() => handleThemeChange(theme)}
+              className="settings-row"
+              style={
+                settings.theme === theme
+                  ? {
+                      backgroundColor: 'var(--color-accent-bg)',
+                      borderColor: 'var(--color-accent)',
+                      cursor: 'default',
+                      transition: 'background-color 200ms ease, border-color 200ms ease',
+                    }
+                  : {}
+              }
+            >
+              <span
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  backgroundColor: settings.theme === theme ? 'var(--color-accent)' : 'var(--color-muted)',
+                  transition: 'background-color 200ms ease',
+                }}
+              />
+              <span
+                style={{
+                  color: settings.theme === theme ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
+                  fontWeight: settings.theme === theme ? 600 : 500,
+                  opacity: settings.theme === theme ? 1 : 0.75,
+                }}
+              >
+                {THEME_LABEL[theme]}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Data Section */}
-      <h2 className="settings-section-label">
-        Data
-      </h2>
-      <div className="settings-card settings-card-stack-sm">
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          className="settings-row"
-        >
-          <Download size={20} aria-hidden="true" />
-          {exporting ? 'Exporting...' : 'Export as JSON'}
-        </button>
-        <button
-          onClick={() => setShowClearDialog(true)}
-          className="settings-row settings-row-danger"
-        >
-          <Trash2 size={20} aria-hidden="true" />
-          Delete Everything
-        </button>
-      </div>
-
-      {/* Appearance Section */}
-      <h2 className="settings-section-label">
-        Appearance
-      </h2>
-      <div className="settings-card">
-        <button
-          onClick={handleThemeCycle}
-          className="settings-row"
-        >
-          {THEME_ICON[settings.theme]}
-          <span>Theme: {THEME_LABEL[settings.theme]}</span>
-        </button>
-      </div>
+      <section className="settings-section">
+        <h2 className="settings-section-label">Data</h2>
+        <div className="settings-card settings-card-stack-sm">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="settings-row"
+          >
+            <Download size={20} aria-hidden="true" />
+            {exporting ? 'Exporting...' : 'Export as JSON'}
+          </button>
+          <button
+            onClick={() => setShowClearDialog(true)}
+            className="settings-row settings-row-danger"
+          >
+            <Trash2 size={20} aria-hidden="true" />
+            Delete Everything
+          </button>
+        </div>
+      </section>
 
       {/* About Section */}
-      <h2 className="settings-section-label">
-        About
-      </h2>
-      <div className="settings-card settings-card-stack-sm">
-        <div className="settings-info-header">
-          <Info size={20} className="text-muted" aria-hidden="true" />
-          <div>
-            <div className="settings-info-name">
-              Barcode Inventory
-            </div>
-            <div className="settings-info-version">
-              Version 1.0.0
+      <section className="settings-section">
+        <h2 className="settings-section-label">About</h2>
+        <div className="settings-card settings-card-stack-sm">
+          <div className="settings-info-header">
+            <Info size={20} className="text-muted" aria-hidden="true" />
+            <div>
+              <div className="settings-info-name">Barcode Inventory</div>
+              <div className="settings-info-version">Version 1.0.0</div>
             </div>
           </div>
+          <a
+            href="https://github.com/dcyngraphics-glitch/barcode-inventory"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="settings-info-row"
+          >
+            <ExternalLink size={20} aria-hidden="true" />
+            View on GitHub
+          </a>
+          <a
+            href="https://github.com/dcyngraphics-glitch/barcode-inventory#license"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="settings-info-row"
+          >
+            <ExternalLink size={20} aria-hidden="true" />
+            Licenses
+          </a>
+          <button
+            onClick={handleReplayTutorial}
+            className="settings-row"
+          >
+            <HelpCircle size={20} aria-hidden="true" />
+            Replay Tutorial
+          </button>
         </div>
-        <a
-          href="https://github.com/dcyngraphics-glitch/barcode-inventory"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="settings-info-row"
-        >
-          <ExternalLink size={20} aria-hidden="true" />
-          View on GitHub
-        </a>
-        <a
-          href="https://github.com/dcyngraphics-glitch/barcode-inventory#license"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="settings-info-row"
-        >
-          <ExternalLink size={20} aria-hidden="true" />
-          Licenses
-        </a>
-        <button
-          onClick={handleReplayTutorial}
-          className="settings-row"
-        >
-          <HelpCircle size={20} aria-hidden="true" />
-          Replay Tutorial
-        </button>
-      </div>
+      </section>
 
-      {/* Security Section */}
-      <h2 className="settings-section-label">
-        Security
-      </h2>
-      <div className="settings-card settings-card-stack">
-        <button
-          onClick={handleLogout}
-          className="settings-row settings-row-danger"
-        >
-          <LogOut size={20} aria-hidden="true" />
-          Log Out
-        </button>
-        <div className="settings-row">
-          <UserRound size={20} aria-hidden="true" />
-          <div className="flex-1">
-            <div className="settings-info-name">Signed in</div>
-            <div className="settings-info-version">
-              Your inventory syncs to this account on every device you sign in to.
+      {/* Security Section — account indicator + sign out */}
+      <section className="settings-section">
+        <h2 className="settings-section-label">Security</h2>
+        <div className="settings-card settings-card-stack-sm">
+          <button
+            onClick={handleLogout}
+            className="settings-row settings-row-danger"
+          >
+            <LogOut size={20} aria-hidden="true" />
+            Log Out
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+            <UserRound size={20} aria-hidden="true" />
+            <div style={{ flex: 1 }}>
+              <div className="settings-info-name">Signed in</div>
+              <div className="settings-info-version">
+                Your inventory syncs to this account on every device you sign in to.
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Clear data confirmation dialog */}
       <ConfirmDialog

@@ -73,6 +73,7 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
 
   return (
     <div
+      className="quick-entry-modal"
       style={{
         position: 'fixed',
         inset: 0,
@@ -101,8 +102,23 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
           boxShadow: '0 20px 25px rgba(0,0,0,0.1)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 id="quick-entry-title" style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--color-foreground)' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}
+        >
+          <h3
+            id="quick-entry-title"
+            style={{
+              margin: 0,
+              fontSize: '16px',
+              fontWeight: 600,
+              color: 'var(--color-foreground)',
+            }}
+          >
             Quick Entry
           </h3>
           <button
@@ -122,7 +138,14 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
           </button>
         </div>
 
-        <p style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginBottom: '16px', fontFamily: 'monospace' }}>
+        <p
+          style={{
+            fontSize: '12px',
+            color: 'var(--color-muted-foreground)',
+            marginBottom: '16px',
+            fontFamily: 'monospace',
+          }}
+        >
           {barcode}
         </p>
 
@@ -130,7 +153,13 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
         <div style={{ marginBottom: '12px' }}>
           <label
             htmlFor="quick-entry-name"
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--color-secondary)',
+              marginBottom: '4px',
+            }}
           >
             Product name
           </label>
@@ -149,12 +178,18 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
               border: `1.5px solid ${nameError ? 'var(--color-destructive)' : 'var(--color-border)'}`,
               borderRadius: '8px',
               fontSize: '16px',
-              outline: 'none',
               boxSizing: 'border-box',
             }}
           />
           {nameError && (
-            <span style={{ fontSize: '12px', color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
+            <span
+              style={{
+                fontSize: '12px',
+                color: 'var(--color-destructive)',
+                marginTop: '2px',
+                display: 'block',
+              }}
+            >
               {nameError}
             </span>
           )}
@@ -164,7 +199,13 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
         <div style={{ marginBottom: '12px' }}>
           <label
             htmlFor="quick-entry-brand"
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--color-secondary)',
+              marginBottom: '4px',
+            }}
           >
             Brand (optional)
           </label>
@@ -180,7 +221,6 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
               border: '1.5px solid var(--color-border)',
               borderRadius: '8px',
               fontSize: '16px',
-              outline: 'none',
               boxSizing: 'border-box',
             }}
           />
@@ -188,7 +228,13 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
 
         <div style={{ marginBottom: '12px' }}>
           <label
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--color-secondary)',
+              marginBottom: '4px',
+            }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <DollarSign size={14} /> Price (₱)
@@ -201,7 +247,8 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
             onChange={(e) => {
               const sanitized = e.target.value.replace(/[^0-9.]/g, '');
               const parts = sanitized.split('.');
-              const cleaned = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+              const cleaned =
+                parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
               setPrice(cleaned);
               setPriceError('');
             }}
@@ -212,12 +259,18 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
               border: `1.5px solid ${priceError ? 'var(--color-destructive)' : 'var(--color-border)'}`,
               borderRadius: '8px',
               fontSize: '16px',
-              outline: 'none',
               boxSizing: 'border-box',
             }}
           />
           {priceError && (
-            <span style={{ fontSize: '12px', color: 'var(--color-destructive)', marginTop: '2px', display: 'block' }}>
+            <span
+              style={{
+                fontSize: '12px',
+                color: 'var(--color-destructive)',
+                marginTop: '2px',
+                display: 'block',
+              }}
+            >
               {priceError}
             </span>
           )}
@@ -225,7 +278,13 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
 
         <div style={{ marginBottom: '20px' }}>
           <label
-            style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-secondary)', marginBottom: '4px' }}
+            style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--color-secondary)',
+              marginBottom: '4px',
+            }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <Calendar size={14} /> Expiry Date
@@ -241,11 +300,17 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
               border: '1.5px solid var(--color-border)',
               borderRadius: '8px',
               fontSize: '16px',
-              outline: 'none',
               boxSizing: 'border-box',
             }}
           />
-          <span style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginTop: '2px', display: 'block' }}>
+          <span
+            style={{
+              fontSize: '12px',
+              color: 'var(--color-muted-foreground)',
+              marginTop: '2px',
+              display: 'block',
+            }}
+          >
             Leave empty for 30 days from today
           </span>
         </div>
@@ -272,12 +337,12 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
             style={{
               flex: 1,
               padding: '12px',
-              background: 'var(--color-primary)',
+              background: 'var(--color-accent)',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 600,
-              color: 'var(--color-on-primary)',
+              color: 'var(--color-on-accent)',
               cursor: 'pointer',
             }}
           >
@@ -285,6 +350,14 @@ export function QuickEntryModal({ barcode, onSave, onCancel, triggerRef }: Quick
           </button>
         </div>
       </div>
+
+      <style>{`
+        /* 2px hairline focus ring on system-style form inputs */
+        .quick-entry-modal input:focus {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+      `}</style>
     </div>
   );
 }

@@ -318,6 +318,16 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
 
     return (
       <div className="camera-viewfinder">
+      <style>{`
+        .camera-start-content { padding: var(--space-lg); gap: var(--space-sm); }
+        .camera-start-icon { color: var(--color-accent); }
+        .camera-start-title { font-size: var(--text-lg); font-weight: 600; color: var(--color-camera-text); margin: 0; }
+        .camera-start-desc { font-size: var(--text-sm); color: var(--color-camera-text-muted); margin: 0; line-height: 1.4; }
+        .camera-start-hint { font-size: var(--text-xs); color: var(--color-camera-hint); margin: 0; }
+        .camera-helper-text { font-size: var(--text-xs); color: var(--color-camera-hint); }
+        .camera-scan-line { height: 2px; background: var(--color-accent); opacity: 0.75; animation: scan-line-pulse 2s ease-in-out infinite; }
+        @keyframes scan-line-pulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+      `}</style>
         {/* Only render video when camera is active to avoid residual box artifact */}
         {cameraActive && (
           <video
@@ -380,9 +390,10 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
 
         {/* Helper text */}
         {cameraActive && !initializing && (
-          <p className="camera-helper-text">Point camera at barcode to scan automatically</p>
+          <p className="camera-helper-text">Point at a barcode to scan</p>
         )}
       </div>
+
     );
   }
 );

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Trash2 } from 'lucide-react';
 import type { Product } from '@/types';
-import { FormField } from './FormField';
 
 interface ProductManagementSheetProps {
   open: boolean;
@@ -10,18 +9,6 @@ interface ProductManagementSheetProps {
   onSave: (product: Product) => Promise<void>;
   onDelete: (barcode: string) => Promise<void>;
 }
-
-const inputStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  border: '1px solid var(--color-border)',
-  borderRadius: '8px',
-  fontSize: '16px',
-  fontFamily: 'Inter, sans-serif',
-  background: 'var(--color-card)',
-  color: 'var(--color-foreground)',
-  width: '100%',
-  boxSizing: 'border-box',
-};
 
 export function ProductManagementSheet({
   open,
@@ -157,13 +144,7 @@ export function ProductManagementSheet({
     }
   };
 
-  const getInputStyle = (field: string): React.CSSProperties => ({
-    ...inputStyle,
-    border: `1px solid ${validationErrors[field] ? 'var(--color-destructive)' : 'var(--color-border)'}`,
-  });
-
   const getErrorId = (field: string) => `edit-${field}-error`;
-
   return (
     <>
       {/* Backdrop */}
@@ -253,35 +234,79 @@ export function ProductManagementSheet({
           </button>
         </div>
 
-        {/* Form fields */}
+        {/* Form fields — system-style text fields: label above, 2px hairline focus ring, inline errors */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Product Name */}
-          <FormField id="edit-name" label="Product Name" error={validationErrors.name}>
+          <div className="form-field">
+            <label
+              htmlFor="edit-name"
+              style={{
+                display: 'block',
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                fontSize: '17px',
+                fontWeight: 600,
+                color: 'var(--color-foreground)',
+                marginBottom: '4px',
+              }}
+            >
+              Product Name
+            </label>
             <input
               id="edit-name"
               ref={firstFieldRef}
               type="text"
               value={formData.name}
               onChange={(e) => updateField('name', e.target.value)}
-              style={getInputStyle('name')}
+              className={`input${validationErrors.name ? ' input-error' : ''}`}
               aria-invalid={!!validationErrors.name}
               aria-describedby={validationErrors.name ? getErrorId('name') : undefined}
             />
-          </FormField>
+            {validationErrors.name && (
+              <span id={getErrorId('name')} className="form-error" role="alert">
+                {validationErrors.name}
+              </span>
+            )}
+          </div>
 
           {/* Brand */}
-          <FormField id="edit-brand" label="Brand">
+          <div className="form-field">
+            <label
+              htmlFor="edit-brand"
+              style={{
+                display: 'block',
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                fontSize: '17px',
+                fontWeight: 600,
+                color: 'var(--color-foreground)',
+                marginBottom: '4px',
+              }}
+            >
+              Brand
+            </label>
             <input
               id="edit-brand"
               type="text"
               value={formData.brand}
               onChange={(e) => updateField('brand', e.target.value)}
-              style={inputStyle}
+              className="input"
             />
-          </FormField>
+          </div>
 
           {/* Default Price */}
-          <FormField id="edit-price" label="Default Price (₱)" error={validationErrors.storePrice}>
+          <div className="form-field">
+            <label
+              htmlFor="edit-price"
+              style={{
+                display: 'block',
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                fontSize: '17px',
+                fontWeight: 600,
+                color: 'var(--color-foreground)',
+                marginBottom: '4px',
+              }}
+            >
+              Default Price (₱)
+            </label>
             <div style={{ position: 'relative' }}>
               <span
                 style={{
@@ -302,69 +327,43 @@ export function ProductManagementSheet({
                 inputMode="decimal"
                 value={formData.storePrice}
                 onChange={(e) => updateField('storePrice', parseFloat(e.target.value) || 0)}
-                style={{
-                  ...getInputStyle('storePrice'),
-                  paddingLeft: '36px',
-                }}
+                className={`input form-currency-input${validationErrors.storePrice ? ' input-error' : ''}`}
                 aria-invalid={!!validationErrors.storePrice}
                 aria-describedby={validationErrors.storePrice ? getErrorId('storePrice') : undefined}
               />
             </div>
-          </FormField>
+          </div>
 
           {/* Default Expiry */}
-          <FormField id="edit-expiry" label="Default Expiry" error={validationErrors.defaultExpiry}>
+          <div className="form-field">
+            <label
+              htmlFor="edit-expiry"
+              style={{
+                display: 'block',
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                fontSize: '17px',
+                fontWeight: 600,
+                color: 'var(--color-foreground)',
+                marginBottom: '4px',
+              }}
+            >
+              Default Expiry
+            </label>
             <input
               id="edit-expiry"
               type="date"
               value={formData.defaultExpiry}
               onChange={(e) => updateField('defaultExpiry', e.target.value)}
-              style={getInputStyle('defaultExpiry')}
+              className={`input${validationErrors.defaultExpiry ? ' input-error' : ''}`}
               aria-invalid={!!validationErrors.defaultExpiry}
               aria-describedby={validationErrors.defaultExpiry ? getErrorId('defaultExpiry') : undefined}
             />
-          </FormField>
-
-          {/* Error message */}
-          {error && (
-            <div
-              role="alert"
-              aria-live="polite"
-              style={{
-                padding: '12px 16px',
-                background: 'var(--color-error-bg)',
-                border: '1px solid var(--color-error-border)',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: 'var(--color-error-text)',
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            style={{
-              width: '100%',
-              background: 'var(--color-accent-border)',
-              color: 'var(--color-on-accent)',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              fontWeight: 600,
-              fontSize: '16px',
-              minHeight: '48px',
-              border: 'none',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              transition: 'opacity 200ms ease',
-            }}
-          >
-            {loading ? 'Saving...' : 'Save Changes'}
-          </button>
-
+            {validationErrors.defaultExpiry && (
+              <span id={getErrorId('defaultExpiry')} className="form-error" role="alert">
+                {validationErrors.defaultExpiry}
+              </span>
+            )}
+          </div>
           {/* Delete Button */}
           {!showDeleteConfirm ? (
             <button
@@ -374,7 +373,7 @@ export function ProductManagementSheet({
                 background: 'transparent',
                 color: 'var(--color-destructive)',
                 padding: '12px 24px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
                 fontWeight: 500,
                 fontSize: '14px',
                 minHeight: '44px',
@@ -452,13 +451,14 @@ export function ProductManagementSheet({
       </div>
 
       <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        /* 2px hairline focus ring on system-style form inputs (no shadow blob) */
+        .input:focus {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+          box-shadow: none;
         }
-        @keyframes slide-up {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
+        .input-error {
+          border-color: var(--color-destructive) !important;
         }
       `}</style>
     </>

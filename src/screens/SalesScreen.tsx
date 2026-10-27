@@ -153,8 +153,12 @@ export function SalesScreen() {
             ))}
         </div>
 
-        {/* Totals */}
-        <section className="sales-summary" aria-label={`Sales summary for ${formatDay(selectedDay)}`}>
+        {/* Totals — a calm, elevated summary card. */}
+        <section
+          className="sales-summary"
+          aria-label={`Sales summary for ${formatDay(selectedDay)}`}
+          style={{ boxShadow: 'var(--shadow-sm)' }}
+        >
           <span className="sales-summary-label">{formatDay(selectedDay)}</span>
           <span className="sales-summary-total">{peso(summary.total)}</span>
           <span className="sales-summary-meta">

@@ -371,10 +371,10 @@ export function ProductDetailScreen() {
                         {product.name}
                       </h2>
                       {(product.brand || product.category) && (
-                        <p className="product-hero-meta">
-                          {[product.brand].filter(Boolean).join(' · ')}
-                        </p>
-                      )}
+                                              <p className="product-hero-meta">
+                                                {[product.brand, product.category].filter(Boolean).join(' · ')}
+                                              </p>
+                                            )}
                     </>
                   )}
 

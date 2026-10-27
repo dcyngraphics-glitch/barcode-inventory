@@ -79,7 +79,11 @@ export default defineConfig({
       // as 404.html lets the app boot and route itself from any path.
       name: 'spa-404-fallback',
       closeBundle() {
-        fs.copyFileSync('dist/index.html', 'dist/404.html');
+        if (fs.existsSync('dist/index.html')) {
+          fs.copyFileSync('dist/index.html', 'dist/404.html');
+        } else {
+          console.warn('[spa-404-fallback] dist/index.html not found — skipping 404 fallback copy');
+        }
       },
     },
   ],

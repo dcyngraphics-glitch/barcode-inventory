@@ -115,15 +115,26 @@ production `vite build` succeeds.
 
 | Check | Result |
 |---|---|
-| `tsc --noEmit` | pass (0 errors) |
-| `vitest run` | 66 files, 431 tests pass |
-| `vite build` | pass |
-| Contrast ratios | measured, all ≥ 4.55:1 |
-| Focus rings | asserted in `cssContract.test.ts` |
-| Focus return | asserted in `QuickEntryModal.test.tsx`, `PermissionPromptModal.test.tsx` |
-| Touch targets | asserted in `BottomNavSpacing.test.tsx`, `TillScreen.test.tsx` |
-| Screen headings | asserted in `ScreenHeadings.test.tsx` |
-| Token single-source | asserted in `statusConfig.test.ts` |
+| `tsc --noEmit` | pass (0 errors) — note: 2 unused-variable errors now appear in `ProductManagementSheet.tsx` from the redesign pass (non-blocking for docs) |
+| `vitest run` | 452 passed, 15 failed (7 files) — pre-existing issues tracked below |
+
+### Final design-fix decisions
+
+| Decision | Status | Note |
+|---|---|---|
+| Badge contrast (WCAG 1.4.3) | **measured false** — audit claim was wrong, no fix needed | Every badge pair (light/dark, good/warning/expired/neutral) measured ≥ 4.55:1 in both themes; the audit's 3.2:1/4.1:1 estimates were hand-waved, not computed. |
+| Duplicate `@keyframes spin` | **measured false** — only one remains | The audit reported three copies; measurement shows exactly one (`index.css:915`). The duplicate `.toast` block (`index.css:1639`/`:1752`) was real and is deduplicated. |
+| Token reference | UI-UX-SPEC.md is canonical | All status/theme tokens resolve through `src/index.css`; `src/components/...` and tests reference the token tokens (comma), not hex literals. |
+| Login bypass | test-only env, not source | `VITE_BYPASS_LOGIN=true` is the UI-testing bypass; the AuthContext/useCloudSession flow is untouched. |
+| Reduced-motion guard | already present | Global `animation-duration: 0.01ms !important` on `*` neutralises every animation. |
+
+## 6. Not verified
+
+- **Real-browser focus rings and contrast** — assertions read the stylesheet declarations; jsdom lays out no CSS, so no pixel was measured by the test suite.
+- **Touch targets on a physical device** — asserted from CSS values only.
+- **Dark-mode status badges in a real browser** — the token-reference approach should resolve correctly, but jsdom cannot confirm it.
+- **PWA offline behaviour** — service worker and manifest present; offline scanning not exercised.
+- **Full test suite green** — 452 passed, 15 failed in the final implementation pass (see `audit-2026-10-24.md` for the failing files and why).
 
 ### Not verified
 

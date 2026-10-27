@@ -42,15 +42,23 @@ export function OfflineIndicator() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '8px',
-        padding: 'var(--space-sm) var(--space-md)',
-        background: 'var(--color-surface)',
-        color: 'var(--color-on-surface)',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-md)',
+        background: 'var(--color-card)',
+        color: 'var(--color-foreground)',
+        boxShadow: 'var(--shadow-sm)',
       }}
     >
       <WifiOff size={18} />
-      <span style={{ fontSize: 'var(--text-sm)' }}>You are offline — using local data.</span>
+      <span
+        style={{
+          color: 'var(--color-foreground)',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 600,
+        }}
+      >
+        Offline — using local data
+      </span>
     </div>
   );
 }

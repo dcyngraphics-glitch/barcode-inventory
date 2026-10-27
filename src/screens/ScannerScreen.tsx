@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, WifiOff, ShoppingCart } from 'lucide-react';
+import { ScanLine, WifiOff } from 'lucide-react';
 import { CameraViewfinder, type CameraViewfinderHandle } from '@/components/CameraViewfinder';
 import { QuickEntryModal, type QuickEntryData } from '@/components/QuickEntryModal';
 import { ModeSegmentedControl } from '@/components/ModeSegmentedControl';
@@ -277,7 +277,7 @@ useEffect(() => {
                         <h1 className="app-bar-title">Scan Product</h1>
                       </div>
 
-                      <div className="app-bar-row">
+                      <div className="app-bar-row app-bar-row--actions">
                         {/* Offline indicator */}
                         {!isOnline && (
                           <div
@@ -292,35 +292,10 @@ useEffect(() => {
                         )}
 
 
-                        {/* Scan method: Auto/Manual. This is the only gate on the FAB's
-                            triggerScan() — see isScanAllowed — so it cannot be dropped. */}
-                        <span
-                          data-testid="scan-mode-label"
-                          className="scanner-scan-label"
-                        >
-                          Scan
-                        </span>
                         <ModeSegmentedControl mode={scanMode} onChange={handleModeChange} className={modeAnimationClass} />
                       </div>
 
-                      <div className="app-bar-row app-bar-row--actions">
-                        {/* Cart Badge */}
-                        <button
-                          onClick={() => navigate('/cart')}
-                          className={`btn-ghost ${totalItems > 0 ? 'cart-badge-active' : ''}`}
-                          aria-label={`Cart with ${totalItems} item${totalItems === 1 ? '' : 's'}, ₱${totalPrice.toFixed(2)} total`}
-                        >
-                          <ShoppingCart size={18} />
-                          {totalItems > 0 && (
-                            <>
-                              <span>{totalItems}</span>
-                              <span className="text-xs opacity-70">
-                                ₱{totalPrice.toFixed(2)}
-                              </span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+
                     </header>
 
 {/* Main content */}
@@ -339,15 +314,19 @@ useEffect(() => {
       {/* Floating Scan Button — positioned above bottom nav */}
       <div className="scan-fab-container">
         <button
-          className={`scan-fab${processing ? ' scan-fab--processing' : ''}`}
+          className="scan-fab"
           onClick={handleScanClick}
           disabled={processing}
           aria-label="Scan barcode"
+          style={{
+            boxShadow:
+              '0 4px 14px rgba(0, 113, 224, 0.4), 0 0 0 4px rgba(0, 113, 224, 0.15)',
+          }}
         >
           {processing ? (
-            <span className="scan-fab-processing">
-              <span className="scan-fab-dot" />
-              Processing...
+            <span className="scan-processing">
+              <span className="scan-ring" aria-hidden="true" />
+              <span className="scan-counter">Scanning…</span>
             </span>
           ) : (
             <>
@@ -386,6 +365,40 @@ useEffect(() => {
           }}
         />
       )}
+
+      <style>{`
+        .scan-ring {
+          flex-shrink: 0;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 2px solid var(--color-accent);
+          border-top-color: var(--color-on-accent);
+          animation: pulse-ring 1.2s ease-in-out infinite;
+        }
+        .scan-counter {
+          font-size: var(--text-sm);
+          font-weight: 600;
+          color: var(--color-on-accent);
+        }
+        .scan-processing {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+        }
+        @keyframes pulse-ring {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.85); }
+        }
+        .scan-fab:hover {
+          box-shadow:
+            0 6px 20px rgba(0, 113, 224, 0.5),
+            0 0 0 6px rgba(0, 113, 224, 0.2);
+        }
+        .scan-fab:active {
+          box-shadow: 0 2px 8px rgba(0, 113, 224, 0.3);
+        }
+      `}</style>
     </div>
   );
 }
