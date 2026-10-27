@@ -40,13 +40,17 @@ export function LoginScreen() {
           created the first time you sign in.
         </p>
 
-        <p className="login-guest-hint">
-          <button type="button" className="login-guest-link">
-            Continue as guest
-          </button>{' '}
-          — skip sign-in for UI testing. Set <code className="code-inline">VITE_BYPASS_LOGIN=true</code>
-          in <code className="code-inline">.env</code>, then reload the dev server.
-        </p>
+        {/* Only meaningful when the bypass is actually on — otherwise it is a dead
+            button. Keeps the production sign-in gate down to the single CTA. */}
+        {import.meta.env.VITE_BYPASS_LOGIN === 'true' && (
+          <p className="login-guest-hint">
+            <button type="button" className="login-guest-link">
+              Continue as guest
+            </button>{' '}
+            — skip sign-in for UI testing. Set <code className="code-inline">VITE_BYPASS_LOGIN=true</code>
+            in <code className="code-inline">.env</code>, then reload the dev server.
+          </p>
+        )}
       </div>
     </div>
   );

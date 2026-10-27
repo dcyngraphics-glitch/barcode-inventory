@@ -24,8 +24,14 @@ describe('Sign-in Gate - First Run', () => {
   it('renders a single "Sign in with email" button', () => {
     renderLogin();
     const buttons = screen.getAllByRole('button');
+    // The gate's real contract is a single CTA. The "Continue as guest" button only
+    // renders when VITE_BYPASS_LOGIN is on (UI-testing bypass), so in the default
+    // environment there is exactly one button.
     expect(buttons).toHaveLength(1);
     expect(buttons[0]).toHaveTextContent(/sign in with email/i);
+    // The CTA is a plain onClick button (the form lives inside Dexie's OTP dialog),
+    // so it is type="button", not a form submit.
+    expect(buttons[0]).toHaveAttribute('type', 'button');
   });
 
   it('shows no error initially', () => {

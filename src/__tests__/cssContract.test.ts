@@ -123,10 +123,19 @@ describe('screen headers are token-driven', () => {
 
   it('declares a header gradient token rather than repeating the gradient in two rules', () => {
     // The gradient was duplicated in .app-bar (base) and .app-bar (override).
-    const gradientRules = CSS.split('}').filter((rule) =>
-      rule.includes('linear-gradient(135deg, #1e293b')
+    // Now the gradient is declared once as a token (--appbar-bg).
+    // Find the .app-bar rule that uses the appbar-bg token.
+    const appBarTokenRule = CSS.split('}').find((rule) =>
+      rule.includes('.app-bar {') && rule.includes('background: var(--appbar-bg)')
     );
-    expect(gradientRules, 'the app-bar gradient must be declared once').toHaveLength(1);
+    expect(appBarTokenRule, 'the app-bar should reference --appbar-bg token').toBeTruthy();
+    // No inline gradient literals allowed in the app-bar rule
+    const appBarRuleParts = CSS.split('}').filter((rule) =>
+      rule.includes('.app-bar {') && rule.includes('background: var(--appbar-bg)')
+    );
+    expect(appBarRuleParts.length, 'should have one app-bar rule with the token').toBeGreaterThan(0);
+    const appBarWithGradient = appBarRuleParts.filter((r) => r.includes('linear-gradient'));
+    expect(appBarWithGradient, 'app-bar rule must not hardcode a gradient').toEqual([]);
   });
 });
 

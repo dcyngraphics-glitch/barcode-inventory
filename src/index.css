@@ -9,18 +9,18 @@
      PRIMARY PALETTE — Apple-inspired: warm paper, near-black, Apple blue CTA
      ====================================================================== */
   --color-primary: #1d1d1f;           /* Near-black — primary text/accents */
-  --color-on-primary: #ffffff;        /* On primary — for buttons */
+  --color-on-primary: #ffffff;  /* Text on a primary fill (inverted surface) */
   --color-secondary: #595959;         /* Medium grey — secondary text */
   --color-on-secondary: #ffffff;
   --color-accent: #0071e0;            /* Apple blue — CTA, highlights */
-  --color-accent-text: #0071e0;       /* Apple blue — text on light bg */
+  --color-accent-text: #0066cc;  /* Apple blue (darkened) — 5.1:1 on page bg */
   --color-accent-border: #0077ed;     /* Apple blue — borders on light bg */
   --color-accent-border-rgb: 0, 113, 224;
   --color-accent-bg: #e8f4fe;         /* Light blue wash for accents */
   --color-on-accent: #ffffff;         /* On accent — white text on accent */
-  --color-primary-bg: #ffffff;        /* White bg for buttons/cards in light */
+  --color-primary-bg: #1d1d1f;  /* Primary fill — near-black button in light */
   --color-on-accent-hover: #0063c1;   /* Apple blue hover */
-  --color-destructive: #d63638;       /* Apple red — destructive, errors */
+  --color-destructive: #c92a2a;  /* Red — error text, 5.0:1 on page bg */
   --color-destructive-bg: #d63638;    /* Red — destructive button bg */
   --color-on-destructive: #ffffff;    /* On destructive — white text */
 
@@ -32,10 +32,11 @@
   --color-card: #ffffff;              /* White card surfaces */
   --color-card-foreground: #1d1d1f;   /* Text on cards */
   --color-muted: #e8e8ed;             /* Subtle divider/background */
-  --color-muted-foreground: #767676;  /* Secondary text, placeholders */
-  --color-border: #d2d2d7;            /* Hairline — input borders, separators */
+  --color-muted-foreground: #5f5f5f;  /* Secondary text, placeholders */
+  --color-border: #86868b;  /* Hairline — 3:1 vs card and page bg */
   --color-header: #1d1d1f;            /* Screen headers (till/sales), near-black */
-  --appbar-bg: #1d1d1f;               /* App bar — near-black (dark mode style) */
+  --appbar-bg: #1d1d1f;  /* App bar — near-black (dark mode style) */
+  --color-on-appbar: #ffffff;         /* Text/icons on the app bar */
   --cta-bg: #0071e0;                  /* Apple blue CTA — primary button */
   --color-border-focus: #0071e0;      /* Focus ring color */
   --color-focus: #0071e0;             /* Focus ring color (alias for border-focus) */
@@ -48,14 +49,14 @@
   --color-expired: #d63638;           /* Red — expired items */
 
   /* Status badge backgrounds (with lower-opacity backgrounds) */
-  --status-good-bg: #dcf5f9;          /* Very light blue */
-  --status-good-text: #0071e0;        /* Apple blue text */
-  --status-warning-bg: #fdf0d5;       /* Very light amber */
-  --status-warning-text: #b87f00;     /* Dark amber text */
-  --status-expired-bg: #fdecea;       /* Very light red */
-  --status-expired-text: #d63638;     /* Red text */
+  --status-good-bg: #d0eaf7;          /* Very light blue */
+  --status-good-text: #0a5cc4;  /* Blue — 5.0:1 on its own badge bg */
+  --status-warning-bg: #f8e08a;       /* Very light amber */
+  --status-warning-text: #7a5200;  /* Amber — 5.3:1 on its own badge bg */
+  --status-expired-bg: #fbdcd6;       /* Very light red */
+  --status-expired-text: #b3261e;  /* Red — 5.1:1 on its own badge bg */
   --status-neutral-bg: #f5f5f7;       /* Neutral paper */
-  --status-neutral-text: #767676;     /* Muted grey */
+  --status-neutral-text: #6b6b70;  /* Muted grey — 4.9:1 on its own badge bg */
 
   /* ======================================================================
      ERROR / DESTRUCTIVE
@@ -68,7 +69,8 @@
      CAMERA / SCANNER — Specialized scanner colors
      ====================================================================== */
   --color-camera-bg: #000000;         /* Camera viewfinder background */
-  --color-camera-surface: #1a1a1b;    /* Slightly lighter than bg */
+  --color-camera-surface: #1a1a1b;  /* Slightly lighter than bg */
+  --color-camera-text: #f5f5f7;       /* Primary text on camera surfaces (always dark) */
   --color-camera-overlay: rgba(0, 0, 0, 0.85);  /* Start overlay backdrop */
   --color-camera-error-overlay: rgba(0, 0, 0, 0.65);
   --color-camera-text-muted: #a8a8a8; /* Muted text on camera (light) */
@@ -158,10 +160,10 @@
   --color-card-foreground: #f5f5f7;    /* Warm white text on cards */
   --color-muted: #2d2d2f;              /* Dark muted divider */
   --color-muted-foreground: #989898;   /* Muted text on dark */
-  --color-border: #2d2d2f;             /* Hairline border in dark */
+  --color-border: #7a7a7e;  /* Hairline — 3:1 vs card, bg and muted */
   --color-header: #f5f5f7;             /* Screen headers, warm white */
   --color-primary: #989898;            /* Muted grey for primary text */
-  --color-primary-bg: #2d2d2f;         /* Dark bg for buttons/cards */
+  --color-primary-bg: #f5f5f7;  /* Primary fill — light button in dark */
   --color-on-primary: #000000;         /* On primary — near-black text (inverted) */
   --color-secondary: #767676;          /* Muted grey */
   --color-on-secondary: #000000;
@@ -176,7 +178,7 @@
   --color-on-destructive: #ffffff;
 
   --status-good-bg: #1a2a3a;
-  --status-good-text: #3b82f0;
+  --status-good-text: #79b0f7;  /* Blue — 6.5:1 on its own badge bg */
   --status-warning-bg: #4a3f00;
   --status-warning-text: #f2a900;
   --status-expired-bg: #4a0a0a;
@@ -190,6 +192,7 @@
 
   --color-camera-bg: #000000;
   --color-camera-surface: #151516;
+  --color-camera-text: #f5f5f7;
   --color-camera-overlay: rgba(0, 0, 0, 0.9);
   --color-camera-error-overlay: rgba(0, 0, 0, 0.7);
   --color-camera-text-muted: #989898;
@@ -198,6 +201,7 @@
   --color-scan-line: #3b82f0;
 
   --appbar-bg: #000000;
+  --color-on-appbar: #f5f5f7;
   --cta-bg: #0071e0;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -216,10 +220,10 @@
     --color-card-foreground: #f5f5f7;
     --color-muted: #2d2d2f;
     --color-muted-foreground: #989898;
-    --color-border: #2d2d2f;
+    --color-border: #7a7a7e;  /* Hairline — 3:1 vs card, bg and muted */
     --color-header: #f5f5f7;
     --color-primary: #989898;
-    --color-primary-bg: #2d2d2f;
+    --color-primary-bg: #f5f5f7;  /* Primary fill — light button in dark */
     --color-on-primary: #000000;
     --color-secondary: #767676;
     --color-on-secondary: #000000;
@@ -234,7 +238,7 @@
     --color-on-destructive: #ffffff;
 
     --status-good-bg: #1a2a3a;
-    --status-good-text: #3b82f0;
+    --status-good-text: #79b0f7;  /* Blue — 6.5:1 on its own badge bg */
     --status-warning-bg: #4a3f00;
     --status-warning-text: #f2a900;
     --status-expired-bg: #4a0a0a;
@@ -248,6 +252,7 @@
 
     --color-camera-bg: #000000;
     --color-camera-surface: #151516;
+    --color-camera-text: #f5f5f7;
     --color-camera-overlay: rgba(0, 0, 0, 0.9);
     --color-camera-error-overlay: rgba(0, 0, 0, 0.7);
     --color-camera-text-muted: #989898;
@@ -256,6 +261,7 @@
     --color-scan-line: #3b82f0;
 
     --appbar-bg: #000000;
+    --color-on-appbar: #f5f5f7;
     --cta-bg: #0071e0;
 
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -634,7 +640,7 @@ ol {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-on-primary);
+  color: var(--color-camera-text);
   opacity: 0.7;
 }
 
@@ -677,7 +683,7 @@ ol {
 }
 
 .filter-chip-active {
-  background: var(--color-primary);
+  background: var(--color-primary-bg);
   color: var(--color-on-primary);
 }
 
@@ -760,8 +766,8 @@ ol {
   gap: var(--space-sm);
   height: var(--appbar-height);
   padding: 0 var(--space-md);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-on-appbar);
   padding-top: env(safe-area-inset-top, 0px);
 }
 
@@ -786,7 +792,7 @@ ol {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  color: var(--color-on-primary);
+  color: var(--color-on-appbar);
   cursor: pointer;
   border-radius: var(--radius-md);
   transition: opacity var(--transition-fast);
@@ -824,7 +830,7 @@ ol {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 8px;
   color: var(--color-muted-foreground);
   cursor: pointer;
   transition: color var(--transition-fast), background var(--transition-fast);
@@ -967,7 +973,7 @@ ol {
   border: 0;
   border-radius: var(--radius-full);
   background: transparent;
-  color: var(--color-on-primary);
+  color: var(--color-camera-text);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -1204,7 +1210,7 @@ ol {
 }
 
 .camera-error-icon {
-  color: var(--color-muted-foreground);
+  color: var(--color-camera-text-muted);
 }
 
 .camera-error-text {
@@ -1212,7 +1218,7 @@ ol {
 }
 
 .camera-error-title {
-  color: var(--color-on-primary);
+  color: var(--color-camera-text);
   font-weight: 500;
   margin-bottom: var(--space-sm);
 }
@@ -1223,7 +1229,7 @@ ol {
 }
 
 .camera-retry-btn {
-  background: var(--color-primary);
+  background: var(--color-primary-bg);
   color: var(--color-on-primary);
   padding: 12px 24px;
   border-radius: var(--radius-md);
@@ -1408,11 +1414,11 @@ ol {
      text-align: center;
    }
    .camera-start-icon {
-     color: var(--color-on-primary);
+     color: var(--color-camera-text);
      opacity: 0.9;
    }
    .camera-start-title {
-     color: var(--color-on-primary);
+     color: var(--color-camera-text);
      font-size: 20px;
      font-weight: 600;
      margin: 0;
@@ -1983,7 +1989,7 @@ ol {
   top: 0;
   z-index: var(--z-toast);
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-primary);
+  background: var(--color-primary-bg);
   color: var(--color-on-primary);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -2072,7 +2078,8 @@ ol {
 }
 
 .scan-fab--processing {
-  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+  color: #ffffff;
   box-shadow:
     0 4px 14px rgba(100, 116, 139, 0.4),
     0 0 0 4px rgba(100, 116, 139, 0.15);
@@ -2954,7 +2961,7 @@ select {
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-bg);
   color: var(--color-on-primary);
 }
 
@@ -3133,7 +3140,7 @@ select {
   border: 2px solid var(--color-primary);
 }
 .install-banner-button-close:hover:not(:disabled) {
-  background: var(--color-primary);
+  background: var(--color-primary-bg);
   color: var(--color-on-primary);
 }
 /* Permission prompt modal overlay */
@@ -3193,7 +3200,7 @@ select {
   color: var(--color-foreground);
 }
 .permission-prompt-modal-button-deny:hover:not(:disabled) {
-  background: var(--color-primary);
+  background: var(--color-primary-bg);
   color: var(--color-on-primary);
 }
 
@@ -3283,7 +3290,7 @@ select {
 }
 
 .mode-toggle[aria-checked="false"] .mode-toggle-label--auto {
-  color: var(--color-on-primary);
+  color: var(--color-foreground);
   opacity: 0;
 }
 
@@ -3298,7 +3305,7 @@ select {
 
 .mode-toggle[aria-checked="true"] .mode-toggle-label--auto {
   opacity: 1;
-  color: var(--color-on-primary);
+  color: var(--color-foreground);
 }
 
 .mode-toggle-icon {
