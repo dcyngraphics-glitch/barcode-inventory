@@ -36,15 +36,21 @@ export const CameraViewfinder = forwardRef<CameraViewfinderHandle, CameraViewfin
       onNoDetectionRef.current = onNoDetection;
     }, [onScan, onNoDetection]);
 
-    // Respond to cameraActive prop changes from parent
+    // Respond to cameraActive prop changes from parent.
+    //
+    // NOTE: we key on strict equality (`=== true` / `=== false`) rather than on
+    // truthiness, because the props default to `undefined` when the parent does
+    // not pass them. If we keyed on truthiness, the `else if` branch would fire
+    // whenever the permission read set `cameraActive` to `true` and `cameraActiveProp`
+    // was `undefined` — silently turning the camera off after an auto-start.
     useEffect(() => {
-      if (cameraActiveProp && !cameraActive) {
+      if (cameraActiveProp === true && !cameraActive) {
         setCameraActive(true);
         setInitializing(true);
-      } else if (!cameraActiveProp && cameraActive) {
+      } else if (cameraActiveProp === false && cameraActive) {
         setCameraActive(false);
       }
-    }, [cameraActiveProp]);
+    }, [cameraActive, cameraActiveProp]);
 
     /**
      * Re-read the camera permission from the browser.

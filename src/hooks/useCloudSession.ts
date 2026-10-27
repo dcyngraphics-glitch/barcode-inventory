@@ -37,23 +37,22 @@ export function useCloudSession(): CloudSession {
     error: null,
   });
 
-  // Bypass mode: treat guest as signed in immediately so the UI can be tested
-  // without an account. The real auth flow (useCloudSession + dexie.ts) is
-  // untouched — this only short-circuits the gate for testing.
-  if (import.meta.env.VITE_BYPASS_LOGIN === 'true') {
-    setSession({ isLoading: false, isLoggedIn: true, email: null, error: null });
-    return session;
-  }
+  // Bypass mode: the gate short-circuits for testing without an account. We
+  // cannot return early here — React Hooks must be called in the exact same
+  // order on every render — so the decision is deferred into the effects
+  // below, which become no-ops for a bypassed session.
+  const isBypassed = import.meta.env.VITE_BYPASS_LOGIN === 'true';
 
   useEffect(() => {
+    if (isBypassed) {
+      setSession({ isLoading: false, isLoggedIn: true, email: null, error: null });
+      return;
+    }
+
     let cancelled = false;
 
-    // Dexie Cloud publishes the persisted session on Dexie's 'ready' event, so the
-    // database has to be OPENED before we can know who is signed in — and this hook is
-    // what renders before the app does, so nothing else opens it this early. Without
-    // this the gate waits on isLoading forever and the app sits on the splash screen.
-    // (Found by loading the built app; the unit tests could not catch it because they
-    // stub db.cloud and never exercise the addon's ready hook.)
+    // Open the database so the persisted session is available. Without this the
+    // gate waits on isLoading forever and the app sits on the splash screen.
     Promise.resolve((db as any).open?.()).then(() => {
       if (cancelled) return;
       // DB opened successfully: settle isLoading so the app can leave the splash
@@ -78,6 +77,8 @@ export function useCloudSession(): CloudSession {
   }, []);
 
   useEffect(() => {
+    if (isBypassed) return;
+
     if (!cloud?.currentUser?.subscribe) {
       // No addon — tests, or a build where configure() never ran. Settle as signed out
       // rather than hanging on isLoading and pinning the app on the splash screen.

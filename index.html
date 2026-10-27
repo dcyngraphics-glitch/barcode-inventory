@@ -15,13 +15,16 @@
     <meta name="apple-mobile-web-app-title" content="BarInv" />
     <meta name="color-scheme" content="dark light" />
 
-    <!-- Content-Security-Policy: tell the browser to block inline scripts/styles
-         and unsafe-eval. The theme-preload.js is referenced by src, so it's allowed.
-         NOTE: GitHub Pages & Vercel do not set custom CSP headers by default — this
-         meta tag only partial protection. For full protection, set these headers in
-         your hosting config (GitHub Pages: _config.yml; Vercel: headers field). -->
+    <!-- Content-Security-Policy. GitHub Pages and Vercel do not let us set response
+         headers without extra config, so this meta tag carries the policy; it is
+         partial protection only. frame-ancestors is deliberately omitted: the
+         directive is ignored when delivered via <meta> (browsers warn about it), and
+         clickjacking protection genuinely belongs in a real response header.
+         style-src must allow fonts.googleapis.com because src/index.css @imports the
+         Inter / SF Mono stylesheet; font-src must allow fonts.gstatic.com for the
+         font files that stylesheet points at. -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' https://world.openfoodfacts.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://zo7vbabeq.dexie.cloud https://world.openfoodfacts.org; frame-ancestors 'none';">
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' https://world.openfoodfacts.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://zo7vbabeq.dexie.cloud https://world.openfoodfacts.org;">
 
     <!-- 180x180 is the iOS home-screen size; the previous value (/icon-192.png)
          404'd because no such file existed, so iOS fell back to a screenshot. -->
@@ -31,6 +34,11 @@
          Content-Security-Policy without needing 'unsafe-inline' for scripts. -->
     <script src="/theme-preload.js" defer></script>
     <title>Barcode Inventory</title>
+  </head>
+  <body>
+    <!-- React mounts here. This element must exist in the production HTML: without
+         it createRoot(null) throws React error #299 and the page renders blank. -->
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -123,11 +123,12 @@ export function SettingsScreen() {
       await db.products.clear();
       await db.inventory.clear();
       await db.sales.clear();
-      // Reset settings to defaults, but keep `catalogSeeded: false` so the 506-row
+      // Reset settings to defaults, keeping `catalogSeeded: false` so the 506-row
       // demo catalog is NOT re-inserted on the next launch. The user was told
       // "All data cleared", and then getting the whole catalog back would be
       // silently undone.
-      const { catalogSeeded, ...settingsReset } = DEFAULT_SETTINGS;
+      const { ...settingsReset } = DEFAULT_SETTINGS;
+      settingsReset.catalogSeeded = false;
       updateSettings(settingsReset);
       setShowClearDialog(false);
       showToast('success', 'All data cleared');

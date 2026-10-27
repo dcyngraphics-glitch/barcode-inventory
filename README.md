@@ -10,7 +10,7 @@ A Progressive Web App (PWA) for scanning barcodes and managing personal inventor
 - **Store product catalog and inventory** locally using IndexedDB
 - **Track multiple batches** of the same product with FIFO sorting
 - **Expiry notifications** (configurable alert window, default 3 days)
-- **Two modes** — Shop (inventory management) and Sell (till/cashier), one tap apart
+- **Two primary modes** — Shop (inventory management) and Sell (till/cashier), one tap apart; a third **Cashier** mode (rapid scan-to-cart) is toggled in Settings for the scan-to-cart workflow.
 - **Works offline and is installable** on Android/iOS home screens (PWA, Workbox service worker)
 
 ## Sign-in (required)
@@ -32,7 +32,7 @@ or from Settings.
 | Mode | Purpose | Workflow |
 |------|---------|----------|
 | **Shop** (default) | Standard inventory management | Scan → Product Detail → Add to Inventory |
-| **Sell** | Rapid multi-item scanning (supermarket checkout) | Scan → Add to Cart → Keep Scanning → Review Cart → Save All |
+| **Cashier** | Rapid scan-to-cart (supermarket aisle) | Scan → Add to Cart → Keep Scanning → Review Cart → Save All |
 
 Switching out of Sell while items are in the basket asks first (Keep basket / Clear
 and switch) rather than discarding the basket silently.
@@ -53,16 +53,20 @@ App.tsx
 └── AuthProvider → AuthGate (splash / storage-error / login / MainApp)
     └── MainApp (catalog-seed gate)
         └── SettingsProvider → ModeProvider → TutorialProvider → ScanCartProvider
-            ├── AppRoutes ('/', '/product/:barcode', '/inventory', '/settings', '/cart', '/sales')
-            └── BottomNav (3 tabs in Shop, 4 in Sell)
+            ├── AppRoutes ('/', '/product/:barcode', '/inventory', '/settings', '/cart', '/sales', '/till')
+            │   ├── '/' → ScannerScreen (Shop) | TillScreen (Sell)
+            │   ├── '/product/:barcode' → ProductDetailScreen
+            │   ├── '/inventory' → InventoryScreen
+            │   ├── '/settings' → SettingsScreen
+            │   ├── '/cart' → CartReviewScreen
+            │   └── '/sales' → SalesScreen
+            └── BottomNav (3 tabs in Shop, 4 in Sell, 5 in Cashier)
 ```
 
 ## Files
 
-- `src/context/SettingsContext.tsx` — shared settings state via React Context
-- `src/context/ModeContext.tsx` — device-local Shop/Sell mode
-- `src/context/ScanCartContext.tsx` — cart state for Sell mode
 - `src/context/AuthContext.tsx` — sign-in actions (Dexie Cloud)
+- `src/context/SettingsContext.tsx` — shared settings state via React Context
 - `src/hooks/useCloudSession.ts` — the signed-in/out gate, with `db.open()` guard
 - `src/services/catalogService.ts` — CRUD for product catalog
 - `src/services/inventoryService.ts` — CRUD for batch inventory
@@ -95,16 +99,16 @@ existing rows are upserted, not duplicated.
 
 ## Deployment
 
-Deployed to GitHub Pages from `.github/workflows/deploy.yml` on every push to
-`master` (type-check + test + build, then `actions/deploy-pages`).
+Two deployments from one push to `master`:
 
-Two things make the Pages subpath work:
+| | GitHub Pages | Vercel |
+|---|---|---|
+| Trigger | Actions workflow (`deploy.yml`) | Vercel Git integration |
+| URL | `dcyngraphics-glitch.github.io/barcode-inventory/` | `barcode-inventory-beige.vercel.app` |
+| Build command | `npm run build` | `npm run build` |
+| Output | `dist` + `404.html` (SPA fallback) | `dist` |
 
-- `vite.config.ts` sets `base: '/barcode-inventory/'` for production builds and
-  `src/main.tsx` passes the matching `basename` to `BrowserRouter`.
-- A small `spa-404-fallback` plugin copies `dist/index.html` to `dist/404.html`.
-  GitHub Pages has no SPA fallback, so without it a hard reload on `/inventory`
-  would 404 instead of booting the app.
+`vite.config.ts` sets `base: '/barcode-inventory/'` for production builds and `src/main.tsx` passes the matching `basename` to `BrowserRouter` so the router matches the GitHub Pages subpath. GitHub Pages has no SPA fallback, so a hard reload on `/inventory` or `/sales` would 404 without the `spa-404-fallback` plugin copying `dist/index.html` → `dist/404.html`.
 
 ### PWA icons
 
@@ -120,7 +124,7 @@ python scripts/gen-icons.py
 
 ## Status
 
-463 tests passing · 0 type errors · build passing · CI runs type-check + test + build on push to master.
+467 tests passing · 0 type errors · build passing · CI runs type-check + test + build on push to master.
 
 ## License
 

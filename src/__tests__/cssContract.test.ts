@@ -168,7 +168,8 @@ describe('contrast — the pairs the pooled audit proved invisible', () => {
 describe('type floors', () => {
   it('raises --text-xs to the 12px floor', () => {
     const tokens = resolveThemeTokens('light');
-    expect(toNumber('--text-xs' ? tokens['--text-xs']! : '', tokens)).toBeGreaterThanOrEqual(12);
+    expect(tokens['--text-xs']).toBeDefined();
+    expect(toNumber(tokens['--text-xs']!, tokens)).toBeGreaterThanOrEqual(12);
   });
 
   it('declares no font-size below 12px anywhere in the stylesheet', () => {
