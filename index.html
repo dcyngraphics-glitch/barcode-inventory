@@ -33,6 +33,13 @@
          theme on cold start. Kept as a separate file so the HTML can declare a
          Content-Security-Policy without needing 'unsafe-inline' for scripts. -->
     <script src="/theme-preload.js" defer></script>
+    <script>
+      // Force light theme on load so the app never renders as "blank black"
+      // when the device is in dark mode. Users can switch to dark theme in Settings.
+      try {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } catch (e) { /* ignore */ }
+    </script>
     <title>Barcode Inventory</title>
   </head>
   <body>
