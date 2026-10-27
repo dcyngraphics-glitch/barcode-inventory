@@ -796,21 +796,6 @@ ol {
 .app-bar-action:hover {
   opacity: 0.8;
 }
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  color: var(--color-on-primary);
-  cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: opacity var(--transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.app-bar-action:hover {
-  opacity: 0.8;
-}
 
 /* ==========================================================================
    BOTTOM NAVIGATION — Apple-style tab bar
