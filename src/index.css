@@ -20,7 +20,7 @@
   --color-on-accent: #ffffff;         /* On accent — white text on accent */
   --color-primary-bg: #1d1d1f;  /* Primary fill — near-black button in light */
   --color-on-accent-hover: #0063c1;   /* Apple blue hover */
-  --color-destructive: #c92a2a;  /* Red — error text, 5.0:1 on page bg */
+  --color-destructive: #ff3b30;  /* Red — destructive text, 4.5:1 on page bg */
   --color-destructive-bg: #d63638;    /* Red — destructive button bg */
   --color-on-destructive: #ffffff;    /* On destructive — white text */
 
@@ -174,7 +174,7 @@
   --color-accent-bg: #1a2a3a;           /* Dark blue wash                            */
   --color-on-accent: #ffffff;           /* White on accent                         */
   --color-on-accent-hover: #4d9aff;
-  --color-destructive: #ff6b6b;         /* Inverted destructive red                */
+  --color-destructive: #ff3b30;  /* Inverted destructive red */
   --color-destructive-bg: #d63638;
   --color-on-destructive: #ffffff;
 
@@ -234,7 +234,7 @@
     --color-accent-bg: #1a2a3a;
     --color-on-accent: #ffffff;
     --color-on-accent-hover: #4d9aff;
-    --color-destructive: #ff6b6b;
+    --color-destructive: #ff3b30;
     --color-destructive-bg: #d63638;
     --color-on-destructive: #ffffff;
 
